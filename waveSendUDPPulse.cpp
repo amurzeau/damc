@@ -1,7 +1,12 @@
-#include <alsa/asoundlib.h>
 #include <arpa/inet.h>
 #include <ctype.h>
+#include <errno.h>
+#include <pulse/introspect.h>
+#include <pulse/simple.h>
 #include <sched.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/fcntl.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -33,8 +38,8 @@ struct vban_data_t {
 #define VBAN_PROTOCOL_USER 0xE
 
 void setScheduler();
-bool setHwParams(snd_pcm_t* hWave, int numChannels, int bytesPerSample, int samplePerSec, int period, int numBuffer);
-void dumpParams(snd_pcm_t* hWave);
+// bool setHwParams(snd_pcm_t* hWave, int numChannels, int bytesPerSample, int samplePerSec, int period, int numBuffer);
+// void dumpParams(snd_pcm_t* hWave);
 
 inline int min(int a, int b) {
 	return (a > b) ? b : a;
@@ -52,10 +57,12 @@ bool inputAvailable() {
 }
 
 int main(int argc, char* argv[]) {
-	snd_pcm_t* hWaveIn;
-	snd_pcm_uframes_t result;
+	pa_simple* hWaveIn;
+	pa_sample_spec sampleFormat;
+	pa_buffer_attr bufferAttrs;
+	int result;
 
-	snd_pcm_uframes_t datasent;
+	int datasent;
 	struct vban_data_t* data_buffer;
 	double volume = 1;
 
@@ -63,14 +70,14 @@ int main(int argc, char* argv[]) {
 	struct sockaddr_in sin_server = {0};
 
 	const char* ip = NULL;
-	const char* audioTarget = "default";
+	const char* audioTarget = NULL;
 	int port = 2305;
 	int audioSamplePerSec = 48000;
 	int audioChannels = 2;
 	int audioBytesPerSample = 2;
 	int audioNumBuffer = 4;
 
-	snd_pcm_uframes_t bufferChunk = 128;
+	int bufferChunk = 128;
 	int bufferSize;
 	int packetSize;
 
@@ -106,7 +113,7 @@ int main(int argc, char* argv[]) {
 
 	bufferSize = bufferChunk * audioChannels * audioBytesPerSample;
 
-	printf("Sending audio to %s\n", ip);
+	printf("Sending audio to %s:%d\n", ip, port);
 	setScheduler();
 
 	sin_server.sin_addr.s_addr = inet_addr(ip);
@@ -124,19 +131,27 @@ int main(int argc, char* argv[]) {
 	flags = 1;
 	setsockopt(connection, SOL_SOCKET, SO_BROADCAST, &flags, sizeof(flags));
 
-	result = snd_pcm_open(&hWaveIn, audioTarget, SND_PCM_STREAM_CAPTURE, 0);
-	if(result < 0) {
-		logMessage("Failed to open waveform input device.");
+	// Get default output
+	sampleFormat.format = PA_SAMPLE_S16LE;
+	sampleFormat.channels = audioChannels;
+	sampleFormat.rate = audioSamplePerSec;
+	bufferAttrs.fragsize = bufferSize;
+	bufferAttrs.maxlength = audioNumBuffer * bufferSize;
+	bufferAttrs.minreq = -1;
+	bufferAttrs.prebuf = -1;
+	bufferAttrs.tlength = -1;
+
+	hWaveIn = pa_simple_new(
+	    NULL, "waveSendUDPPulse", PA_STREAM_RECORD, audioTarget, "record", &sampleFormat, NULL, &bufferAttrs, &result);
+	if(hWaveIn == NULL) {
+		logMessage("Failed to open waveform input device: %d.", result);
 		return 3;
 	}
 
-	if(!setHwParams(hWaveIn, audioChannels, audioBytesPerSample, audioSamplePerSec, bufferChunk, audioNumBuffer))
-		return 4;
-	dumpParams(hWaveIn);
+	printf("Record latency: %lu\n", pa_simple_get_latency(hWaveIn, NULL));
 
-	snd_pcm_prepare(hWaveIn);
 	packetSize = bufferSize + sizeof(struct vban_data_t);
-	data_buffer = (struct vban_data_t*) calloc(packetSize, 1);
+	data_buffer = (struct vban_data_t*) malloc(packetSize);
 
 	data_buffer->vban = 0x4e414256;  // "VBAN"
 	data_buffer->format_SR = 3;      // 48Khz
@@ -145,7 +160,7 @@ int main(int argc, char* argv[]) {
 	strcpy(data_buffer->streamname, "Linux");
 	data_buffer->nuFrame = 0;
 
-	logMessage("Recording...");
+	logMessage("Recording device %s...\n", audioTarget);
 	while(1) {
 		if(inputAvailable()) {
 			char line[256];
@@ -156,13 +171,12 @@ int main(int argc, char* argv[]) {
 			printf("vol = %lf\n", volume);
 		}
 
-		result = snd_pcm_readi(hWaveIn, data_buffer->data, bufferChunk);
-
-		if(result < 0) {
-			printf("Error %ld, errno: %d\n", -result, errno);
-			result = snd_pcm_recover(hWaveIn, result, 0);
-			logMessage("overload");
+		if(pa_simple_read(hWaveIn, data_buffer->data, bufferSize, &result) < 0) {
+			printf("Error %d\n", result);
+		} else {
+			result = 0;
 		}
+
 		if(result < 0) {
 			printf("snd_pcm_... failed\n");
 			continue;
@@ -177,9 +191,7 @@ int main(int argc, char* argv[]) {
 		}
 		if(max > 20000)
 			printf("max = %d\n", max);
-		if(result > 0 && result < bufferChunk)
-			printf("Short write : %lu\n", result);
-		if(result == bufferChunk) {
+		if(result == 0) {
 			int ret;
 			for(datasent = 0; datasent < bufferChunk;) {
 				if(bufferChunk - datasent <= 256)
@@ -211,6 +223,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	close(connection);
+	pa_simple_free(hWaveIn);
 	return 0;
 }
 
@@ -228,73 +241,4 @@ void setScheduler() {
 		return;
 	}
 	printf("!!!Scheduler set to Round Robin with priority %i FAILED!!!\n", sched_param.sched_priority);
-}
-
-bool setHwParams(snd_pcm_t* hWave, int numChannels, int bytesPerSample, int samplePerSec, int period, int numBuffer) {
-	snd_pcm_hw_params_t* hwparams;
-	int result;
-
-	snd_pcm_hw_params_alloca(&hwparams);
-
-	result = snd_pcm_hw_params_any(hWave, hwparams);
-	if(result < 0) {
-		printf("snd_pcm_hw_params_any failed: %s\n", snd_strerror(result));
-		return false;
-	}
-
-	result = snd_pcm_hw_params_set_format(hWave, hwparams, SND_PCM_FORMAT_S16_LE);
-	if(result < 0) {
-		printf("snd_pcm_hw_params_set_format failed: %s\n", snd_strerror(result));
-		return false;
-	}
-
-	result = snd_pcm_hw_params_set_rate(hWave, hwparams, samplePerSec, 0);
-	if(result < 0) {
-		printf("snd_pcm_hw_params_set_rate failed: %s\n", snd_strerror(result));
-		return false;
-	}
-
-	result = snd_pcm_hw_params_set_channels(hWave, hwparams, numChannels);
-	if(result < 0) {
-		printf("snd_pcm_hw_params_set_channels failed: %s\n", snd_strerror(result));
-		return false;
-	}
-
-	result = snd_pcm_hw_params_set_access(hWave, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);
-	if(result < 0) {
-		printf("snd_pcm_hw_params_set_access failed: %s\n", snd_strerror(result));
-		return false;
-	}
-
-	snd_pcm_uframes_t period_size = period;
-	int dir = 0;
-	result = snd_pcm_hw_params_set_period_size_near(hWave, hwparams, &period_size, &dir);
-	if(result < 0) {
-		printf("snd_pcm_hw_params_set_period_size_near failed: %s\n", snd_strerror(result));
-		return false;
-	}
-
-	snd_pcm_uframes_t target_buffer_size = period_size * numBuffer;
-	result = snd_pcm_hw_params_set_buffer_size_near(hWave, hwparams, &target_buffer_size);
-	if(result < 0) {
-		printf("snd_pcm_hw_params_set_buffer_size_near failed: %s\n", snd_strerror(result));
-		return false;
-	}
-
-	result = snd_pcm_hw_params(hWave, hwparams);
-	if(result < 0) {
-		printf("snd_pcm_hw_params failed: %s\n", snd_strerror(result));
-		return false;
-	}
-
-	return true;
-}
-
-void dumpParams(snd_pcm_t* hWave) {
-	snd_output_t* out;
-
-	snd_output_stdio_attach(&out, stdout, 0);
-	snd_output_printf(out, "dump :\n");
-	snd_pcm_dump_setup(hWave, out);
-	snd_output_close(out);
 }
