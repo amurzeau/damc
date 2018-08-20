@@ -8,43 +8,47 @@
 
 static void setScheduler();
 static int configureServer(int port);
-static void dumpParams(snd_pcm_t *hWave);
-static int writeAudio(snd_pcm_t *hWaveOut, const char* data, int size, int chunkSize);
-static int audioRecovery(snd_pcm_t *hWaveOut, int err);
-static snd_pcm_t * setupAudio(const char *audioTarget, int samplePerSec, int numChannels, snd_pcm_uframes_t *bufferChunk, int numBuffers);
-static void stopAudio(snd_pcm_t *hWaveOut);
-static void setHwParams(snd_pcm_t *hWaveOut, int samplePerSec, int numChannels, snd_pcm_uframes_t *bufferChunk, int numBuffers);
-static void setSwParams(snd_pcm_t *hWaveOut, snd_pcm_uframes_t bufferChunk);
+static void dumpParams(snd_pcm_t* hWave);
+static int writeAudio(snd_pcm_t* hWaveOut, const char* data, int size, int chunkSize);
+static int audioRecovery(snd_pcm_t* hWaveOut, int err);
+static snd_pcm_t* setupAudio(
+    const char* audioTarget, int samplePerSec, int numChannels, snd_pcm_uframes_t* bufferChunk, int numBuffers);
+static void stopAudio(snd_pcm_t* hWaveOut);
+static void setHwParams(
+    snd_pcm_t* hWaveOut, int samplePerSec, int numChannels, snd_pcm_uframes_t* bufferChunk, int numBuffers);
+static void setSwParams(snd_pcm_t* hWaveOut, snd_pcm_uframes_t bufferChunk, int numBuffers);
 
-int main(int argc, char *argv[])
-{
-
-	const char *audioTarget = "default";
+int main(int argc, char* argv[]) {
+	const char* audioTarget = "default";
 	int port = 2305;
 	int audioSamplePerSec = 48000;
 	int audioChannels = 2;
 	int audioBytesPerSample = 2;
 	snd_pcm_uframes_t audioBufferChunk = 128;
 	int audioBufferNum = 10;
+	int driftAdjust = 31800;
 
-	for(int i = 1; (i+1) < argc; i++) {
+	for(int i = 1; (i + 1) < argc; i++) {
 		if(!strcmp(argv[i], "--rate")) {
-			audioSamplePerSec = atoi(argv[i+1]);
+			audioSamplePerSec = atoi(argv[i + 1]);
 			i++;
 		} else if(!strcmp(argv[i], "--channel")) {
-			audioChannels = atoi(argv[i+1]);
+			audioChannels = atoi(argv[i + 1]);
 			i++;
 		} else if(!strcmp(argv[i], "--chunksize")) {
-			audioBufferChunk = atoi(argv[i+1]);
+			audioBufferChunk = atoi(argv[i + 1]);
 			i++;
 		} else if(!strcmp(argv[i], "--chunknum")) {
-			audioBufferNum = atoi(argv[i+1]);
+			audioBufferNum = atoi(argv[i + 1]);
 			i++;
 		} else if(!strcmp(argv[i], "--port")) {
-			port = atoi(argv[i+1]);
+			port = atoi(argv[i + 1]);
 			i++;
 		} else if(!strcmp(argv[i], "--device")) {
-			audioTarget = argv[i+1];
+			audioTarget = argv[i + 1];
+			i++;
+		} else if(!strcmp(argv[i], "--drift")) {
+			driftAdjust = atoi(argv[i + 1]);
 			i++;
 		}
 	}
@@ -63,12 +67,15 @@ int main(int argc, char *argv[])
 	while(1) {
 		fd_set rfds;
 		struct timeval timeout;
+		// struct timeval tv_tod, tv_ioctl;
+
 		FD_ZERO(&rfds);
 		FD_SET(server, &rfds);
-		select((int)server+1, &rfds, 0, 0, NULL);
+		select((int) server + 1, &rfds, 0, 0, NULL);
 		logMessage("Incoming data received, starting player\n");
 
-		snd_pcm_t *hWaveOut = setupAudio(audioTarget, audioSamplePerSec, audioChannels, &audioBufferChunk, audioBufferNum);
+		snd_pcm_t* hWaveOut =
+		    setupAudio(audioTarget, audioSamplePerSec, audioChannels, &audioBufferChunk, audioBufferNum);
 		if(hWaveOut == NULL)
 			break;
 
@@ -78,29 +85,49 @@ int main(int argc, char *argv[])
 
 		logMessage("Playing...\n");
 
-		//drain recv buffer
-		packetRecvTimeout.tv_usec = 0;
-		packetRecvTimeout.tv_sec = 0;
-		timeout = packetRecvTimeout;
-		while(select((int)server+1, &rfds, 0, 0, &timeout)) {	//recupere les données de l'autre programme (waveSend) par le reseau
-			if((dataRecv = recvfrom(server, dataRecvBuffer, dataRecvBufferSize, 0, NULL, NULL)) <= 0)
-				break;
-			FD_ZERO(&rfds);
-			FD_SET(server, &rfds);
-			timeout = packetRecvTimeout;
-		}
+		int64_t sampleCounter = 0;
+		int64_t drift = driftAdjust;
 
 		FD_ZERO(&rfds);
 		FD_SET(server, &rfds);
 
 		packetRecvTimeout.tv_usec = 0;
-		packetRecvTimeout.tv_sec = 1;	//1sec de timeout avant de stopper le system de son (quand on recoit plus rien)
+		packetRecvTimeout.tv_sec = 1;  // 1sec de timeout avant de stopper le system de son (quand on recoit plus rien)
 		timeout = packetRecvTimeout;
-		while(select((int)server+1, &rfds, 0, 0, &timeout)) {	//recupere les données de l'autre programme (waveSend) par le reseau
+		while(select((int) server + 1,
+		             &rfds,
+		             0,
+		             0,
+		             &timeout)) {  // recupere les données de l'autre programme (waveSend) par le reseau
 			if((dataRecv = recvfrom(server, dataRecvBuffer, dataRecvBufferSize, 0, NULL, NULL)) <= 0)
 				break;
 
-			writeAudio(hWaveOut, dataRecvBuffer, dataRecv/chunkSize, chunkSize);
+			int sampleCount = (dataRecv - 28) / chunkSize;
+			short* samples = (short*) (dataRecvBuffer + 28);
+
+			sampleCounter += sampleCount;
+			int sampleToInsert = sampleCounter * drift / 1000000000ll;
+
+			if((sampleToInsert > 0 && sampleCount >= 2) || (sampleToInsert < 0 && sampleCount >= -sampleToInsert)) {
+				if(sampleToInsert > 0) {
+					int sourceSample[audioChannels];
+					int targetSample[audioChannels];
+					for(int i = 0; i < audioChannels; i++) {
+						sourceSample[i] = samples[(sampleCount - 2) * audioChannels + i];
+						targetSample[i] = samples[(sampleCount - 1) * audioChannels + i];
+					}
+					for(int i = 0; i < (sampleToInsert + 1); i++) {
+						for(int j = 0; j < audioChannels; j++) {
+							samples[(sampleCount - 1 + i) * audioChannels + j] =
+							    sourceSample[j] + (targetSample[j] - sourceSample[j]) * (i + 1) / (sampleToInsert + 1);
+						}
+					}
+				}
+				sampleCount += sampleToInsert;
+				sampleCounter -= sampleToInsert * 1000000000 / drift;
+			}
+
+			writeAudio(hWaveOut, (const char*) samples, sampleCount, chunkSize);
 
 			if(dataRecv % chunkSize != 0)
 				logMessage("Warning: received datagram of size %d but chunk size is %d\n", dataRecv, chunkSize);
@@ -117,7 +144,7 @@ int main(int argc, char *argv[])
 		stopAudio(hWaveOut);
 	}
 
-	//ferme la connection
+	// ferme la connection
 	close(server);
 
 	return 0;
@@ -126,12 +153,12 @@ int main(int argc, char *argv[])
 static void setScheduler() {
 	struct sched_param sched_param;
 
-	if (sched_getparam(0, &sched_param) < 0) {
+	if(sched_getparam(0, &sched_param) < 0) {
 		logMessage("Scheduler getparam failed...\n");
 		return;
 	}
 	sched_param.sched_priority = sched_get_priority_max(SCHED_FIFO);
-	if (!sched_setscheduler(0, SCHED_FIFO, &sched_param)) {
+	if(!sched_setscheduler(0, SCHED_FIFO, &sched_param)) {
 		logMessage("Scheduler set to Round Robin with priority %i...\n", sched_param.sched_priority);
 		fflush(stdout);
 		return;
@@ -152,7 +179,7 @@ static int configureServer(int port) {
 		return -1;
 	}
 
-	if(bind(server, (struct sockaddr*)&sin, sizeof(sin)) == -1) {
+	if(bind(server, (struct sockaddr*) &sin, sizeof(sin)) == -1) {
 		logMessage("Erreur: port deja utilisé, choisissez un autre\n");
 
 		return -1;
@@ -161,36 +188,38 @@ static int configureServer(int port) {
 	return server;
 }
 
-static snd_pcm_t * setupAudio(const char *audioTarget, int samplePerSec, int numChannels, snd_pcm_uframes_t *bufferChunk, int numBuffers) {
+static snd_pcm_t* setupAudio(
+    const char* audioTarget, int samplePerSec, int numChannels, snd_pcm_uframes_t* bufferChunk, int numBuffers) {
 	int result;
-	snd_pcm_t * hWaveOut;
+	snd_pcm_t* hWaveOut;
 
 	result = snd_pcm_open(&hWaveOut, audioTarget, SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
 	if(result < 0) {
-		logMessage("Error no waveout: %s\n",  snd_strerror(result));
+		logMessage("Error no waveout: %s\n", snd_strerror(result));
 		return NULL;
 	}
 
 	setHwParams(hWaveOut, samplePerSec, numChannels, bufferChunk, numBuffers);
-	setSwParams(hWaveOut, *bufferChunk);
+	setSwParams(hWaveOut, *bufferChunk, numBuffers);
 	dumpParams(hWaveOut);
 
 	result = snd_pcm_prepare(hWaveOut);
 	if(result < 0) {
-		logMessage("Error preparing: %s\n",  snd_strerror(result));
+		logMessage("Error preparing: %s\n", snd_strerror(result));
 		return NULL;
 	}
 
 	return hWaveOut;
 }
 
-static void stopAudio(snd_pcm_t *hWaveOut) {
+static void stopAudio(snd_pcm_t* hWaveOut) {
 	snd_pcm_drop(hWaveOut);
 	snd_pcm_close(hWaveOut);
 }
 
-static void setHwParams(snd_pcm_t *hWaveOut, int samplePerSec, int numChannels, snd_pcm_uframes_t *bufferChunk, int numBuffers) {
-	snd_pcm_hw_params_t *hwparams;
+static void setHwParams(
+    snd_pcm_t* hWaveOut, int samplePerSec, int numChannels, snd_pcm_uframes_t* bufferChunk, int numBuffers) {
+	snd_pcm_hw_params_t* hwparams;
 	int result;
 
 	snd_pcm_hw_params_alloca(&hwparams);
@@ -246,8 +275,8 @@ static void setHwParams(snd_pcm_t *hWaveOut, int samplePerSec, int numChannels, 
 	}
 }
 
-static void setSwParams(snd_pcm_t *hWaveOut, snd_pcm_uframes_t bufferChunk) {
-	snd_pcm_sw_params_t *swparams;
+static void setSwParams(snd_pcm_t* hWaveOut, snd_pcm_uframes_t bufferChunk, int numBuffers) {
+	snd_pcm_sw_params_t* swparams;
 	int result;
 
 	snd_pcm_sw_params_alloca(&swparams);
@@ -258,7 +287,8 @@ static void setSwParams(snd_pcm_t *hWaveOut, snd_pcm_uframes_t bufferChunk) {
 		return;
 	}
 
-	result = snd_pcm_sw_params_set_start_threshold(hWaveOut, swparams, bufferChunk);
+	result = snd_pcm_sw_params_set_start_threshold(
+	    hWaveOut, swparams, bufferChunk);  // bug in bcm driver ? sometimes, silence samples get inserted
 	if(result < 0) {
 		logMessage("snd_pcm_sw_params_set_start_threshold failed: %s\n", snd_strerror(result));
 		return;
@@ -271,14 +301,16 @@ static void setSwParams(snd_pcm_t *hWaveOut, snd_pcm_uframes_t bufferChunk) {
 	}
 }
 
-static int writeAudio(snd_pcm_t *hWaveOut, const char* data, int size, int chunkSize) {
-	while (size > 0) {
+static int writeAudio(snd_pcm_t* hWaveOut, const char* data, int size, int chunkSize) {
+	while(size > 0) {
 		int err = snd_pcm_writei(hWaveOut, data, size);
-		if (err == -EAGAIN)
+		if(err == -EAGAIN) {
+			puts("O");
 			return 1;
+		}
 
-		if (err < 0) {
-			if (audioRecovery(hWaveOut, err) < 0) {
+		if(err < 0) {
+			if(audioRecovery(hWaveOut, err) < 0) {
 				logMessage("Write error: %s\n", snd_strerror(err));
 				return 3;
 			}
@@ -290,22 +322,22 @@ static int writeAudio(snd_pcm_t *hWaveOut, const char* data, int size, int chunk
 
 	return 0;
 }
-static int audioRecovery(snd_pcm_t *hWaveOut, int err) {
+static int audioRecovery(snd_pcm_t* hWaveOut, int err) {
 	// Under-run?
-	if (err == -EPIPE) {
+	if(err == -EPIPE) {
 		// NOTE: If you see these during playback, you'll have to increase
 		// BUFFERSIZE/PERIODSIZE
-		//logMessage("underrun\n");
-		if ((err = snd_pcm_prepare(hWaveOut)) >= 0)
+		// logMessage("underrun\n");
+		if((err = snd_pcm_prepare(hWaveOut)) >= 0)
 			return 0;
 		logMessage("Can't recovery from underrun, prepare failed: %s\n", snd_strerror(err));
 	}
 
-	return(err);
+	return (err);
 }
 
-static void dumpParams(snd_pcm_t *hWave) {
-	snd_output_t *out;
+static void dumpParams(snd_pcm_t* hWave) {
+	snd_output_t* out;
 
 	snd_output_stdio_attach(&out, stderr, 0);
 	snd_output_printf(out, "dump :\n");
