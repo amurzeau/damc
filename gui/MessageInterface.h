@@ -2,7 +2,7 @@
 #define MESSAGEINTERFACE_H
 
 struct control_message_t {
-	enum opcode_e { op_set_mute, op_set_volume, op_set_eq, op_set_delay } opcode;
+	enum opcode_e { op_set_mute, op_set_volume, op_set_eq, op_set_delay, op_set_dithering } opcode;
 	int outputInstance;
 	union {
 		struct {
@@ -21,6 +21,10 @@ struct control_message_t {
 		struct {
 			double delay;
 		} set_delay;
+		struct {
+			double scale;
+			int bitReduction;
+		} set_dithering;
 	} data;
 };
 

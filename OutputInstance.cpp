@@ -132,6 +132,14 @@ int OutputInstance::messageProcessor(const void* data, size_t) {
 			filters.setDelay(message->data.set_delay.delay);
 			pthread_mutex_unlock(&filtersMutex);
 			break;
+		case control_message_t::op_set_dithering:
+			printf("Set dithering scale %.6f, bitReduction: %d\n",
+			       message->data.set_dithering.scale,
+			       message->data.set_dithering.bitReduction);
+			pthread_mutex_lock(&filtersMutex);
+			filters.setDithering(message->data.set_dithering.scale, message->data.set_dithering.bitReduction);
+			pthread_mutex_unlock(&filtersMutex);
+			break;
 	}
 
 	notification_message_t messageBroadcast;
@@ -174,6 +182,11 @@ void OutputInstance::sendFilterParameters(ControlClient* client) {
 
 	messageBroadcast.data.control.opcode = control_message_t::op_set_delay;
 	messageBroadcast.data.control.data.set_delay.delay = filters.getDelay();
+	client->sendMessage(&messageBroadcast, sizeof(messageBroadcast));
+
+	messageBroadcast.data.control.opcode = control_message_t::op_set_dithering;
+	filters.getDithering(messageBroadcast.data.control.data.set_dithering.scale,
+	                     messageBroadcast.data.control.data.set_dithering.bitReduction);
 	client->sendMessage(&messageBroadcast, sizeof(messageBroadcast));
 }
 

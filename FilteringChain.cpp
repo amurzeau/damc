@@ -5,10 +5,16 @@
 void FilterChain::init(double fs, size_t numChannel, size_t numEq) {
 	delayFilters.resize(numChannel);
 	eqFilters.resize(numEq);
+	ditheringFilters.resize(numChannel);
 
 	for(DelayFilter& delayFilter : delayFilters) {
 		delayFilter.init(fs);
 	}
+
+	for(DitheringFilter& filter : ditheringFilters) {
+		filter.init(fs);
+	}
+
 	for(std::pair<bool, std::vector<EqFilter>>& filter : eqFilters) {
 		filter.first = false;
 		filter.second.resize(numChannel);
@@ -39,6 +45,8 @@ void FilterChain::processSamples(double* samples, size_t count, int channel) {
 			samples[i] = 0;
 		}
 	}
+
+	ditheringFilters[channel].processSamples(samples, count);
 }
 
 void FilterChain::setVolumeDb(double db) {
@@ -62,6 +70,12 @@ void FilterChain::setDelay(double delay) {
 	}
 }
 
+void FilterChain::setDithering(double scale, int bitReduction) {
+	for(DitheringFilter& filter : ditheringFilters) {
+		filter.setParameters(scale, bitReduction);
+	}
+}
+
 double FilterChain::getVolumeDb() {
 	return 20.0 * log10(volume[0]);
 }
@@ -79,4 +93,8 @@ double FilterChain::getDelay() {
 	double delay;
 	delayFilters[0].getParameters(delay);
 	return delay;
+}
+
+void FilterChain::getDithering(double& scale, int& bitReduction) {
+	ditheringFilters[0].getParameters(scale, bitReduction);
 }

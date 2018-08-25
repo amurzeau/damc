@@ -28,6 +28,8 @@ add_executable(waveSendUDPJack
 	EqFilter.h
 	FilteringChain.cpp
 	FilteringChain.h
+	DitheringFilter.cpp
+	DitheringFilter.h
 	DelayFilter.cpp
 	DelayFilter.h
 	ControlServer.cpp

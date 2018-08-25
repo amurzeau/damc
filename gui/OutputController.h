@@ -26,6 +26,7 @@ protected slots:
 	void onMute(bool muted);
 	void onShowEq();
 	void onChangeEq(int index, EqFilter::FilterType type, double f0, double q, double gain);
+	void onChangeDithering();
 
 	void onMessageReceived(notification_message_t message);
 

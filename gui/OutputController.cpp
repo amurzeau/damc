@@ -32,6 +32,8 @@ OutputController::OutputController(QWidget* parent, int numEq, int numChannels)
 	connect(ui->delaySpinBox, SIGNAL(valueChanged(double)), this, SLOT(onChangeDelay(double)));
 	connect(ui->muteButton, SIGNAL(toggled(bool)), this, SLOT(onMute(bool)));
 	connect(ui->eqButton, SIGNAL(clicked(bool)), this, SLOT(onShowEq()));
+	connect(ui->ditheringScaleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onChangeDithering()));
+	connect(ui->ditheringBitSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onChangeDithering()));
 
 	connect(
 	    &interface, SIGNAL(onMessage(notification_message_t)), this, SLOT(onMessageReceived(notification_message_t)));
@@ -92,6 +94,15 @@ void OutputController::onChangeEq(int index, EqFilter::FilterType type, double f
 	interface.sendMessage(message);
 }
 
+void OutputController::onChangeDithering() {
+	qDebug("Changing dithering");
+	struct control_message_t message;
+	message.opcode = control_message_t::op_set_dithering;
+	message.data.set_dithering.scale = ui->ditheringScaleSpinBox->value();
+	message.data.set_dithering.bitReduction = ui->ditheringBitSpinBox->value();
+	interface.sendMessage(message);
+}
+
 void OutputController::onMessageReceived(notification_message_t message) {
 	switch(message.opcode) {
 		case notification_message_t::op_state:
@@ -130,6 +141,14 @@ void OutputController::onMessageReceived(notification_message_t message) {
 					                                             message.data.control.data.set_eq.f0,
 					                                             message.data.control.data.set_eq.Q,
 					                                             message.data.control.data.set_eq.gain);
+					break;
+				case control_message_t::op_set_dithering:
+					ui->ditheringScaleSpinBox->blockSignals(true);
+					ui->ditheringScaleSpinBox->setValue(message.data.control.data.set_dithering.scale);
+					ui->ditheringScaleSpinBox->blockSignals(false);
+					ui->ditheringBitSpinBox->blockSignals(true);
+					ui->ditheringBitSpinBox->setValue(message.data.control.data.set_dithering.bitReduction);
+					ui->ditheringBitSpinBox->blockSignals(false);
 					break;
 			}
 			break;
