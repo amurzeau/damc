@@ -1,10 +1,13 @@
 #include <stdio.h>
 
 #include "Logger.h"
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include "filter.h"
 #include <alsa/asoundlib.h>
+#include <arpa/inet.h>
 #include <sched.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 
 static void setScheduler();
 static int configureServer(int port);
@@ -67,7 +70,12 @@ int main(int argc, char* argv[]) {
 	while(1) {
 		fd_set rfds;
 		struct timeval timeout;
+		struct filter_farrow_t resamplingFilter[2];
+		float drift = 1.0 + driftAdjust / 1000000000.0;
 		// struct timeval tv_tod, tv_ioctl;
+
+		filter_farrow_init(&resamplingFilter[0]);
+		filter_farrow_init(&resamplingFilter[1]);
 
 		FD_ZERO(&rfds);
 		FD_SET(server, &rfds);
@@ -82,11 +90,9 @@ int main(int argc, char* argv[]) {
 		int dataRecv;
 		int dataRecvBufferSize = 32768;
 		char* dataRecvBuffer = new char[dataRecvBufferSize];
+		char* dataRecvBufferResampled = new char[filter_farrow_get_out_size(dataRecvBufferSize, drift, 0)];
 
 		logMessage("Playing...\n");
-
-		int64_t sampleCounter = 0;
-		int64_t drift = driftAdjust;
 
 		FD_ZERO(&rfds);
 		FD_SET(server, &rfds);
@@ -104,30 +110,18 @@ int main(int argc, char* argv[]) {
 
 			int sampleCount = (dataRecv - 28) / chunkSize;
 			short* samples = (short*) (dataRecvBuffer + 28);
+			short* samplesOut = (short*) (dataRecvBufferResampled);
 
-			sampleCounter += sampleCount;
-			int sampleToInsert = sampleCounter * drift / 1000000000ll;
-
-			if((sampleToInsert > 0 && sampleCount >= 2) || (sampleToInsert < 0 && sampleCount >= -sampleToInsert)) {
-				if(sampleToInsert > 0) {
-					int sourceSample[audioChannels];
-					int targetSample[audioChannels];
-					for(int i = 0; i < audioChannels; i++) {
-						sourceSample[i] = samples[(sampleCount - 2) * audioChannels + i];
-						targetSample[i] = samples[(sampleCount - 1) * audioChannels + i];
-					}
-					for(int i = 0; i < (sampleToInsert + 1); i++) {
-						for(int j = 0; j < audioChannels; j++) {
-							samples[(sampleCount - 1 + i) * audioChannels + j] =
-							    sourceSample[j] + (targetSample[j] - sourceSample[j]) * (i + 1) / (sampleToInsert + 1);
-						}
-					}
-				}
-				sampleCount += sampleToInsert;
-				sampleCounter -= sampleToInsert * 1000000000 / drift;
+			int i, j;
+			for(i = 0, j = 0; i < sampleCount * audioChannels; i += 2) {
+				size_t intOutSize =
+				    filter_farrow_resample_put(&resamplingFilter[0], samples[i], drift, 0, &samplesOut[j], 2);
+				intOutSize =
+				    filter_farrow_resample_put(&resamplingFilter[1], samples[i + 1], drift, 0, &samplesOut[j + 1], 2);
+				j += intOutSize * 2;
 			}
 
-			writeAudio(hWaveOut, (const char*) samples, sampleCount, chunkSize);
+			writeAudio(hWaveOut, (const char*) samplesOut, j / audioChannels, chunkSize);
 
 			if(dataRecv % chunkSize != 0)
 				logMessage("Warning: received datagram of size %d but chunk size is %d\n", dataRecv, chunkSize);
@@ -138,6 +132,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		delete[] dataRecvBuffer;
+		delete[] dataRecvBufferResampled;
 
 		logMessage("End of connection\n");
 
