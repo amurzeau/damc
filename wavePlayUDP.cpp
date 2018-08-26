@@ -2,6 +2,7 @@
 
 #include "Logger.h"
 #include "filter.h"
+#include "filter_fir2.h"
 #include <alsa/asoundlib.h>
 #include <arpa/inet.h>
 #include <sched.h>
@@ -20,6 +21,43 @@ static void stopAudio(snd_pcm_t* hWaveOut);
 static void setHwParams(
     snd_pcm_t* hWaveOut, int samplePerSec, int numChannels, snd_pcm_uframes_t* bufferChunk, int numBuffers);
 static void setSwParams(snd_pcm_t* hWaveOut, snd_pcm_uframes_t bufferChunk, int numBuffers);
+/*
+
+FIR filter designed with
+http://t-filter.appspot.com
+
+sampling frequency: 96000 Hz
+
+* 0 Hz - 18000 Hz
+  gain = 1
+  desired ripple = 0.001 dB
+  actual ripple = 0.0017438144643438644 dB
+
+* 24000 Hz - 48000 Hz
+  gain = 0
+  desired attenuation = -60 dB
+  actual attenuation = -52.50488873143957 dB
+
+*/
+
+#define FILTER_TAP_NUM 60
+
+static float filter_taps[FILTER_TAP_NUM] = {
+    -0.00016468251099241267, -0.0003398014928446548,  0.001242949328700672,    -0.00034437180863040797,
+    -0.0014057200978669325,  -0.00011179680674933007, 0.0022350700215351352,   0.000907703852043078,
+    -0.003095528045303807,   -0.0024248293594127104,  0.0036910939294729416,   0.004816495267842575,
+    -0.003525081363226198,   -0.008059619554657605,   0.0019580866215319313,   0.011857990516750783,
+    0.001716540635242086,    -0.015562407085166754,   -0.008195912065959748,   0.018122961314950004,
+    0.01814059155469694,     -0.0180055364140552,     -0.032358848210805216,   0.012842181234232013,
+    0.05269393953259328,     0.002211913983485687,    -0.08613462098570118,    -0.04490834927479029,
+    0.18148229822409895,     0.4106670980442739,      0.4106670980442739,      0.18148229822409895,
+    -0.04490834927479029,    -0.08613462098570118,    0.002211913983485687,    0.05269393953259328,
+    0.012842181234232013,    -0.032358848210805216,   -0.0180055364140552,     0.01814059155469694,
+    0.018122961314950004,    -0.008195912065959748,   -0.015562407085166754,   0.001716540635242086,
+    0.011857990516750783,    0.0019580866215319313,   -0.008059619554657605,   -0.003525081363226198,
+    0.004816495267842575,    0.0036910939294729416,   -0.0024248293594127104,  -0.003095528045303807,
+    0.000907703852043078,    0.0022350700215351352,   -0.00011179680674933007, -0.0014057200978669325,
+    -0.00034437180863040797, 0.001242949328700672,    -0.0003398014928446548,  -0.00016468251099241267};
 
 int main(int argc, char* argv[]) {
 	const char* audioTarget = "default";
@@ -30,6 +68,8 @@ int main(int argc, char* argv[]) {
 	snd_pcm_uframes_t audioBufferChunk = 128;
 	int audioBufferNum = 10;
 	int driftAdjust = 31800;
+	int RANGE = 125;
+	int PWM_FREQUENCY = 200000;
 
 	for(int i = 1; (i + 1) < argc; i++) {
 		if(!strcmp(argv[i], "--rate")) {
@@ -53,6 +93,12 @@ int main(int argc, char* argv[]) {
 		} else if(!strcmp(argv[i], "--drift")) {
 			driftAdjust = atoi(argv[i + 1]);
 			i++;
+		} else if(!strcmp(argv[i], "--range")) {
+			RANGE = atoi(argv[i + 1]);
+			i++;
+		} else if(!strcmp(argv[i], "--pwm")) {
+			PWM_FREQUENCY = atoi(argv[i + 1]);
+			i++;
 		}
 	}
 
@@ -70,28 +116,37 @@ int main(int argc, char* argv[]) {
 	while(1) {
 		fd_set rfds;
 		struct timeval timeout;
-		struct filter_farrow_t resamplingFilter[2];
-		float drift = 1.0 + driftAdjust / 1000000000.0;
+		struct filter_fir2_t resamplingFilter[2];
+		struct filter_farrow_t farrowFilter[2];
+		float drift = (1.0 + driftAdjust / 1000000000.0) * PWM_FREQUENCY / audioSamplePerSec / 2;
 		// struct timeval tv_tod, tv_ioctl;
 
-		filter_farrow_init(&resamplingFilter[0]);
-		filter_farrow_init(&resamplingFilter[1]);
+		filter_fir2_init(&resamplingFilter[0], filter_taps, FILTER_TAP_NUM, 2, 1);
+		filter_fir2_init(&resamplingFilter[1], filter_taps, FILTER_TAP_NUM, 2, 1);
+		filter_farrow_init(&farrowFilter[0]);
+		filter_farrow_init(&farrowFilter[1]);
 
 		FD_ZERO(&rfds);
 		FD_SET(server, &rfds);
 		select((int) server + 1, &rfds, 0, 0, NULL);
 		logMessage("Incoming data received, starting player\n");
 
-		snd_pcm_t* hWaveOut =
-		    setupAudio(audioTarget, audioSamplePerSec, audioChannels, &audioBufferChunk, audioBufferNum);
+		snd_pcm_t* hWaveOut = setupAudio(audioTarget, PWM_FREQUENCY, audioChannels, &audioBufferChunk, audioBufferNum);
 		if(hWaveOut == NULL)
 			break;
 
 		int dataRecv;
 		int dataRecvBufferSize = 32768;
 		char* dataRecvBuffer = new char[dataRecvBufferSize];
-		char* dataRecvBufferResampled = new char[filter_farrow_get_out_size(dataRecvBufferSize, drift, 0)];
+		unsigned int* dataRecvBufferResampled =
+		    new unsigned int[filter_farrow_get_out_size(dataRecvBufferSize, drift, 0)];
+		float samplesIntermediate1_1[2];
+		float samplesIntermediate1_2[2];
+		float samplesIntermediate2[filter_farrow_get_out_size(2, drift, 0) + 1];
+		float integrator[2][2] = {{0}, {0}};
+		static const float feedback_coefs[sizeof(integrator) / sizeof(integrator[0])] = {0.493, 1.250};
 
+		// FILE* fileOut = fopen("debug.raw", "wb");
 		logMessage("Playing...\n");
 
 		FD_ZERO(&rfds);
@@ -110,19 +165,58 @@ int main(int argc, char* argv[]) {
 
 			int sampleCount = (dataRecv - 28) / chunkSize;
 			short* samples = (short*) (dataRecvBuffer + 28);
-			short* samplesOut = (short*) (dataRecvBufferResampled);
+			unsigned int* samplesOut = dataRecvBufferResampled;
 
 			int i, j;
-			for(i = 0, j = 0; i < sampleCount * audioChannels; i += 2) {
-				size_t intOutSize =
-				    filter_farrow_resample_put(&resamplingFilter[0], samples[i], drift, 0, &samplesOut[j], 2);
-				intOutSize =
-				    filter_farrow_resample_put(&resamplingFilter[1], samples[i + 1], drift, 0, &samplesOut[j + 1], 2);
-				j += intOutSize * 2;
+			for(i = 0, j = 0; i < sampleCount; i++) {
+				unsigned int out_size;
+				unsigned int k, m;
+
+				filter_fir2_put(&resamplingFilter[0], samples[i * 2] / (32768.0 / 2));
+				out_size = filter_fir2_get(&resamplingFilter[0], samplesIntermediate1_1);
+
+				filter_fir2_put(&resamplingFilter[1], samples[i * 2 + 1] / (32768.0 / 2));
+				out_size = filter_fir2_get(&resamplingFilter[1], samplesIntermediate1_2);
+
+				for(k = 0, m = 0; k < out_size; k++) {
+					unsigned int out_size_2 = filter_farrow_resample_putfloat(
+					    &farrowFilter[0], samplesIntermediate1_1[k], drift, 0, samplesIntermediate2, 1);
+					for(size_t l = 0; l < out_size_2; l++) {
+						integrator[0][0] += samplesIntermediate2[l];
+
+						float roundedOutput = round((integrator[0][1] / 2 + 0.5) * RANGE);
+
+						integrator[0][1] += integrator[0][0] - ((roundedOutput / RANGE - 0.5) * 2) * feedback_coefs[1];
+						integrator[0][0] -= ((roundedOutput / RANGE - 0.5) * 2) * feedback_coefs[0];
+
+						samplesOut[(j + m) * 2] = (unsigned int) roundedOutput;
+						m++;
+					}
+				}
+
+				for(k = 0, m = 0; k < out_size; k++) {
+					unsigned int out_size_2 = filter_farrow_resample_putfloat(
+					    &farrowFilter[1], samplesIntermediate1_2[k], drift, 0, samplesIntermediate2, 1);
+					for(size_t l = 0; l < out_size_2; l++) {
+						integrator[1][0] += samplesIntermediate2[l];
+
+						float roundedOutput = round((integrator[1][1] / 2 + 0.5) * RANGE);
+
+						integrator[1][1] += integrator[1][0] - ((roundedOutput / RANGE - 0.5) * 2) * feedback_coefs[1];
+						integrator[1][0] -= ((roundedOutput / RANGE - 0.5) * 2) * feedback_coefs[0];
+
+						samplesOut[(j + m) * 2 + 1] = (unsigned int) roundedOutput;
+						m++;
+					}
+				}
+
+				j += m;
 			}
 
-			writeAudio(hWaveOut, (const char*) samplesOut, j / audioChannels, chunkSize);
-
+			writeAudio(hWaveOut, (const char*) samplesOut, j, audioChannels * sizeof(unsigned int));
+			/*if(fileOut)
+			    fwrite(samplesOut, j, audioChannels * sizeof(unsigned int), fileOut);
+*/
 			if(dataRecv % chunkSize != 0)
 				logMessage("Warning: received datagram of size %d but chunk size is %d\n", dataRecv, chunkSize);
 
@@ -130,6 +224,9 @@ int main(int argc, char* argv[]) {
 			FD_SET(server, &rfds);
 			timeout = packetRecvTimeout;
 		}
+		/*
+		        if(fileOut)
+		fclose(fileOut);*/
 
 		delete[] dataRecvBuffer;
 		delete[] dataRecvBufferResampled;
@@ -225,7 +322,10 @@ static void setHwParams(
 		return;
 	}
 
-	result = snd_pcm_hw_params_set_format(hWaveOut, hwparams, SND_PCM_FORMAT_S16_LE);
+	if(samplePerSec > 48000)
+		result = snd_pcm_hw_params_set_format(hWaveOut, hwparams, SND_PCM_FORMAT_U32_LE);
+	else
+		result = snd_pcm_hw_params_set_format(hWaveOut, hwparams, SND_PCM_FORMAT_S16_LE);
 	if(result < 0) {
 		logMessage("snd_pcm_hw_params_set_format failed: %s\n", snd_strerror(result));
 		return;
@@ -233,7 +333,7 @@ static void setHwParams(
 
 	result = snd_pcm_hw_params_set_rate(hWaveOut, hwparams, samplePerSec, 0);
 	if(result < 0) {
-		logMessage("snd_pcm_hw_params_set_rate failed: %s\n", snd_strerror(result));
+		logMessage("snd_pcm_hw_params_set_rate failed: %s, %d\n", snd_strerror(result), samplePerSec);
 		return;
 	}
 

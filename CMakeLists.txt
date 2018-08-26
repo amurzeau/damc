@@ -11,7 +11,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE False)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -Wall -fvisibility=hidden")
 
-add_executable(wavePlayUDP wavePlayUDP.cpp filter.h Logger.cpp Logger.h)
+add_executable(wavePlayUDP wavePlayUDP.cpp filter.h filter_fir2.h Logger.cpp Logger.h)
 target_link_libraries(wavePlayUDP asound)
 
 add_executable(waveSendUDP waveSendUDP.cpp Logger.cpp Logger.h)
