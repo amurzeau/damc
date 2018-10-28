@@ -1,7 +1,7 @@
 #ifndef OUTPUTCONTROLLER_H
 #define OUTPUTCONTROLLER_H
 
-#include "../EqFilter.h"
+#include "../waveSendUDPJack/EqFilter.h"
 #include "WavePlayOutputInterface.h"
 #include <QWidget>
 
@@ -26,13 +26,12 @@ protected slots:
 	void onMute(bool muted);
 	void onShowEq();
 	void onChangeEq(int index, EqFilter::FilterType type, double f0, double q, double gain);
-	void onChangeDithering();
 
-	void onMessageReceived(notification_message_t message);
+	void onMessageReceived(const QJsonObject& message);
 
 protected:
 	double translateLevel(double level);
-	void setDisplayedVolume(double volume);
+	void setDisplayedVolume(int volume);
 
 private:
 	Ui::OutputController* ui;

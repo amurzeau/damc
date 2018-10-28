@@ -1,8 +1,11 @@
 #include "OutputController.h"
 #include "EqualizersController.h"
 #include "ui_OutputController.h"
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <math.h>
-#include <qwt/qwt_thermo.h>
+#include <qwt_thermo.h>
 
 OutputController::OutputController(QWidget* parent, int numEq, int numChannels)
     : QWidget(parent), ui(new Ui::OutputController) {
@@ -32,11 +35,8 @@ OutputController::OutputController(QWidget* parent, int numEq, int numChannels)
 	connect(ui->delaySpinBox, SIGNAL(valueChanged(double)), this, SLOT(onChangeDelay(double)));
 	connect(ui->muteButton, SIGNAL(toggled(bool)), this, SLOT(onMute(bool)));
 	connect(ui->eqButton, SIGNAL(clicked(bool)), this, SLOT(onShowEq()));
-	connect(ui->ditheringScaleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onChangeDithering()));
-	connect(ui->ditheringBitSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onChangeDithering()));
 
-	connect(
-	    &interface, SIGNAL(onMessage(notification_message_t)), this, SLOT(onMessageReceived(notification_message_t)));
+	connect(&interface, SIGNAL(onMessage(QJsonObject)), this, SLOT(onMessageReceived(const QJsonObject&)));
 }
 
 OutputController::~OutputController() {
@@ -51,27 +51,26 @@ void OutputController::setInterface(int index, WavePlayInterface* interface) {
 
 void OutputController::onChangeVolume(int volume) {
 	qDebug("Changing volume");
-	struct control_message_t message;
-	message.opcode = control_message_t::op_set_volume;
-	message.data.set_volume.volume = volume;
-	interface.sendMessage(message);
+	QJsonObject json;
+	json["volume"] = volume;
+	interface.sendMessage(json);
 	setDisplayedVolume(volume);
 	ui->muteButton->setChecked(false);
 }
 
 void OutputController::onChangeDelay(double delay) {
-	struct control_message_t message;
-	message.opcode = control_message_t::op_set_delay;
-	message.data.set_delay.delay = delay / 1000.0;
-	interface.sendMessage(message);
+	QJsonObject json;
+	QJsonObject jsonDelay;
+	jsonDelay["delay"] = delay;
+	json["delayFilter"] = jsonDelay;
+	interface.sendMessage(json);
 }
 
 void OutputController::onMute(bool muted) {
 	qDebug("Muting");
-	struct control_message_t message;
-	message.opcode = control_message_t::op_set_mute;
-	message.data.set_mute.mute = muted;
-	interface.sendMessage(message);
+	QJsonObject json;
+	json["mute"] = muted;
+	interface.sendMessage(json);
 }
 
 void OutputController::onShowEq() {
@@ -84,74 +83,79 @@ void OutputController::onShowEq() {
 
 void OutputController::onChangeEq(int index, EqFilter::FilterType type, double f0, double q, double gain) {
 	qDebug("Changing eq %d", index);
-	struct control_message_t message;
-	message.opcode = control_message_t::op_set_eq;
-	message.data.set_eq.index = index;
-	message.data.set_eq.type = (int) type;
-	message.data.set_eq.f0 = f0;
-	message.data.set_eq.Q = q;
-	message.data.set_eq.gain = gain;
-	interface.sendMessage(message);
+
+	QJsonObject json;
+	QJsonArray eqFiltersArray;
+	QJsonObject eqFilter;
+
+	eqFilter["index"] = index;
+	eqFilter["type"] = (int) type;
+	eqFilter["f0"] = f0;
+	eqFilter["Q"] = q;
+	eqFilter["gain"] = gain;
+
+	eqFiltersArray.append(eqFilter);
+	json["eqFilters"] = eqFiltersArray;
+
+	interface.sendMessage(json);
 }
 
-void OutputController::onChangeDithering() {
-	qDebug("Changing dithering");
-	struct control_message_t message;
-	message.opcode = control_message_t::op_set_dithering;
-	message.data.set_dithering.scale = ui->ditheringScaleSpinBox->value();
-	message.data.set_dithering.bitReduction = ui->ditheringBitSpinBox->value();
-	interface.sendMessage(message);
-}
+void OutputController::onMessageReceived(const QJsonObject& message) {
+	QJsonValue levelValue = message.value("levels");
+	if(levelValue.type() == QJsonValue::Array) {
+		QJsonArray levels = levelValue.toArray();
+		double maxLevel = -INFINITY;
+		int levelNumber = std::min(levels.size(), (int) levelWidgets.size());
 
-void OutputController::onMessageReceived(notification_message_t message) {
-	switch(message.opcode) {
-		case notification_message_t::op_state:
-			// Handled in MainWindow
-			break;
-		case notification_message_t::op_level:
-			for(size_t i = 0; i < std::min(sizeof(message.data.level.level) / sizeof(message.data.level.level[0]),
-			                               levelWidgets.size());
-			    i++) {
-				levelWidgets[i]->setValue(translateLevel(message.data.level.level[i]));
+		for(int i = 0; i < levelNumber; i++) {
+			double level = levels[i].toDouble();
+			levelWidgets[i]->setValue(translateLevel(level));
+			if(level > maxLevel)
+				maxLevel = level;
+		}
+		if(maxLevel <= -192)
+			ui->levelLabel->setText("--");
+		else
+			ui->levelLabel->setText(QString::number((int) maxLevel));
+	} else {
+		qDebug("Received message %s", QJsonDocument(message).toJson(QJsonDocument::Indented).constData());
+
+		QJsonValue muteValue = message.value("mute");
+		if(muteValue.type() != QJsonValue::Undefined) {
+			ui->volumeSlider->blockSignals(true);
+			ui->muteButton->setChecked(muteValue.toBool());
+			ui->volumeSlider->blockSignals(false);
+		}
+
+		QJsonValue volumeValue = message.value("volume");
+		if(volumeValue.type() != QJsonValue::Undefined) {
+			int integerVolume = round(volumeValue.toDouble());
+			ui->volumeSlider->blockSignals(true);
+			ui->volumeSlider->setValue(integerVolume);
+			ui->volumeSlider->blockSignals(false);
+			setDisplayedVolume(integerVolume);
+		}
+
+		QJsonValue delayValue = message.value("delayFilter");
+		if(delayValue.type() != QJsonValue::Undefined) {
+			ui->delaySpinBox->blockSignals(true);
+			ui->delaySpinBox->setValue(delayValue.toObject()["delay"].toDouble());
+			ui->delaySpinBox->blockSignals(false);
+		}
+
+		QJsonValue eqFiltersValue = message.value("eqFilters");
+		if(eqFiltersValue.type() == QJsonValue::Array) {
+			QJsonArray eqFilters = eqFiltersValue.toArray();
+			for(int i = 0; i < eqFilters.size(); i++) {
+				QJsonObject eqFilter = eqFilters[i].toObject();
+
+				equalizersController->setEqualizerParameters(eqFilter["index"].toInt(),
+				                                             eqFilter["type"].toInt(),
+				                                             eqFilter["f0"].toDouble(),
+				                                             eqFilter["Q"].toDouble(),
+				                                             eqFilter["gain"].toDouble());
 			}
-			ui->levelLabel->setText(
-			    QString::number((int) std::max(message.data.level.level[0], message.data.level.level[1])));
-			break;
-		case notification_message_t::op_control:
-			switch(message.data.control.opcode) {
-				case control_message_t::op_set_mute:
-					ui->volumeSlider->blockSignals(true);
-					ui->muteButton->setChecked(message.data.control.data.set_mute.mute);
-					ui->volumeSlider->blockSignals(false);
-					break;
-				case control_message_t::op_set_volume:
-					ui->volumeSlider->blockSignals(true);
-					ui->volumeSlider->setValue(message.data.control.data.set_volume.volume);
-					ui->volumeSlider->blockSignals(false);
-					setDisplayedVolume(message.data.control.data.set_volume.volume);
-					break;
-				case control_message_t::op_set_delay:
-					ui->delaySpinBox->blockSignals(true);
-					ui->delaySpinBox->setValue(message.data.control.data.set_delay.delay * 1000.0);
-					ui->delaySpinBox->blockSignals(false);
-					break;
-				case control_message_t::op_set_eq:
-					equalizersController->setEqualizerParameters(message.data.control.data.set_eq.index,
-					                                             message.data.control.data.set_eq.type,
-					                                             message.data.control.data.set_eq.f0,
-					                                             message.data.control.data.set_eq.Q,
-					                                             message.data.control.data.set_eq.gain);
-					break;
-				case control_message_t::op_set_dithering:
-					ui->ditheringScaleSpinBox->blockSignals(true);
-					ui->ditheringScaleSpinBox->setValue(message.data.control.data.set_dithering.scale);
-					ui->ditheringScaleSpinBox->blockSignals(false);
-					ui->ditheringBitSpinBox->blockSignals(true);
-					ui->ditheringBitSpinBox->setValue(message.data.control.data.set_dithering.bitReduction);
-					ui->ditheringBitSpinBox->blockSignals(false);
-					break;
-			}
-			break;
+		}
 	}
 }
 
@@ -161,6 +165,6 @@ double OutputController::translateLevel(double level) {
 	return level;
 }
 
-void OutputController::setDisplayedVolume(double volume) {
-	ui->volumeLevelLabel->setText(QString::number((int) volume) + " dB");
+void OutputController::setDisplayedVolume(int volume) {
+	ui->volumeLevelLabel->setText(QString::number(volume) + " dB");
 }

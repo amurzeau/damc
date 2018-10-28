@@ -4,6 +4,7 @@
 #include "OutputController.h"
 #include "WavePlayInterface.h"
 #include "WavePlayOutputInterface.h"
+#include <QJsonObject>
 #include <QWidget>
 #include <vector>
 
@@ -19,7 +20,7 @@ public:
 	~MainWindow();
 
 protected slots:
-	void onMessage(notification_message_t message);
+	void onMessage(const QJsonObject& message);
 
 private:
 	Ui::MainWindow* ui;

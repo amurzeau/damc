@@ -15,11 +15,12 @@ void WavePlayOutputInterface::setInterface(int index, WavePlayInterface* interfa
 	interface->addOutputInterface(index, this);
 }
 
-void WavePlayOutputInterface::sendMessage(control_message_t message) {
-	message.outputInstance = outputInstance;
-	interface->sendMessage(message);
+void WavePlayOutputInterface::sendMessage(const QJsonObject& message) {
+	QJsonObject json = message;
+	json["instance"] = outputInstance;
+	interface->sendMessage(json);
 }
 
-void WavePlayOutputInterface::messageReiceved(notification_message_t message) {
+void WavePlayOutputInterface::messageReiceved(const QJsonObject& message) {
 	emit onMessage(message);
 }

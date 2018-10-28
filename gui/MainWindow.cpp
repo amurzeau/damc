@@ -1,15 +1,13 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
+#include <QJsonDocument>
 
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow) {
 	ui->setupUi(this);
 
 	mainControlInterface.setInterface(-1, &wavePlayInterface);
 
-	connect(&mainControlInterface,
-	        SIGNAL(onMessage(notification_message_t)),
-	        this,
-	        SLOT(onMessage(notification_message_t)));
+	connect(&mainControlInterface, SIGNAL(onMessage(QJsonObject)), this, SLOT(onMessage(const QJsonObject&)));
 }
 
 MainWindow::~MainWindow() {
@@ -21,10 +19,16 @@ MainWindow::~MainWindow() {
 	outputs.clear();
 }
 
-void MainWindow::onMessage(notification_message_t message) {
-	if(message.opcode == notification_message_t::op_state) {
-		if(message.data.state.numOutputInstances > 20) {
-			printf("too many instance %d\n", message.data.state.numOutputInstances);
+void MainWindow::onMessage(const QJsonObject& message) {
+	qDebug("Received global message: %s", QJsonDocument(message).toJson().constData());
+	QJsonValue outputInstance = message["instance"];
+	if(outputInstance.type() != QJsonValue::Undefined && outputInstance.toInt() == -1) {
+		int numOutputInstances = message["numOutputInstances"].toInt();
+		int numEq = message["numEq"].toInt();
+		int numChannels = message["numChannels"].toInt();
+
+		if(numOutputInstances > 20) {
+			printf("too many instance %d\n", numOutputInstances);
 			return;
 		}
 
@@ -34,10 +38,9 @@ void MainWindow::onMessage(notification_message_t message) {
 		}
 		outputs.clear();
 
-		printf("%d instances\n", message.data.state.numOutputInstances);
-		for(int i = 0; i < message.data.state.numOutputInstances; i++) {
-			OutputController* output =
-			    new OutputController(this, message.data.state.numEq, message.data.state.numChannels);
+		printf("%d instances\n", numOutputInstances);
+		for(int i = 0; i < numOutputInstances; i++) {
+			OutputController* output = new OutputController(this, numEq, numChannels);
 			output->setInterface(i, &wavePlayInterface);
 			ui->horizontalLayout->addWidget(output);
 

@@ -1,7 +1,7 @@
 #ifndef EQUALIZER_H
 #define EQUALIZER_H
 
-#include "../EqFilter.h"
+#include "../waveSendUDPJack/EqFilter.h"
 #include <QWidget>
 
 namespace Ui {

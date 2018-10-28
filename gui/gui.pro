@@ -27,12 +27,18 @@ unix {
     LIBS += -L/usr/lib \
             -lqwt-qt5
 }
+win32 {
+    DEFINES += QWT_DLL _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX
+    INCLUDEPATH += D:/Projets_C/wavePlayer2/gui/qwt-6.1.3/src
+    LIBS += D:/Projets_C/wavePlayer2/gui/qwt-6.1.3/build/lib/qwtd.lib
+}
+
 
 SOURCES += \
         main.cpp \
         MainWindow.cpp \
     BodePlot.cpp \
-    ../EqFilter.cpp \
+    ../waveSendUDPJack/EqFilter.cpp \
     OutputController.cpp \
     WavePlayInterface.cpp \
     WavePlayOutputInterface.cpp \
@@ -43,11 +49,10 @@ SOURCES += \
 HEADERS += \
         MainWindow.h \
     BodePlot.h \
-    ../EqFilter.h \
+    ../waveSendUDPJack/EqFilter.h \
     OutputController.h \
     WavePlayInterface.h \
     WavePlayOutputInterface.h \
-    MessageInterface.h \
     EqualizersController.h \
     Equalizer.h \
     Dialog.h

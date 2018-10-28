@@ -1,7 +1,7 @@
 #ifndef BODEPLOT_H
 #define BODEPLOT_H
 
-#include "../EqFilter.h"
+#include "../waveSendUDPJack/EqFilter.h"
 #include <complex>
 #include <qwt_plot.h>
 

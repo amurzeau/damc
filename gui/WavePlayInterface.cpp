@@ -1,5 +1,6 @@
 #include "WavePlayInterface.h"
 #include "WavePlayOutputInterface.h"
+#include <QJsonDocument>
 #include <QMessageBox>
 
 WavePlayInterface::WavePlayInterface() {
@@ -12,14 +13,16 @@ WavePlayInterface::WavePlayInterface() {
 	controlSocket.connectToHost("127.0.0.1", 2306);
 }
 
-void WavePlayInterface::sendMessage(struct control_message_t message) {
-	qDebug("Reveived data: %d, %d", (int) controlSocket.bytesAvailable(), (int) networkBuffer.size());
-	int sizeData = sizeof(message);
+void WavePlayInterface::sendMessage(const QJsonObject& message) {
+	QByteArray data = QJsonDocument(message).toJson(QJsonDocument::Compact);
+	int sizeData = data.size();
+
+	qDebug("Sending data: %s", data.constData());
 	if(controlSocket.state() != QTcpSocket::ConnectedState)
 		controlSocket.connectToHost("127.0.0.1", 2306);
 
 	controlSocket.write((const char*) &sizeData, sizeof(sizeData));
-	controlSocket.write((const char*) &message, sizeof(message));
+	controlSocket.write(data.constData(), sizeData);
 }
 
 void WavePlayInterface::onDataReceived() {
@@ -61,12 +64,23 @@ void WavePlayInterface::onReconnect() {
 	controlSocket.connectToHost("127.0.0.1", 2306);
 }
 
-void WavePlayInterface::onPacketReceived(const void* data, size_t) {
-	const notification_message_t* message = reinterpret_cast<const notification_message_t*>(data);
-	auto it = outputInterfaces.find(message->outputInstance);
+void WavePlayInterface::onPacketReceived(const void* data, size_t size) {
+	QJsonParseError error;
+	QJsonDocument jsonDocument = QJsonDocument::fromJson(QByteArray((const char*) data, size), &error);
+	if(jsonDocument.isNull()) {
+		qDebug("Null document: %s", error.errorString().toUtf8().constData());
+	}
+
+	QJsonObject json = jsonDocument.object();
+
+	// qDebug("Received message %s", QJsonDocument(json).toJson(QJsonDocument::Indented).constData());
+
+	int outputInstance = json["instance"].toInt();
+
+	auto it = outputInterfaces.find(outputInstance);
 	if(it != outputInterfaces.end()) {
-		it->second->messageReiceved(*message);
+		it->second->messageReiceved(json);
 	} else {
-		qDebug("Bad instance %d", message->outputInstance);
+		qDebug("Bad instance %d", outputInstance);
 	}
 }

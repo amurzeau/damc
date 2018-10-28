@@ -1,7 +1,7 @@
 #ifndef WAVEPLAYINTERFACE_H
 #define WAVEPLAYINTERFACE_H
 
-#include "MessageInterface.h"
+#include <QJsonObject>
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
@@ -16,7 +16,7 @@ class WavePlayInterface : public QObject {
 public:
 	WavePlayInterface();
 
-	void sendMessage(struct control_message_t message);
+	void sendMessage(const QJsonObject& message);
 	void addOutputInterface(int index, WavePlayOutputInterface* outputInterface) {
 		outputInterfaces[index] = outputInterface;
 	}
