@@ -82,14 +82,7 @@
        </widget>
       </item>
       <item row="5" column="0" colspan="2">
-       <widget class="BodePlot" name="bodePlot">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-       </widget>
+       <widget class="BodePlot" name="bodePlot"/>
       </item>
       <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="qSpinBox">

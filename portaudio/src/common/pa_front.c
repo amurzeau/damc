@@ -149,6 +149,7 @@ void PaUtil_SetLastHostErrorInfo( PaHostApiTypeId hostApiType, long errorCode,
     lastHostErrorInfo_.errorCode = errorCode;
 
     strncpy( lastHostErrorText_, errorText, PA_LAST_HOST_ERROR_TEXT_LENGTH_ );
+	printf("Error: %d: %s\n", errorCode, errorText);
 }
 
 

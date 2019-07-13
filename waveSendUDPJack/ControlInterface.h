@@ -3,9 +3,10 @@
 
 #include "ControlClient.h"
 #include "ControlServer.h"
-#include "OutputInstance.h"
+#include "OutputInstance/OutputInstance.h"
+#include "json.h"
+#include <map>
 #include <memory>
-#include <vector>
 
 class ControlInterface {
 public:
@@ -14,13 +15,15 @@ public:
 
 	int init(const char* controlIp, int controlPort);
 
-	void addLocalOutput();
-	void addRemoteOutput(const char* ip, int port);
-
 	void run();
+	void stop();
 
 	void loadConfig();
 	void saveConfig();
+
+	std::map<int, std::unique_ptr<OutputInstance>>::iterator addOutputInstance(
+	    const nlohmann::json& outputInstancesJson);
+	void removeOutputInstance(std::map<int, std::unique_ptr<OutputInstance>>::iterator index);
 
 protected:
 	static void onNewClientStatic(void* arg, ControlClient* client);
@@ -30,9 +33,9 @@ protected:
 	void messageProcessor(const void* data, size_t size);
 
 private:
-	int numChannels;
+	int nextInstanceIndex;
 	int numEq;
-	std::vector<std::unique_ptr<OutputInstance>> outputs;
+	std::map<int, std::unique_ptr<OutputInstance>> outputs;
 	ControlServer controlServer;
 	std::string saveFileName;
 };

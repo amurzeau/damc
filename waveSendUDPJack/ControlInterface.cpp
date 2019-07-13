@@ -1,12 +1,17 @@
 #include "ControlInterface.h"
-#include "json.h"
 #include <errno.h>
 #include <stdio.h>
 #include <uv.h>
 
 #include <string.h>
 
-ControlInterface::ControlInterface(const char* argv0) : numChannels(2), numEq(4) {
+#include "OutputInstance/DeviceInputInstance.h"
+#include "OutputInstance/DeviceOutputInstance.h"
+#include "OutputInstance/LoopbackOutputInstance.h"
+#include "OutputInstance/RemoteInputInstance.h"
+#include "OutputInstance/RemoteOutputInstance.h"
+
+ControlInterface::ControlInterface(const char* argv0) : nextInstanceIndex(0), numEq(6) {
 	char basePath[260];
 
 	size_t n = sizeof(basePath);
@@ -57,11 +62,7 @@ void ControlInterface::loadConfig() {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 
 		for(const nlohmann::json& outputInstancesJson : jsonConfig.at("outputInstances")) {
-			int index = outputInstancesJson.at("instance").get<int>();
-
-			if(index >= 0 && index < (int) outputs.size()) {
-				outputs[index]->setParameters(outputInstancesJson);
-			}
+			addOutputInstance(outputInstancesJson);
 		}
 	} catch(const nlohmann::json::exception& e) {
 		printf("Exception while parsing config: %s\n", e.what());
@@ -74,8 +75,8 @@ void ControlInterface::saveConfig() {
 	nlohmann::json jsonConfigToSave = nlohmann::json::object();
 	nlohmann::json outputInstancesJson = nlohmann::json::array();
 
-	for(std::unique_ptr<OutputInstance>& output : outputs) {
-		outputInstancesJson.push_back(output->getParameters());
+	for(auto& output : outputs) {
+		outputInstancesJson.push_back(output.second->getParameters());
 	}
 
 	jsonConfigToSave["outputInstances"] = outputInstancesJson;
@@ -91,26 +92,74 @@ void ControlInterface::saveConfig() {
 	fclose(file.release());
 }
 
+std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOutputInstance(
+    const nlohmann::json& outputInstancesJson) {
+	int type = outputInstancesJson.value("type", -1);
+	int instance = outputInstancesJson.value("instance", -1);
+	int numChannel;
+	std::unique_ptr<OutputInstance> outputInstance;
+
+	switch(type) {
+		case OutputInstance::Loopback:
+			outputInstance.reset(new OutputInstance(new LoopbackOutputInstance));
+			break;
+		case OutputInstance::RemoteOutput:
+			outputInstance.reset(new OutputInstance(new RemoteOutputInstance));
+			break;
+		case OutputInstance::RemoteInput:
+			outputInstance.reset(new OutputInstance(new RemoteInputInstance));
+			break;
+		case OutputInstance::DeviceOutput:
+			outputInstance.reset(new OutputInstance(new DeviceOutputInstance));
+			break;
+		case OutputInstance::DeviceInput:
+			outputInstance.reset(new OutputInstance(new DeviceInputInstance));
+			break;
+		default:
+			printf("Bad type %d\n", type);
+			return outputs.end();
+	}
+
+	auto numChannelElement = outputInstancesJson.find("numChannels");
+	if(numChannelElement != outputInstancesJson.end()) {
+		numChannel = numChannelElement.value().get<int>();
+	} else {
+		printf("Missing numChannel configuration, using 2\n");
+		numChannel = 2;
+	}
+
+	if(instance == -1)
+		instance = nextInstanceIndex;
+	else if(nextInstanceIndex < instance)
+		nextInstanceIndex = instance;
+
+	nextInstanceIndex++;
+	outputInstance->init(&controlServer, type, instance, numChannel, outputInstancesJson);
+
+	return outputs.emplace(std::make_pair(instance, std::move(outputInstance))).first;
+}
+
+void ControlInterface::removeOutputInstance(std::map<int, std::unique_ptr<OutputInstance>>::iterator index) {
+	index->second->stop();
+	outputs.erase(index);
+}
+
 int ControlInterface::init(const char* controlIp, int controlPort) {
 	controlServer.init(controlIp, controlPort, &messageProcessorStatic, &onNewClientStatic, this);
 
 	return 0;
 }
 
-void ControlInterface::addLocalOutput() {
-	outputs.emplace_back(new OutputInstance);
-	OutputInstance* output = outputs.back().get();
-	output->init(&controlServer, OutputInstance::Local, outputs.size() - 1, numChannels, numEq, nullptr, 0);
-}
-
-void ControlInterface::addRemoteOutput(const char* ip, int port) {
-	outputs.emplace_back(new OutputInstance);
-	OutputInstance* output = outputs.back().get();
-	output->init(&controlServer, OutputInstance::Remote, outputs.size() - 1, numChannels, numEq, ip, port);
-}
-
 void ControlInterface::run() {
 	controlServer.run();
+}
+
+void ControlInterface::stop() {
+	controlServer.stop();
+
+	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {
+		output.second->stop();
+	}
 }
 
 void ControlInterface::onNewClientStatic(void* arg, ControlClient* client) {
@@ -120,14 +169,18 @@ void ControlInterface::onNewClientStatic(void* arg, ControlClient* client) {
 
 void ControlInterface::onNewClient(ControlClient* client) {
 	nlohmann::json json = {
-	    {"instance", -1}, {"numOutputInstances", outputs.size()}, {"numChannels", numChannels}, {"numEq", numEq}};
+	    {"instance", -1}, {"operation", "outputList"}, {"numOutputInstances", outputs.size()}, {"numEq", numEq}};
 
 	std::string jsonStr = json.dump();
 
 	client->sendMessage(jsonStr.c_str(), jsonStr.size());
 
-	for(std::unique_ptr<OutputInstance>& output : outputs) {
-		std::string jsonStr = output->getParameters().dump();
+	for(auto& output : outputs) {
+		nlohmann::json json = {{"instance", -1}, {"operation", "add"}, {"target", output.first}};
+		std::string jsonStr = json.dump();
+		client->sendMessage(jsonStr.c_str(), jsonStr.size());
+
+		jsonStr = output.second->getParameters().dump();
 		client->sendMessage(jsonStr.c_str(), jsonStr.size());
 	}
 }
@@ -144,7 +197,48 @@ void ControlInterface::messageProcessor(const void* data, size_t size) {
 		json = nlohmann::json::parse((const char*) data, (const char*) data + size);
 		int outputInstance = json.at("instance").get<int>();
 
-		if(outputInstance >= 0 && outputInstance < (int) outputs.size()) {
+		if(outputInstance == -1) {
+			printf("Received command: %s\n", json.dump().c_str());
+			std::string operation = json.value("operation", "none");
+			int target = json.value("target", -1);
+
+			if(operation == "add") {
+				auto it = addOutputInstance(json);
+
+				if(it != outputs.end()) {
+					json["target"] = it->first;
+					std::string jsonStr = json.dump();
+					controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
+
+					jsonStr = it->second->getParameters().dump();
+					controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
+					printf("Added interface %d\n", it->first);
+					saveConfig();
+				}
+			} else if(operation == "remove") {
+				auto it = outputs.find(target);
+				if(it == outputs.end()) {
+					printf("Bad delete target %d\n", target);
+				} else {
+					removeOutputInstance(it);
+
+					std::string jsonStr = json.dump();
+					controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
+					printf("Removed interface %d\n", target);
+					saveConfig();
+				}
+			} else if(operation == "query") {
+				nlohmann::json json = {
+				    {"instance", -1},
+				    {"operation", "queryResult"},
+				    {"deviceList", DeviceOutputInstance::getDeviceList()},
+				    {"typeList",
+				     nlohmann::json::array(
+				         {"Loopback", "RemoteOutput", "RemoteInput", "DeviceOutput", "DeviceInput"})}};
+				std::string jsonStr = json.dump();
+				controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
+			}
+		} else if(outputs.count(outputInstance) > 0) {
 			outputs[outputInstance]->setParameters(json);
 
 			std::string jsonStr = json.dump();

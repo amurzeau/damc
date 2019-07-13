@@ -1,14 +1,11 @@
 #ifndef BODEPLOT_H
 #define BODEPLOT_H
 
-#include "../waveSendUDPJack/EqFilter.h"
+#include "../waveSendUDPJack/Filter/EqFilter.h"
+#include "BodePlotWidget.h"
 #include <complex>
-#include <qwt_plot.h>
 
-class QwtPlotCurve;
-class QwtPlotMarker;
-
-class BodePlot : public QwtPlot {
+class BodePlot : public BodePlotWidget {
 	Q_OBJECT
 public:
 	BodePlot(QWidget* parent);
@@ -22,11 +19,9 @@ public Q_SLOTS:
 
 private:
 	void showData(const double* frequency, const double* amplitude, const double* phase, int count);
-	void showPeak(double freq, double amplitude);
-	void show3dB(double freq);
 
-	QwtPlotCurve* d_curve1;
-	QwtPlotCurve* d_curve2;
+	PlotCurve d_curve1;
+	PlotCurve d_curve2;
 
 	std::vector<EqFilter> eqFilters;
 };

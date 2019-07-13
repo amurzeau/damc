@@ -1496,7 +1496,10 @@ static PaWinWdmPin* PinNew(PaWinWdmFilter* parentFilter, unsigned long pinId, Pa
     PA_DEBUG(("PinNew: Checking %u no of dataranges...\n", pin->dataRangesItem->Count));
     for( i = 0; i < pin->dataRangesItem->Count; i++)
     {
-        PA_DEBUG(("PinNew: DR major format %x\n",*(unsigned long*)(&(dataRange->MajorFormat))));
+        PA_DEBUG(("PinNew: DR major format %x, SubFormat %x, Specifier %x\n",
+		          *(unsigned long*)(&(dataRange->MajorFormat)),
+		          *(unsigned long*)(&(dataRange->SubFormat)),
+		          *(unsigned long*)(&(dataRange->Specifier))));
         /* Check that subformat is WAVEFORMATEX, PCM or WILDCARD */
         if( IS_VALID_WAVEFORMATEX_GUID(&dataRange->SubFormat) ||
             IsEqualGUID(&dataRange->SubFormat, &KSDATAFORMAT_SUBTYPE_PCM) ||

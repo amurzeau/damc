@@ -1,31 +1,38 @@
 #include "ControlInterface.h"
+#include "portaudio.h"
 #include <string.h>
 
+void onTtyAllocBuffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
+	buf->base = new char[suggested_size];
+	buf->len = suggested_size;
+}
+void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
+	ControlInterface* controlInterface = (ControlInterface*) stream->data;
+	delete[] static_cast<char*>(buf->base);
+
+	printf("Stopping\n");
+
+	controlInterface->stop();
+
+	uv_read_stop(stream);
+	uv_close((uv_handle_t*) stream, nullptr);
+}
+
 int main(int argc, char* argv[]) {
-	const char* ip = NULL;
-	int port = 2305;
+	uv_tty_t ttyRead;
 
-	for(int i = 1; i < argc; i++) {
-		if(!strcmp(argv[i], "--port") && (i + 1) < argc) {
-			port = atoi(argv[i + 1]);
-			i++;
-		} else {
-			ip = argv[i];
-		}
-	}
-
-	if(ip == NULL) {
-		printf("Usage example: %s --port 2305 192.168.1.10\n", argv[0]);
-		return 1;
-	}
-
+	Pa_Initialize();
 	ControlInterface controlInterface(argv[0]);
 
 	controlInterface.init("127.0.0.1", 2306);
-	controlInterface.addRemoteOutput(ip, port);
-	controlInterface.addLocalOutput();
 
 	controlInterface.loadConfig();
+
+	uv_tty_init(uv_default_loop(), &ttyRead, 0, 1);
+	ttyRead.data = &controlInterface;
+	uv_read_start((uv_stream_t*) &ttyRead, &onTtyAllocBuffer, &onTtyRead);
+
+	printf("Press enter to stop\n");
 
 	controlInterface.run();
 

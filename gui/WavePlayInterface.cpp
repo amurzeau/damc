@@ -66,7 +66,7 @@ void WavePlayInterface::onReconnect() {
 
 void WavePlayInterface::onPacketReceived(const void* data, size_t size) {
 	QJsonParseError error;
-	QJsonDocument jsonDocument = QJsonDocument::fromJson(QByteArray((const char*) data, size), &error);
+	QJsonDocument jsonDocument = QJsonDocument::fromJson(QByteArray::fromRawData((const char*) data, size), &error);
 	if(jsonDocument.isNull()) {
 		qDebug("Null document: %s", error.errorString().toUtf8().constData());
 	}

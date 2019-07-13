@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "portaudio.h"
+#include <limits.h>
 
 #define NUM_SECONDS   (5)
 #define SAMPLE_RATE   (44100)
@@ -74,7 +75,7 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
                             void *userData )
 {
     paTestData *data = (paTestData*)userData;
-    float *out = (float*)outputBuffer;
+    int *out = (int*)outputBuffer;
     unsigned long i;
 
     (void) timeInfo; /* Prevent unused variable warnings. */
@@ -83,8 +84,8 @@ static int patestCallback( const void *inputBuffer, void *outputBuffer,
     
     for( i=0; i<framesPerBuffer; i++ )
     {
-        *out++ = data->sine[data->left_phase];  /* left */
-        *out++ = data->sine[data->right_phase];  /* right */
+        *out++ = data->sine[data->left_phase] * INT_MAX;  /* left */
+        *out++ = data->sine[data->right_phase] * INT_MAX;  /* right */
         data->left_phase += 1;
         if( data->left_phase >= TABLE_SIZE ) data->left_phase -= TABLE_SIZE;
         data->right_phase += 3; /* higher pitch so we can distinguish left and right. */
@@ -104,8 +105,7 @@ static void StreamFinished( void* userData )
 }
 
 /*******************************************************************/
-int main(void);
-int main(void)
+int main(int argc, char** argv)
 {
     PaStreamParameters outputParameters;
     PaStream *stream;
@@ -125,13 +125,18 @@ int main(void)
     err = Pa_Initialize();
     if( err != paNoError ) goto error;
 
-    outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
+	if(argc < 2)
+		outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
+	else
+		outputParameters.device = atoi(argv[1]);
+
+	printf("Using device %d\n", outputParameters.device);
     if (outputParameters.device == paNoDevice) {
       fprintf(stderr,"Error: No default output device.\n");
       goto error;
     }
     outputParameters.channelCount = 2;       /* stereo output */
-    outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+    outputParameters.sampleFormat = paInt32; /* 32 bit floating point output */
     outputParameters.suggestedLatency = Pa_GetDeviceInfo( outputParameters.device )->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 

@@ -17,6 +17,7 @@ public:
 	void init(
 	    const char* ip, uint16_t port, PacketCallback packetCallback, NewClientCallback newClientCallback, void* arg);
 	void run();
+	void stop();
 
 	void sendMessage(const void* data, size_t size);
 

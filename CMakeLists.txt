@@ -1,17 +1,26 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 project(waveOverUDP)
 
 set(CMAKE_CXX_STANDARD 11)
+
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 get_filename_component(BUILD_DIR_NAME ${CMAKE_BINARY_DIR} NAME)
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/../${BUILD_DIR_NAME}-bin")
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/../${BUILD_DIR_NAME}-bin")
 
-set(CMAKE_POSITION_INDEPENDENT_CODE False)
+set(CMAKE_POSITION_INDEPENDENT_CODE True)
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fvisibility=hidden")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -Wall -fvisibility=hidden")
+if(MINGW)
+	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fvisibility=hidden")
+	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
+	#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -Wall -fvisibility=hidden")
+
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -mfpmath=sse -ffast-math -Wall")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse -mfpmath=sse -ffast-math -Wall")
+endif()
+
+
 
 if(UNIX)
 	add_executable(wavePlayUDP wavePlayUDP.cpp filter.h filter_fir2.h Logger.cpp Logger.h)
@@ -27,4 +36,15 @@ if(UNIX)
 	target_link_libraries(wavePlayUDPJack jack)
 endif()
 
+add_subdirectory(portaudio)
+add_subdirectory(libuv)
+
 add_subdirectory(waveSendUDPJack)
+add_subdirectory(delayControl)
+add_subdirectory(parseWave)
+add_subdirectory(zlib)
+add_subdirectory(libmysofa)
+target_compile_definitions(mysofa PUBLIC VDEBUG)
+
+add_subdirectory(binauralSynthesis)
+add_subdirectory(gui)

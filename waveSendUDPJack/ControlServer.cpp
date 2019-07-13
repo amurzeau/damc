@@ -31,6 +31,13 @@ void ControlServer::run() {
 	uv_run(loop, UV_RUN_DEFAULT);
 }
 
+void ControlServer::stop() {
+	uv_close((uv_handle_t*) &server, nullptr);
+	for(ControlClient* client : clients) {
+		client->close();
+	}
+}
+
 void ControlServer::sendMessage(const void* data, size_t size) {
 	for(ControlClient* client : clients) {
 		client->sendMessage(data, size);
