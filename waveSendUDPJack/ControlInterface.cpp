@@ -66,6 +66,7 @@ void ControlInterface::loadConfig() {
 		}
 	} catch(const nlohmann::json::exception& e) {
 		printf("Exception while parsing config: %s\n", e.what());
+		printf("json: %s\n", jsonData.c_str());
 	} catch(...) {
 		printf("Exception while parsing config\n");
 	}
@@ -75,21 +76,27 @@ void ControlInterface::saveConfig() {
 	nlohmann::json jsonConfigToSave = nlohmann::json::object();
 	nlohmann::json outputInstancesJson = nlohmann::json::array();
 
-	for(auto& output : outputs) {
-		outputInstancesJson.push_back(output.second->getParameters());
+	try {
+		for(auto& output : outputs) {
+			outputInstancesJson.push_back(output.second->getParameters());
+		}
+
+		jsonConfigToSave["outputInstances"] = outputInstancesJson;
+
+		std::string jsonData = jsonConfigToSave.dump(4);
+		std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
+
+		file.reset(fopen(saveFileName.c_str(), "wb"));
+		if(!file) {
+			printf("Can't open save file %s: %s(%d)\n", saveFileName.c_str(), strerror(errno), errno);
+		}
+		fwrite(jsonData.c_str(), 1, jsonData.size(), file.get());
+		fclose(file.release());
+	} catch(const nlohmann::json::exception& e) {
+		printf("Exception while saving config: %s\n", e.what());
+	} catch(...) {
+		printf("Exception while saving config\n");
 	}
-
-	jsonConfigToSave["outputInstances"] = outputInstancesJson;
-
-	std::string jsonData = jsonConfigToSave.dump(4);
-	std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
-
-	file.reset(fopen(saveFileName.c_str(), "wb"));
-	if(!file) {
-		printf("Can't open save file %s: %s(%d)\n", saveFileName.c_str(), strerror(errno), errno);
-	}
-	fwrite(jsonData.c_str(), 1, jsonData.size(), file.get());
-	fclose(file.release());
 }
 
 std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOutputInstance(
