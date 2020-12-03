@@ -20,7 +20,29 @@ if(MINGW)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse -mfpmath=sse -ffast-math -Wall")
 endif()
 
+if(WIN32)
+	find_library(JACK_LIBRARY
+		NAMES jack libjack libjack.lib
+		NAMES_PER_DIR
+		PATHS "C:/Program Files (x86)/JACK2/lib" "D:/Programmes/Musique/Jack/lib"
+	)
 
+	find_file(JACK_INCLUDE_FILE
+		NAMES jack.h
+		PATHS jack/ "C:/Program Files (x86)/JACK2/include/jack" "D:/Programmes/Musique/Jack/includes/jack"
+	)
+
+	if(JACK_INCLUDE_FILE)
+		get_filename_component(JACK_BASE_INCLUDE_DIR ${JACK_INCLUDE_FILE} DIRECTORY)
+		set(JACK_INCLUDE_DIR ${JACK_BASE_INCLUDE_DIR}/..)
+	endif()
+
+	message(STATUS "Jack found at ${JACK_INCLUDE_DIR} / ${JACK_LIBRARY} / ${JACK_LIBRARY_DLL}")
+	add_library(jack SHARED IMPORTED GLOBAL)
+	target_include_directories(jack INTERFACE ${JACK_INCLUDE_DIR})
+	set_property(TARGET jack PROPERTY IMPORTED_LOCATION ${JACK_LIBRARY})
+	set_property(TARGET jack PROPERTY IMPORTED_IMPLIB ${JACK_LIBRARY})
+endif()
 
 if(UNIX)
 	add_executable(wavePlayUDP wavePlayUDP.cpp filter.h filter_fir2.h Logger.cpp Logger.h)
