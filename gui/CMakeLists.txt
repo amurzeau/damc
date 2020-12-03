@@ -51,15 +51,8 @@ set(SOURCES
 	BodePlotWidget.cpp
 )
 
-#find_package(Qwt REQUIRED)
-
-find_package(Qt5 QUIET REQUIRED COMPONENTS Core Gui Widgets Network)
-if(NOT Qt5_FOUND)
-	message(STATUS "Using Qt4")
-	find_package(Qt4 4.8 REQUIRED QtCore QtGui QtNetwork)
-else()
-	message(STATUS "Using Qt5")
-endif()
+find_package(Qt5 QUIET COMPONENTS Core Gui Widgets Network)
+if(Qt5_FOUND)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -80,3 +73,40 @@ endif()
 
 install(TARGETS ${TARGET_NAME} DESTINATION ./)
 
+
+
+get_target_property(_qt5_qmake_location Qt5::qmake IMPORTED_LOCATION)
+get_filename_component(_qt_bin_dir "${_qt5_qmake_location}" DIRECTORY)
+set(QT5_WINDEPLOYQT "${_qt_bin_dir}/windeployqt.exe")
+
+if(EXISTS ${QT5_WINDEPLOYQT})
+	# execute windeployqt in a tmp directory after build
+	add_custom_command(TARGET ${TARGET_NAME}
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
+		COMMAND set PATH=${_qt_bin_dir}$<SEMICOLON>%PATH%
+		COMMAND "${QT5_WINDEPLOYQT}"
+			--dir "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
+			--no-quick-import
+			--no-translations
+			--no-compiler-runtime
+			--no-opengl-sw
+			--no-virtualkeyboard
+			--no-webkit2
+			--no-angle
+			--no-svg
+			"$<TARGET_FILE:${TARGET_NAME}>"
+		USES_TERMINAL
+	)
+
+	# copy deployment directory during installation
+	install(
+		DIRECTORY
+		"${CMAKE_CURRENT_BINARY_DIR}/windeployqt/"
+		DESTINATION ./
+		COMPONENT bin-deps
+	)
+endif()
+
+
+endif()
