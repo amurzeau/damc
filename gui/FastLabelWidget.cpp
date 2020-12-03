@@ -9,7 +9,7 @@ void FastLabelWidget::setTextSize(int numCharacter, int flags) {
 	for(int i = 0; i < numCharacter; i++)
 		data.append('0');
 
-	setMinimumWidth(fontMetrics().width(data));
+	setMinimumWidth(fontMetrics().horizontalAdvance(data));
 	setMinimumHeight(fontMetrics().height());
 	setMaximumSize(minimumSize());
 	setAutoFillBackground(true);

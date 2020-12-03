@@ -1,7 +1,7 @@
 #ifndef LEVELMETERWIDGET_H
 #define LEVELMETERWIDGET_H
 
-#include <QTime>
+#include <QElapsedTimer>
 #include <QTimer>
 #include <QWidget>
 
@@ -40,7 +40,7 @@ private:
 	/**
 	 * Time at which m_peakHoldLevel was last changed.
 	 */
-	QTime m_peakHoldLevelChanged;
+	QElapsedTimer m_peakHoldLevelChanged;
 
 	QTimer* m_redrawTimer;
 };
