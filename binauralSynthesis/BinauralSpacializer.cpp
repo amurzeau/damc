@@ -1,4 +1,6 @@
 #include "BinauralSpacializer.h"
+#include "DiscreteFourierTransform.h"
+#include <map>
 #include <stdio.h>
 #include <string.h>
 #include <string>
@@ -21,6 +23,8 @@ int openJackPort(jack_client_t* client, jack_port_t** ports, size_t number, Jack
 		if(ports[i] == 0) {
 			printf("cannot register port \"%s\"!\n", name);
 			return -1;
+		} else {
+			printf("Port %s at %p\n", name, ports[i]);
 		}
 	}
 
@@ -29,7 +33,7 @@ int openJackPort(jack_client_t* client, jack_port_t** ports, size_t number, Jack
 
 BinauralSpacializer::BinauralSpacializer() : mysofaHandle(nullptr, &mysofa_close) {}
 
-int BinauralSpacializer::start(unsigned int numChannels, const std::string& pulseFileName) {
+int BinauralSpacializer::start(const std::string& pulseFileName, const std::string& speakerPlacement) {
 	jack_status_t status;
 	std::string clientName = "binauralSpacializer";
 
@@ -63,7 +67,8 @@ int BinauralSpacializer::start(unsigned int numChannels, const std::string& puls
 		printf(" %s: %s\n", attribute->name, attribute->value);
 	}
 
-	fillTransforms(mysofaHandle.get(), filterLength, numChannels);
+	size_t numChannels;
+	fillTransforms(mysofaHandle.get(), filterLength, &numChannels, speakerPlacement);
 
 	inputPorts.resize(numChannels);
 	if(openJackPort(client, &inputPorts[0], inputPorts.size(), JackPortIsInput) < 0)
@@ -94,13 +99,13 @@ int BinauralSpacializer::processSamplesStatic(jack_nframes_t nframes, void* arg)
 }
 
 int BinauralSpacializer::processSamples(jack_nframes_t nframes) {
-	jack_default_audio_sample_t* out[outputPorts.size()];
+	jack_default_audio_sample_t* out[32];
 	float buffer[nframes];
 	size_t inputNumber = std::min(inputPorts.size(), transforms.size());
 
 	for(size_t i = 0; i < outputPorts.size(); i++) {
 		out[i] = (jack_default_audio_sample_t*) jack_port_get_buffer(outputPorts[i], nframes);
-		memset(out[i], 0, nframes * sizeof(out[i][0]));
+		std::fill_n(out[i], nframes, 0.0f);
 	}
 
 	for(size_t i = 0; i < inputNumber; i++) {
@@ -119,45 +124,59 @@ int BinauralSpacializer::processSamples(jack_nframes_t nframes) {
 	return 0;
 }
 
-void BinauralSpacializer::fillTransforms(struct MYSOFA_EASY* mysofaHandle, int filterLength, size_t numChannels) {
+void BinauralSpacializer::fillTransforms(struct MYSOFA_EASY* mysofaHandle,
+                                         int filterLength,
+                                         size_t* numChannels,
+                                         const std::string& speakerPlacement) {
 	struct Position {
 		float x, y, z;
 	};
 
-	std::vector<Position> channelsPosition(numChannels);
 	std::vector<float> left, right;
 	float delayLeft, delayRight;
 
-	static const std::vector<std::vector<std::pair<float, float>>> speakerConfigurations = {
-	    {{0, 0}},                                                                     // 1.0
-	    {{30, 0}, {-30, 0}},                                                          // 2.0
-	    {{30, 0}, {-30, 0}, {0, 0}},                                                  // 2.1 or 3.0
-	    {{30, 0}, {-30, 0}, {90, 0}, {-90, 0}},                                       // 4.0
-	    {{30, 0}, {-30, 0}, {0, 0}, {90, 0}, {-90, 0}},                               // 5.0 or 4.1
-	    {{30, 0}, {-30, 0}, {0, 0}, {0, 0}, {110, 0}, {-110, 0}},                     // 5.1
-	    {{30, 0}, {-30, 0}, {0, 0}, {0, 0}, {180, 0}, {90, 0}, {-90, 0}},             // 6.1
-	    {{30, 0}, {-30, 0}, {0, 0}, {0, 0}, {140, 0}, {-140, 0}, {90, 0}, {-90, 0}},  // 7.1
-	    //{{51, 24}, {-51, 24}, {0, 0}, {0, 0}, {180, 55}, {0, -55}, {129, -24}, {-129, -24}},  // 3D7.1
+	static const std::map<std::string, std::vector<std::pair<float, float>>> speakerConfigurations = {
+	    {"1.0", {{0, 0}}},                                                                               // 1.0
+	    {"2.0", {{30, 0}, {-30, 0}}},                                                                    // 2.0
+	    {"2.1", {{30, 0}, {-30, 0}, {0, 0}}},                                                            // 2.1 or 3.0
+	    {"4.0", {{30, 0}, {-30, 0}, {90, 0}, {-90, 0}}},                                                 // 4.0
+	    {"5.0", {{30, 0}, {-30, 0}, {0, 0}, {90, 0}, {-90, 0}}},                                         // 5.0 or 4.1
+	    {"5.1", {{30, 0}, {-30, 0}, {0, 0}, {0, 0}, {110, 0}, {-110, 0}}},                               // 5.1
+	    {"6.1", {{30, 0}, {-30, 0}, {0, 0}, {0, 0}, {180, 0}, {90, 0}, {-90, 0}}},                       // 6.1
+	    {"7.1", {{30, 0}, {-30, 0}, {0, 0}, {0, 0}, {150, 0}, {-150, 0}, {90, 0}, {-90, 0}}},            // 7.1
+	    {"3D7.1", {{51, 24}, {-51, 24}, {0, 0}, {0, 0}, {180, 55}, {0, -55}, {129, -24}, {-129, -24}}},  // 3D7.1
 	};
 
-	const std::vector<std::pair<float, float>>& speakerConfiguration = speakerConfigurations[numChannels - 1];
+	const std::vector<std::pair<float, float>>* speakerConfiguration = nullptr;
 
-	if(speakerConfiguration.size() != numChannels) {
-		printf("Bad channel configuration number %d for numChannels %d, should be equal !\n",
-		       (int) speakerConfiguration.size(),
-		       (int) numChannels);
+	auto it = speakerConfigurations.find(speakerPlacement);
+	if(it != speakerConfigurations.end()) {
+		speakerConfiguration = &it->second;
+		printf("Using speaker configuration %s with %d channels\n", it->first.c_str(), it->second.size());
 	}
 
-	printf("Channel configuration: %d channels, filterLength: %d\n", (int) speakerConfiguration.size(), filterLength);
-	for(std::pair<float, float> angles : speakerConfiguration)
+	if(speakerConfiguration == nullptr) {
+		printf("No speaker placement defined, available:\n");
+		for(const std::pair<std::string, std::vector<std::pair<float, float>>>& item : speakerConfigurations) {
+			printf(" - %s: %d channels\n", item.first.c_str(), (int) item.second.size());
+		}
+		auto firstIt = speakerConfigurations.begin();
+		speakerConfiguration = &firstIt->second;
+		printf("Using speaker configuration %s with %d channels\n", firstIt->first.c_str(), firstIt->second.size());
+	}
+
+	*numChannels = speakerConfiguration->size();
+
+	printf("Channel configuration: %d channels, filterLength: %d\n", (int) speakerConfiguration->size(), filterLength);
+	for(std::pair<float, float> angles : *speakerConfiguration)
 		printf(" - azimut: %.3f deg, elevation: %.3f def\n", angles.first, angles.second);
 
 	left.resize(filterLength);
 	right.resize(filterLength);
 
-	transforms.resize(speakerConfiguration.size());
-	for(size_t i = 0; i < speakerConfiguration.size(); i++) {
-		float pos[3] = {speakerConfiguration[i].first, speakerConfiguration[i].second, 1.95};
+	transforms.resize(speakerConfiguration->size());
+	for(size_t i = 0; i < speakerConfiguration->size(); i++) {
+		float pos[3] = {(*speakerConfiguration)[i].first, (*speakerConfiguration)[i].second, 1.95};
 
 		// convert to cartesian coords
 		mysofa_s2c(pos);
@@ -172,5 +191,76 @@ void BinauralSpacializer::fillTransforms(struct MYSOFA_EASY* mysofaHandle, int f
 		transforms[i].ears[1].hrtf.setConvolver(right.data(), right.size());
 		transforms[i].ears[1].delay.init();
 		transforms[i].ears[1].delay.setParameters(delayRight * sampleRate);
+	}
+
+	normalizeGains();
+}
+
+// void BinauralSpacializer::normalizeGains() {
+//	// Normalize gain at 1kHz
+//	float maxGain = 0;
+//	int i = 0;
+
+//	for(const auto& transform : transforms) {
+//		int earIndex = 0;
+
+//		for(const auto& ear : transform.ears) {
+//			float gain = ear.hrtf.getGain(1000, sampleRate);
+//			printf("Gain at position %d:%d : %.3f\n", i, earIndex, gain);
+//			if(maxGain < gain)
+//				maxGain = gain;
+//			earIndex++;
+//		}
+//		i++;
+//	}
+//	for(auto& transform : transforms) {
+//		for(auto& ear : transform.ears) {
+//			ear.hrtf.normalize(1.0f / maxGain);
+//		}
+//	}
+//}
+
+void BinauralSpacializer::normalizeGains() {
+	std::vector<std::complex<float>> totalFreqDomain;
+	std::vector<float> compensationFilter;
+	size_t totalNumber = 0;
+
+	totalFreqDomain.resize(transforms[0].ears[0].hrtf.getData().size(), 0);
+
+	for(const auto& transform : transforms) {
+		for(const auto& ear : transform.ears) {
+			const std::vector<float>& data = ear.hrtf.getData();
+			std::vector<std::complex<float>> freqDomain;
+
+			freqDomain.resize(data.size());
+
+			DiscreteFourierTransform::dft(data.size(), data.data(), freqDomain.data());
+			for(size_t i = 0; i < data.size(); i++) {
+				totalFreqDomain[i] = std::max(totalFreqDomain[i].real(), 20 * log10f(std::abs(freqDomain[i])));
+			}
+			totalNumber++;
+		}
+	}
+	for(size_t i = 0; i < totalFreqDomain.size(); i++) {
+		totalFreqDomain[i] /= totalNumber;  // finish average
+		totalFreqDomain[i] = -totalFreqDomain[i];
+		if(totalFreqDomain[i] == INFINITY)
+			totalFreqDomain[i] = -INFINITY;
+		else if(totalFreqDomain[i].real() > 20)
+			totalFreqDomain[i] = 20;
+		// printf("Coef: %d: %.3f\n", 48000 * i / totalFreqDomain.size(), totalFreqDomain[i].real());
+		totalFreqDomain[i] = std::complex<float>(/*pow(10, totalFreqDomain[i].real() / 20.f)*/ 1, 0);
+	}
+
+	compensationFilter.resize(totalFreqDomain.size());
+	DiscreteFourierTransform::idft(totalFreqDomain.size(), totalFreqDomain.data(), compensationFilter.data());
+
+	for(size_t i = 0; i < compensationFilter.size(); i++) {
+		compensationFilter[i] /= compensationFilter.size();  // finish average
+	}
+	for(auto& transform : transforms) {
+		for(auto& ear : transform.ears) {
+			ear.hrtf.normalize(compensationFilter.data());
+		}
 	}
 }

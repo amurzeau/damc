@@ -46,5 +46,10 @@ add_subdirectory(zlib)
 add_subdirectory(libmysofa)
 target_compile_definitions(mysofa PUBLIC VDEBUG)
 
+option (BUILD_TESTS "Build tests" OFF)
+set (DISABLE_FORTRAN ON)
+set (ENABLE_FLOAT ON)
+add_subdirectory(fftw-3.3.8)
+
 add_subdirectory(binauralSynthesis)
 add_subdirectory(gui)

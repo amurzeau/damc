@@ -15,14 +15,18 @@
 class BinauralSpacializer {
 public:
 	BinauralSpacializer();
-	int start(unsigned int numChannels, const std::string& pulseFileName);
+	int start(const std::string& pulseFileName, const std::string& speakerPlacement);
 	void stop();
 
 protected:
 	static int processSamplesStatic(jack_nframes_t nframes, void* arg);
 	int processSamples(jack_nframes_t nframes);
 
-	void fillTransforms(struct MYSOFA_EASY* mysofaHandle, int filterLength, size_t numChannels);
+	void fillTransforms(struct MYSOFA_EASY* mysofaHandle,
+	                    int filterLength,
+	                    size_t* numChannels,
+	                    const std::string& speakerPlacement);
+	void normalizeGains();
 
 private:
 	struct SourceToEarTransformation {
