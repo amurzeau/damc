@@ -13,6 +13,7 @@ public:
 	~WavePlayOutputInterface();
 
 	void setInterface(int index, WavePlayInterface* interface);
+	int getIndex() { return outputInstance; }
 	void sendMessage(const QJsonObject& message);
 
 	void messageReiceved(const QJsonObject& message);

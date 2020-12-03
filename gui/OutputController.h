@@ -9,6 +9,7 @@ namespace Ui {
 class OutputController;
 }
 
+class MainWindow;
 class EqualizersController;
 class CompressorController;
 class BalanceController;
@@ -18,7 +19,7 @@ class LevelMeterWidget;
 class OutputController : public QWidget {
 	Q_OBJECT
 public:
-	explicit OutputController(QWidget* parent, int numEq);
+	explicit OutputController(MainWindow* parent, int numEq);
 	~OutputController();
 
 	void setInterface(int index, WavePlayInterface* interface);
@@ -50,8 +51,14 @@ protected:
 	void setDisplayedVolume(int volume);
 	void setNumChannel(int numChannel);
 
+	void dragEnterEvent(QDragEnterEvent* event) override;
+	void dragMoveEvent(QDragMoveEvent* event) override;
+	void dropEvent(QDropEvent* event) override;
+	void mousePressEvent(QMouseEvent* event) override;
+
 private:
 	Ui::OutputController* ui;
+	MainWindow* mainWindow;
 	WavePlayOutputInterface interface;
 	int numEq;
 	int numChannels;

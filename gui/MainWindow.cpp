@@ -58,7 +58,7 @@ void MainWindow::onMessage(const QJsonObject& message) {
 			if(index >= 0) {
 				auto it = outputs.find(index);
 				if(it != outputs.end()) {
-					layout()->removeWidget(it->second);
+					ui->horizontalLayout->removeWidget(it->second);
 					delete it->second;
 					outputs.erase(it);
 				}
@@ -91,8 +91,33 @@ void MainWindow::onRemoveInstance() {
 
 void MainWindow::clearOutputs() {
 	for(auto& output : outputs) {
-		layout()->removeWidget(output.second);
+		ui->horizontalLayout->removeWidget(output.second);
 		delete output.second;
 	}
 	outputs.clear();
+}
+
+void MainWindow::moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore) {
+	auto itSource = outputs.find(sourceInstance);
+	auto itTarget = outputs.find(targetInstance);
+	if(itSource == outputs.end() || itTarget == outputs.end())
+		return;
+	OutputController* sourceWidget = itSource->second;
+	int originalPosition = ui->horizontalLayout->indexOf(sourceWidget);
+	ui->horizontalLayout->removeWidget(sourceWidget);
+
+	int insertPosition = ui->horizontalLayout->indexOf(itTarget->second);
+	if(insertPosition >= 0) {
+		if(!insertBefore)
+			insertPosition++;
+		qDebug("Move instance %d from pos %d to %d (over instance %d)",
+		       sourceInstance,
+		       originalPosition,
+		       insertPosition,
+		       targetInstance);
+		ui->horizontalLayout->insertWidget(insertPosition, sourceWidget);
+	} else {
+		qDebug("Move instance %d from pos %d to %d (original pos)", sourceInstance, originalPosition, originalPosition);
+		ui->horizontalLayout->insertWidget(originalPosition, sourceWidget);
+	}
 }

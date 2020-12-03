@@ -3,7 +3,12 @@
 #include <algorithm>
 
 OutputInstance::OutputInstance(IAudioEndpoint* endpoint)
-    : endpoint(endpoint), enabled(true), client(nullptr), numChannel(0), updateLevelTimer(nullptr) {}
+    : endpoint(endpoint),
+      enabled(true),
+      client(nullptr),
+      numChannel(0),
+      controlSettings(nlohmann::json::object()),
+      updateLevelTimer(nullptr) {}
 
 OutputInstance::~OutputInstance() {
 	if(updateLevelTimer) {
@@ -39,8 +44,6 @@ int OutputInstance::init(
 	levelsDb.resize(numChannel, -192);
 	samplesInPeaks = 0;
 	peaksPerChannel.resize(numChannel, 0);
-	inputPorts.resize(numChannel);
-	outputPorts.resize(numChannel);
 
 	uv_mutex_init(&filtersMutex);
 	uv_mutex_init(&peakMutex);
@@ -79,6 +82,9 @@ int OutputInstance::start() {
 	int additionnalPortFlags = 0;
 	if(type != Loopback)
 		additionnalPortFlags |= JackPortIsTerminal;
+
+	inputPorts.resize(numChannel);
+	outputPorts.resize(numChannel);
 	for(size_t i = 0; i < numChannel; i++) {
 		char name[64];
 
@@ -163,6 +169,8 @@ void OutputInstance::setParameters(const nlohmann::json& json) {
 	try {
 		clientName = json.value("name", clientName);
 		newEnabledState = json.value("enabled", enabled);
+		if(json.find("controlSettings") != json.end())
+			controlSettings = json["controlSettings"];
 		filters.setParameters(json);
 		endpoint->setParameters(json);
 	} catch(const nlohmann::json::exception& e) {
@@ -190,25 +198,13 @@ nlohmann::json OutputInstance::getParameters() {
 	json["type"] = type;
 	json["numChannels"] = numChannel;
 	json["name"] = clientName;
+	json["controlSettings"] = controlSettings;
 
 	for(const auto& j : subClassJson.items()) {
 		json[j.key()] = j.value();
 	}
 
 	return json;
-}
-
-int OutputInstance::getLiveFrameTime(jack_nframes_t* current_frames,
-                                     jack_time_t* current_usecs,
-                                     jack_time_t* next_usecs,
-                                     float* period_usecs,
-                                     jack_nframes_t* call_frame_time,
-                                     jack_time_t* call_time) {
-	*call_frame_time = jack_frames_since_cycle_start(client);
-	jack_get_cycle_times(client, current_frames, current_usecs, next_usecs, period_usecs);
-	*call_time = jack_frames_to_time(client, *call_frame_time + *current_frames);
-
-	return 0;
 }
 
 int OutputInstance::processSamplesStatic(jack_nframes_t nframes, void* arg) {
@@ -267,7 +263,7 @@ int OutputInstance::processSamples(jack_nframes_t nframes) {
 	uv_mutex_unlock(&filtersMutex);
 
 	// add side channel on channel 0
-	if(inputPorts.size() > numChannel) {
+	if(numChannel < inputPorts.size()) {
 		jack_default_audio_sample_t* sideChannel =
 		    (jack_default_audio_sample_t*) jack_port_get_buffer(inputPorts[numChannel], nframes);
 		for(jack_nframes_t i = 0; i < nframes; i++) {

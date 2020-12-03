@@ -27,15 +27,6 @@ public:
 	void setParameters(const nlohmann::json& json);
 	nlohmann::json getParameters();
 
-	int getIndex() { return outputInstance; }
-
-	int getLiveFrameTime(jack_nframes_t* current_frames,
-	                     jack_time_t* current_usecs,
-	                     jack_time_t* next_usecs,
-	                     float* period_usecs,
-	                     jack_nframes_t* call_frame_time,
-	                     jack_time_t* call_time);
-
 protected:
 	static int processSamplesStatic(jack_nframes_t nframes, void* arg);
 	int processInputSamples(jack_nframes_t nframes);
@@ -59,6 +50,8 @@ private:
 	std::vector<jack_port_t*> inputPorts;
 	std::vector<jack_port_t*> outputPorts;
 	uv_mutex_t filtersMutex;
+
+	nlohmann::json controlSettings;
 
 	uv_timer_t* updateLevelTimer;
 	std::vector<float> levelsDb;

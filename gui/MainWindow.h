@@ -20,6 +20,8 @@ public:
 	explicit MainWindow(QWidget* parent = 0);
 	~MainWindow();
 
+	void moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore);
+
 protected slots:
 	void onMessage(const QJsonObject& message);
 	void onAddInstance();
@@ -34,6 +36,7 @@ private:
 	WavePlayInterface wavePlayInterface;
 	WavePlayOutputInterface mainControlInterface;
 	std::unordered_map<int, OutputController*> outputs;
+	std::vector<int> outputsOrder;
 	int numEq;
 
 	NewOutputInstanceDialog addDialog;

@@ -4,12 +4,22 @@
 #include "EqualizersController.h"
 #include "LevelMeterWidget.h"
 #include "ui_OutputController.h"
+#include <MainWindow.h>
+#include <QDrag>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMimeData>
+#include <QMouseEvent>
 #include <math.h>
 
-OutputController::OutputController(QWidget* parent, int numEq) : QWidget(parent), ui(new Ui::OutputController) {
+#define DRAG_FORMAT "application/x-dndwaveoutputinstancewidget"
+
+OutputController::OutputController(MainWindow* parent, int numEq)
+    : QWidget(parent), ui(new Ui::OutputController), mainWindow(parent) {
 	ui->setupUi(this);
 
 	numChannels = 0;
@@ -357,5 +367,79 @@ void OutputController::setNumChannel(int numChannels) {
 		LevelMeterWidget* level = new LevelMeterWidget(this);
 		levelWidgets.push_back(level);
 		ui->levelContainerLayout->addWidget(level);
+	}
+}
+
+void OutputController::dragEnterEvent(QDragEnterEvent* event) {
+	if(event->mimeData()->hasFormat(DRAG_FORMAT)) {
+		if(event->source() == this) {
+			event->setDropAction(Qt::MoveAction);
+			event->accept();
+			qDebug("Drag enter self");
+		} else {
+			event->acceptProposedAction();
+			qDebug("Drag enter other: %d", interface.getIndex());
+		}
+	} else {
+		event->ignore();
+	}
+}
+
+void OutputController::dragMoveEvent(QDragMoveEvent* event) {
+	if(event->mimeData()->hasFormat(DRAG_FORMAT)) {
+		if(event->source() == this) {
+			event->setDropAction(Qt::MoveAction);
+			event->accept();
+			// qDebug("Drag move self");
+		} else {
+			event->acceptProposedAction();
+			// qDebug("Drag move other: %d", interface.getIndex());
+
+			QByteArray itemData = event->mimeData()->data(DRAG_FORMAT);
+			QDataStream dataStream(&itemData, QIODevice::ReadOnly);
+			int sourceInstance = -1;
+			dataStream >> sourceInstance;
+
+			mainWindow->moveOutputInstance(sourceInstance, interface.getIndex(), event->pos().x() < width() / 2);
+		}
+	} else {
+		event->ignore();
+	}
+}
+
+void OutputController::dropEvent(QDropEvent* event) {
+	if(event->mimeData()->hasFormat(DRAG_FORMAT)) {
+		QByteArray itemData = event->mimeData()->data(DRAG_FORMAT);
+		QDataStream dataStream(&itemData, QIODevice::ReadOnly);
+
+		if(event->source() == this) {
+			event->setDropAction(Qt::MoveAction);
+			event->accept();
+			qDebug("Drag drop self");
+		} else {
+			event->acceptProposedAction();
+			qDebug("Drag drop other: %d", interface.getIndex());
+		}
+	} else {
+		event->ignore();
+	}
+}
+
+void OutputController::mousePressEvent(QMouseEvent* event) {
+	QByteArray itemData;
+	QDataStream dataStream(&itemData, QIODevice::WriteOnly);
+	dataStream << interface.getIndex();
+
+	QMimeData* mimeData = new QMimeData;
+	mimeData->setData(DRAG_FORMAT, itemData);
+
+	QDrag* drag = new QDrag(this);
+	drag->setMimeData(mimeData);
+
+	qDebug("Begin drag %d", interface.getIndex());
+	if(drag->exec(Qt::MoveAction) == Qt::MoveAction) {
+		qDebug("End drag");
+	} else {
+		qDebug("End no drag");
 	}
 }
