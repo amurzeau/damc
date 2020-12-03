@@ -1,6 +1,8 @@
 #include "ControlInterface.h"
 #include "portaudio.h"
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 void onTtyAllocBuffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
 	buf->base = new char[suggested_size];
@@ -10,7 +12,7 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 	ControlInterface* controlInterface = (ControlInterface*) stream->data;
 	delete[] static_cast<char*>(buf->base);
 
-	printf("Stopping\n");
+	printf("Stopping, nread: %d\n", nread);
 
 	controlInterface->stop();
 
@@ -21,6 +23,7 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 int main(int argc, char* argv[]) {
 	uv_tty_t ttyRead;
 
+	srand(time(nullptr));
 	Pa_Initialize();
 	ControlInterface controlInterface(argv[0]);
 
@@ -28,11 +31,11 @@ int main(int argc, char* argv[]) {
 
 	controlInterface.loadConfig();
 
-	uv_tty_init(uv_default_loop(), &ttyRead, 0, 1);
-	ttyRead.data = &controlInterface;
-	uv_read_start((uv_stream_t*) &ttyRead, &onTtyAllocBuffer, &onTtyRead);
-
-	printf("Press enter to stop\n");
+	if(uv_tty_init(uv_default_loop(), &ttyRead, 0, 1) == 0) {
+		ttyRead.data = &controlInterface;
+		uv_read_start((uv_stream_t*) &ttyRead, &onTtyAllocBuffer, &onTtyRead);
+		printf("Press enter to stop\n");
+	}
 
 	controlInterface.run();
 
