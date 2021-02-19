@@ -17,15 +17,18 @@ void CompressorFilter::reset() {
 void CompressorFilter::processSamples(float** output, const float** input, size_t count) {
 	if(enable) {
 		for(size_t i = 0; i < count; i++) {
-			float largerCompressionRatio = 1;
+			float largerCompressionDb = 0;
 
 			for(size_t channel = 0; channel < numChannel; channel++) {
-				float ratio = doCompression(input[channel][i],
-				                            previousPartialGainComputerOutput[channel],
-				                            previousLevelDetectorOutput[channel]);
-				if(ratio < largerCompressionRatio)
-					largerCompressionRatio = ratio;
+				float dbGain = doCompression(input[channel][i],
+				                             previousPartialGainComputerOutput[channel],
+				                             previousLevelDetectorOutput[channel]);
+				if(dbGain < largerCompressionDb)
+					largerCompressionDb = dbGain;
 			}
+
+			// db to ratio
+			float largerCompressionRatio = powf(10, (largerCompressionDb + makeUpGain) / 20);
 
 			for(size_t channel = 0; channel < numChannel; channel++) {
 				output[channel][i] = largerCompressionRatio * input[channel][i];
@@ -40,12 +43,11 @@ void CompressorFilter::processSamples(float** output, const float** input, size_
 
 float CompressorFilter::doCompression(float sample, float& y1, float& yL) {
 	if(sample == 0)
-		return 1;
+		return 0;
 
 	float dbSample = 20 * log10f(fabsf(sample));
 	levelDetector(gainComputer(dbSample), y1, yL);
-	float controlDb = -yL + makeUpGain;
-	return powf(10, controlDb / 20);
+	return -yL;
 }
 
 float CompressorFilter::gainComputer(float dbSample) {
