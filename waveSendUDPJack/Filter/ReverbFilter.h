@@ -17,12 +17,12 @@ public:
 	nlohmann::json getParameters();
 
 private:
-	bool enabled;
+	bool enabled = false;
 	DelayFilter delayFilter;
-	float gain;
+	float gain = 0.893;
 	std::vector<ReverbFilter> reverberators;
 
-	float previousDelayOutput;
+	float previousDelayOutput = 0.0f;
 };
 
 #endif

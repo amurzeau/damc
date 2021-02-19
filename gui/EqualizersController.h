@@ -17,7 +17,7 @@ public:
 	~EqualizersController();
 
 	void connectEqualizers(QObject* obj, const char* slot);
-	void setEqualizerParameters(int index, int type, double f0, double q, double gain);
+	void setEqualizerParameters(int index, bool enabled, int type, double f0, double q, double gain);
 
 	void show();
 

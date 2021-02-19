@@ -25,7 +25,8 @@ OutputController::OutputController(MainWindow* parent, int numEq)
 	numChannels = 0;
 
 	equalizersController = new EqualizersController(this, numEq);
-	equalizersController->connectEqualizers(this, SLOT(onChangeEq(int, EqFilter::FilterType, double, double, double)));
+	equalizersController->connectEqualizers(this,
+	                                        SLOT(onChangeEq(int, bool, EqFilter::FilterType, double, double, double)));
 
 	balanceController = new BalanceController(this);
 	connect(balanceController, SIGNAL(parameterChanged(size_t, float)), this, SLOT(onChangeBalance(size_t, float)));
@@ -132,7 +133,8 @@ void OutputController::onShowBalance() {
 	}
 }
 
-void OutputController::onChangeEq(int index, EqFilter::FilterType type, double f0, double q, double gain) {
+void OutputController::onChangeEq(
+    int index, bool enabled, EqFilter::FilterType type, double f0, double q, double gain) {
 	qDebug("Changing eq %d", index);
 
 	QJsonObject json;
@@ -140,6 +142,7 @@ void OutputController::onChangeEq(int index, EqFilter::FilterType type, double f
 	QJsonObject eqFilter;
 
 	eqFilter["index"] = index;
+	eqFilter["enabled"] = enabled;
 	eqFilter["type"] = (int) type;
 	eqFilter["f0"] = f0;
 	eqFilter["Q"] = q;
@@ -281,6 +284,7 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 				QJsonObject eqFilter = eqFilters[i].toObject();
 
 				equalizersController->setEqualizerParameters(eqFilter["index"].toInt(),
+				                                             eqFilter["enabled"].toBool(),
 				                                             eqFilter["type"].toInt(),
 				                                             eqFilter["f0"].toDouble(),
 				                                             eqFilter["Q"].toDouble(),

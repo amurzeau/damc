@@ -16,10 +16,10 @@ class Equalizer : public QWidget {
 public:
 	explicit Equalizer(QWidget* parent, int index);
 	~Equalizer();
-	void setParameters(int type, double f0, double q, double gain);
+	void setParameters(bool enabled, int type, double f0, double q, double gain);
 
 signals:
-	void changeParameters(int index, EqFilter::FilterType type, double f0, double q, double gain);
+	void changeParameters(int index, bool enabled, EqFilter::FilterType type, double f0, double q, double gain);
 
 private slots:
 	void onParameterChanged();

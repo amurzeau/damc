@@ -2,19 +2,17 @@
 #include <math.h>
 #include <string.h>
 
-FilterChain::FilterChain() {
-	mute = false;
-	enabled = true;
-	eqFilters.resize(6, std::make_pair(false, std::vector<EqFilter>()));
-}
+FilterChain::FilterChain() {}
 
 void FilterChain::init(size_t numChannel) {
 	delayFilters.resize(numChannel + 1);  // +1 for side channel
 	reverbFilters.resize(numChannel);
 	volume.resize(numChannel, 1);
 
-	for(std::pair<bool, std::vector<EqFilter>>& filter : eqFilters) {
-		filter.second.resize(numChannel);
+	eqFilters.resize(6);
+
+	for(EqFilter& filter : eqFilters) {
+		filter.init(numChannel);
 	}
 
 	compressorFilter.init(numChannel);
@@ -28,10 +26,8 @@ void FilterChain::reset(double fs) {
 		reverbFilter.reset();
 	}
 
-	for(std::pair<bool, std::vector<EqFilter>>& filter : eqFilters) {
-		for(EqFilter& eqFilter : filter.second) {
-			eqFilter.reset(fs);
-		}
+	for(EqFilter& filter : eqFilters) {
+		filter.reset(fs);
 	}
 
 	compressorFilter.reset();
@@ -42,17 +38,10 @@ void FilterChain::processSamples(
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
 		delayFilters[channel].processSamples(output[channel], input[channel], count);
 		reverbFilters[channel].processSamples(output[channel], output[channel], count);
+	}
 
-		for(std::pair<bool, std::vector<EqFilter>>& filter : eqFilters) {
-			if(filter.first) {
-				filter.second[channel].processSamples(output[channel], output[channel], count);
-			}
-		}
-
-		float volume = this->volume[channel] * this->masterVolume;
-		for(size_t i = 0; i < count; i++) {
-			output[channel][i] *= volume;
-		}
+	for(EqFilter& filter : eqFilters) {
+		filter.processSamples(output, const_cast<const float**>(output), count);
 	}
 
 	if(!mute) {
@@ -60,8 +49,10 @@ void FilterChain::processSamples(
 	}
 
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
+		float volume = this->volume[channel] * this->masterVolume;
 		float peak = 0;
 		for(size_t i = 0; i < count; i++) {
+			output[channel][i] *= volume;
 			if(fabsf(output[channel][i]) >= peak)
 				peak = fabsf(output[channel][i]);
 		}
@@ -77,24 +68,6 @@ void FilterChain::processSamples(
 
 float FilterChain::processSideChannelSample(float input) {
 	return delayFilters.back().processOneSample(input);
-}
-
-void FilterChain::setEqualizer(size_t index, EqFilter::FilterType type, double f0, double gain, double Q) {
-	if(index < eqFilters.size()) {
-		eqFilters[index].first = type != EqFilter::FilterType::None;
-		for(EqFilter& eqFilter : eqFilters[index].second) {
-			eqFilter.setParameters(type, f0, gain, Q);
-		}
-	}
-}
-
-bool FilterChain::getEqualizer(size_t index, EqFilter::FilterType& type, double& f0, double& gain, double& Q) {
-	if(index < eqFilters.size()) {
-		eqFilters[index].second[0].getParameters(type, f0, gain, Q);
-		return true;
-	} else {
-		return false;
-	}
 }
 
 void FilterChain::setParameters(const nlohmann::json& json) {
@@ -145,12 +118,12 @@ void FilterChain::setParameters(const nlohmann::json& json) {
 
 		for(auto eqFilterJson : eqFiltersArray) {
 			int index = eqFilterJson.at("index").get<int>();
-			if(index >= 0 && index < (int) this->eqFilters.size()) {
-				EqFilter::FilterType type = static_cast<EqFilter::FilterType>(eqFilterJson.at("type").get<int>());
-				this->eqFilters[index].first = type != EqFilter::FilterType::None;
-				for(EqFilter& eqFilter : this->eqFilters[index].second) {
-					eqFilter.setParameters(eqFilterJson);
+			if(index >= 0) {
+				while(index >= (int) this->eqFilters.size()) {
+					this->eqFilters.emplace_back();
+					this->eqFilters.back().init(this->volume.size());
 				}
+				this->eqFilters[index].setParameters(eqFilterJson);
 			}
 		}
 	}
@@ -180,8 +153,8 @@ nlohmann::json FilterChain::getParameters() {
 	json["eqFilters"] = nlohmann::json::array();
 
 	for(size_t i = 0; i < eqFilters.size(); i++) {
-		std::pair<bool, std::vector<EqFilter>>& filter = eqFilters[i];
-		nlohmann::json eqFilterJson = filter.second[0].getParameters();
+		EqFilter& filter = eqFilters[i];
+		nlohmann::json eqFilterJson = filter.getParameters();
 		eqFilterJson["index"] = i;
 		json["eqFilters"].push_back(eqFilterJson);
 	}

@@ -37,11 +37,13 @@ public:
 	};
 
 public:
+	void init(size_t numChannel);
 	void reset(double fs);
-	void processSamples(float* output, const float* input, size_t count);
+	void processSamples(float** output, const float** input, size_t count);
 
-	void setParameters(FilterType filterType, double f0, double gain, double Q);
-	void getParameters(FilterType& filterType, double& f0, double& gain, double& Q) {
+	void setParameters(bool enabled, FilterType filterType, double f0, double gain, double Q);
+	void getParameters(bool& enabled, FilterType& filterType, double& f0, double& gain, double& Q) {
+		enabled = this->enabled;
 		filterType = this->filterType;
 		f0 = this->f0;
 		gain = this->gain;
@@ -54,13 +56,14 @@ public:
 	std::complex<double> getResponse(double f0);
 
 private:
+	bool enabled = false;
 	FilterType filterType = FilterType::None;
 	double f0 = 1000;
 	double fs = 48000;
 	double gain = 0;
 	double Q = 0.5;
 
-	BiquadFilter biquadFilter;
+	std::vector<BiquadFilter> biquadFilters;
 
 	void computeFilter();
 };

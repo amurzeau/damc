@@ -37,22 +37,39 @@ std::complex<double> BiquadFilter::getResponse(double f0, double fs) {
 	return (b[0] + b[1] * z_1 + b[2] * z_2) / (std::complex<double>(1) + a[0] * z_1 + a[1] * z_2);
 }
 
+void EqFilter::init(size_t numChannel) {
+	biquadFilters.resize(numChannel);
+}
+
 void EqFilter::reset(double fs) {
 	this->fs = fs;
 	computeFilter();
 }
 
-void EqFilter::processSamples(float* output, const float* input, size_t count) {
-	for(size_t i = 0; i < count; i++) {
-		output[i] = biquadFilter.put(input[i]);
+void EqFilter::processSamples(float** output, const float** input, size_t count) {
+	if(enabled) {
+		for(size_t channel = 0; channel < biquadFilters.size(); channel++) {
+			BiquadFilter& biquadFilter = biquadFilters[channel];
+			float* outputChannel = output[channel];
+			const float* inputChannel = input[channel];
+
+			for(size_t i = 0; i < count; i++) {
+				outputChannel[i] = biquadFilter.put(inputChannel[i]);
+			}
+		}
+	} else if(output != input) {
+		for(size_t channel = 0; channel < biquadFilters.size(); channel++) {
+			std::copy_n(input[channel], count, output[channel]);
+		}
 	}
 }
 
 std::complex<double> EqFilter::getResponse(double f0) {
-	return biquadFilter.getResponse(f0, fs);
+	return biquadFilters.front().getResponse(f0, fs);
 }
 
-void EqFilter::setParameters(EqFilter::FilterType filterType, double f0, double gain, double Q) {
+void EqFilter::setParameters(bool enabled, EqFilter::FilterType filterType, double f0, double gain, double Q) {
+	this->enabled = enabled;
 	this->filterType = filterType;
 	this->f0 = f0;
 	this->gain = gain;
@@ -64,6 +81,7 @@ void EqFilter::setParameters(const nlohmann::json& json) {
 	if(!json.is_object())
 		return;
 
+	this->enabled = json.value("enabled", false);
 	this->filterType = static_cast<EqFilter::FilterType>(json["type"].get<int>());
 	this->f0 = json.at("f0").get<double>();
 	this->gain = json.at("gain").get<double>();
@@ -72,15 +90,18 @@ void EqFilter::setParameters(const nlohmann::json& json) {
 }
 
 nlohmann::json EqFilter::getParameters() {
-	return nlohmann::json::object(
-	    {{"type", static_cast<int>(this->filterType)}, {"f0", this->f0}, {"gain", this->gain}, {"Q", this->Q}});
+	return nlohmann::json::object({{"enabled", this->enabled},
+	                               {"type", static_cast<int>(this->filterType)},
+	                               {"f0", this->f0},
+	                               {"gain", this->gain},
+	                               {"Q", this->Q}});
 }
 
 void EqFilter::computeFilter() {
 	double b_coefs[3];
 	double a_coefs[3];
 
-	if(Q == 0 || fs == 0) {
+	if(!enabled || Q == 0 || fs == 0) {
 		b_coefs[0] = 1;
 		b_coefs[1] = 0;
 		b_coefs[2] = 0;
@@ -177,5 +198,6 @@ void EqFilter::computeFilter() {
 		}
 	}
 
-	biquadFilter.update(a_coefs, b_coefs);
+	for(BiquadFilter& biquadFilter : biquadFilters)
+		biquadFilter.update(a_coefs, b_coefs);
 }

@@ -21,6 +21,7 @@ static void logSpace(double* array, int size, double xmin, double xmax) {
 
 BodePlot::BodePlot(QWidget* parent) : BodePlotWidget(parent) {
 	for(EqFilter& eqFilter : eqFilters) {
+		eqFilter.init(1);
 		eqFilter.reset(48000);
 	}
 
@@ -41,6 +42,10 @@ BodePlot::BodePlot(QWidget* parent) : BodePlotWidget(parent) {
 
 void BodePlot::setNumEq(int numEq) {
 	eqFilters.resize(numEq);
+	for(EqFilter& eqFilter : eqFilters) {
+		eqFilter.init(1);
+		eqFilter.reset(48000);
+	}
 }
 
 void BodePlot::showData(const double* frequency, const double* amplitude, const double* phase, int count) {
@@ -52,14 +57,15 @@ void BodePlot::showData(const double* frequency, const double* amplitude, const 
 //
 // re-calculate frequency response
 //
-void BodePlot::setParameters(int index, EqFilter::FilterType filterType, double f0, double Q, double gain) {
+void BodePlot::setParameters(
+    int index, bool enabled, EqFilter::FilterType filterType, double f0, double Q, double gain) {
 	const int ArraySize = 2000;
 
 	double frequency[ArraySize];
 	double amplitude[ArraySize];
 	double phase[ArraySize];
 
-	eqFilters[index].setParameters(filterType, f0, gain, Q);
+	eqFilters[index].setParameters(enabled, filterType, f0, gain, Q);
 
 	// build frequency vector with logarithmic division
 	logSpace(frequency, ArraySize, 20, 24000);

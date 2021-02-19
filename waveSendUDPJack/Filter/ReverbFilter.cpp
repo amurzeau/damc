@@ -5,9 +5,6 @@
 #include <string.h>
 
 ReverbFilter::ReverbFilter() {
-	this->enabled = false;
-	this->gain = 0.893;
-	this->previousDelayOutput = 0.0f;
 	this->delayFilter.setParameters(1440);
 }
 

@@ -30,7 +30,7 @@ protected slots:
 	void onChangeClockDrift();
 	void onEnable(int state);
 	void onMute(bool muted);
-	void onChangeEq(int index, EqFilter::FilterType type, double f0, double q, double gain);
+	void onChangeEq(int index, bool enabled, EqFilter::FilterType type, double f0, double q, double gain);
 	void onChangeCompressor(bool enabled,
 	                        float releaseTime,
 	                        float attackTime,

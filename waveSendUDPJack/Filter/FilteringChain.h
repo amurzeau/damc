@@ -20,26 +20,19 @@ public:
 	void processSamples(float* peakOutput, float** output, const float** input, size_t numChannel, size_t count);
 	float processSideChannelSample(float input);
 
-	void setMute(bool mute) { this->mute = mute; }
-	void setEqualizer(size_t index, EqFilter::FilterType type, double f0, double gain, double Q);
-
-	bool isMute() { return this->mute; }
-	bool getEqualizer(size_t index, EqFilter::FilterType& type, double& f0, double& gain, double& Q);
-
-	size_t getEqualizerNumber() { return eqFilters.size(); }
-
 	void setParameters(const nlohmann::json& json);
 	nlohmann::json getParameters();
 
 private:
 	std::vector<DelayFilter> delayFilters;
 	std::vector<ReverbFilter> reverbFilters;
-	std::vector<std::pair<bool, std::vector<EqFilter>>> eqFilters;
+	bool eqFiltersEnabled = false;
+	std::vector<EqFilter> eqFilters;
 	std::vector<float> volume;
-	float masterVolume;
+	float masterVolume = 1.0f;
 	CompressorFilter compressorFilter;
-	bool mute;
-	bool enabled;
+	bool mute = false;
+	bool enabled = true;
 };
 
 #endif

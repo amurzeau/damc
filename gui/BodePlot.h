@@ -15,7 +15,7 @@ public:
 	QSize sizeHint() const override { return minimumSizeHint(); }
 
 public Q_SLOTS:
-	void setParameters(int index, EqFilter::FilterType filterType, double f0, double Q, double gain);
+	void setParameters(int index, bool enabled, EqFilter::FilterType filterType, double f0, double Q, double gain);
 
 private:
 	void showData(const double* frequency, const double* amplitude, const double* phase, int count);
