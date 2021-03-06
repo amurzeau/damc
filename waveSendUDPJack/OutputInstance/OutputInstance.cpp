@@ -1,6 +1,9 @@
 #include "OutputInstance.h"
+#include "../ControlInterface.h"
 #include "../ControlServer.h"
 #include <algorithm>
+#include <jack/metadata.h>
+#include <jack/uuid.h>
 
 OutputInstance::OutputInstance(IAudioEndpoint* endpoint)
     : endpoint(endpoint),
@@ -26,10 +29,15 @@ OutputInstance::~OutputInstance() {
 	uv_mutex_destroy(&filtersMutex);
 }
 
-int OutputInstance::init(
-    ControlServer* controlServer, int type, int index, size_t numChannel, const nlohmann::json& json) {
+int OutputInstance::init(ControlInterface* controlInterface,
+                         ControlServer* controlServer,
+                         int type,
+                         int index,
+                         size_t numChannel,
+                         const nlohmann::json& json) {
 	char buffer[128];
 
+	this->controlInterface = controlInterface;
 	this->controlServer = controlServer;
 	this->outputInstance = index;
 	this->type = type;
@@ -50,6 +58,7 @@ int OutputInstance::init(
 
 	sprintf(buffer, "waveSendUDP-%s-%d", endpoint->getName(), index);
 	clientName = buffer;
+	clientDisplayName = clientName;
 
 	filters.init(numChannel);
 
@@ -134,6 +143,18 @@ int OutputInstance::start() {
 
 	jack_set_process_callback(client, &processSamplesStatic, this);
 
+	const char* pszClientUuid = ::jack_get_uuid_for_client_name(client, clientName.c_str());
+	if(pszClientUuid) {
+		::jack_uuid_parse(pszClientUuid, &clientUuid);
+		if(clientDisplayName != clientName) {
+			::jack_set_property(client, clientUuid, JACK_METADATA_PRETTY_NAME, clientDisplayName.c_str(), NULL);
+		}
+		jack_free((void*) pszClientUuid);
+	} else {
+		clientUuid = 0;
+	}
+	jack_set_property_change_callback(client, &OutputInstance::onJackPropertyChangeCallback, this);
+
 	int ret = jack_activate(client);
 	if(ret) {
 		printf("cannot activate client: %d\n", ret);
@@ -162,12 +183,46 @@ void OutputInstance::stop() {
 	}
 }
 
+void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
+                                                  const char* key,
+                                                  jack_property_change_t change,
+                                                  void* arg) {
+	OutputInstance* thisInstance = (OutputInstance*) arg;
+	char* pszValue = NULL;
+	char* pszType = NULL;
+
+	if(subject == thisInstance->clientUuid && strcmp(key, JACK_METADATA_PRETTY_NAME) == 0) {
+		switch(change) {
+			case PropertyCreated:
+			case PropertyChanged:
+				::jack_get_property(thisInstance->clientUuid, JACK_METADATA_PRETTY_NAME, &pszValue, &pszType);
+				if(pszValue) {
+					thisInstance->clientDisplayName = pszValue;
+					::jack_free(pszValue);
+				}
+				if(pszType)
+					::jack_free(pszType);
+				break;
+			case PropertyDeleted:
+				thisInstance->clientDisplayName = thisInstance->clientName;
+				break;
+		}
+
+		nlohmann::json json = {{"instance", thisInstance->outputInstance},
+		                       {"displayName", thisInstance->clientDisplayName}};
+		std::string jsonStr = json.dump();
+		thisInstance->controlServer->sendMessage(jsonStr.c_str(), jsonStr.size());
+		thisInstance->controlInterface->saveConfig();
+	}
+}
+
 void OutputInstance::setParameters(const nlohmann::json& json) {
 	bool newEnabledState = enabled;
 
 	uv_mutex_lock(&filtersMutex);
 	try {
 		clientName = json.value("name", clientName);
+		clientDisplayName = json.value("displayName", clientDisplayName);
 		newEnabledState = json.value("enabled", enabled);
 		if(json.find("controlSettings") != json.end())
 			controlSettings = json["controlSettings"];
@@ -198,6 +253,7 @@ nlohmann::json OutputInstance::getParameters() {
 	json["type"] = type;
 	json["numChannels"] = numChannel;
 	json["name"] = clientName;
+	json["displayName"] = clientDisplayName;
 	json["controlSettings"] = controlSettings;
 
 	for(const auto& j : subClassJson.items()) {

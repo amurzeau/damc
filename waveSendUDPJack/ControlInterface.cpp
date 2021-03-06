@@ -141,7 +141,7 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 		nextInstanceIndex = instance;
 
 	nextInstanceIndex++;
-	outputInstance->init(&controlServer, type, instance, numChannel, outputInstancesJson);
+	outputInstance->init(this, &controlServer, type, instance, numChannel, outputInstancesJson);
 
 	return outputs.emplace(std::make_pair(instance, std::move(outputInstance))).first;
 }

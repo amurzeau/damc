@@ -8,7 +8,9 @@
 #include <uv.h>
 // Need to be after else stdint might conflict
 #include <jack/jack.h>
+#include <jack/metadata.h>
 
+class ControlInterface;
 class ControlServer;
 class ControlClient;
 
@@ -20,7 +22,12 @@ public:
 	OutputInstance(IAudioEndpoint* endpoint);
 	virtual ~OutputInstance();
 
-	int init(ControlServer* controlServer, int type, int index, size_t numChannel, const nlohmann::json& json);
+	int init(ControlInterface* controlInterface,
+	         ControlServer* controlServer,
+	         int type,
+	         int index,
+	         size_t numChannel,
+	         const nlohmann::json& json);
 	int start();
 	void stop();
 
@@ -36,14 +43,22 @@ protected:
 	void onTimeoutTimer();
 	static void onCloseTimer(uv_handle_t* handle);
 
+	static void onJackPropertyChangeCallback(jack_uuid_t subject,
+	                                         const char* key,
+	                                         jack_property_change_t change,
+	                                         void* arg);
+
 private:
+	ControlInterface* controlInterface;
 	ControlServer* controlServer;
 	IAudioEndpoint* endpoint;
 	bool enabled;
 	int outputInstance;
 	int type;
 	jack_client_t* client;
+	jack_uuid_t clientUuid;
 	std::string clientName;
+	std::string clientDisplayName;
 	size_t numChannel;
 	size_t sampleRate;
 	FilterChain filters;

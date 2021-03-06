@@ -306,8 +306,8 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			compressorController->blockSignals(false);
 		}
 
-		QJsonValue nameValue = message.value("name");
-		if(nameValue.type() == QJsonValue::String && ui->groupBox->title().isEmpty()) {
+		QJsonValue nameValue = message.value("displayName");
+		if(nameValue.type() == QJsonValue::String) {
 			QString title = nameValue.toString().replace("waveSendUDP-", "");
 			ui->groupBox->setTitle(title);
 			equalizersController->setWindowTitle(tr("Equalizer - %1").arg(title));
