@@ -26,7 +26,7 @@ void MainWindow::onMessage(const QJsonObject& message) {
 			int numOutputInstances = message["numOutputInstances"].toInt();
 			numEq = message["numEq"].toInt();
 
-			if(numOutputInstances > 20) {
+			if(numOutputInstances > 100) {
 				printf("too many instance %d\n", numOutputInstances);
 				return;
 			}
