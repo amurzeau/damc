@@ -40,6 +40,7 @@ OutputController::OutputController(MainWindow* parent, int numEq)
 
 	connect(ui->eqButton, SIGNAL(clicked(bool)), this, SLOT(onShowEq()));
 	connect(ui->compressorButton, SIGNAL(clicked(bool)), this, SLOT(onShowCompressor()));
+	connect(ui->expanderButton, SIGNAL(clicked(bool)), this, SLOT(onShowExpander()));
 	connect(ui->balanceButton, SIGNAL(clicked(bool)), this, SLOT(onShowBalance()));
 
 	connect(&interface, SIGNAL(onMessage(QJsonObject)), this, SLOT(onMessageReceived(const QJsonObject&)));
@@ -49,6 +50,12 @@ OutputController::OutputController(MainWindow* parent, int numEq)
 	        SIGNAL(parameterChanged(bool, float, float, float, float, float, float)),
 	        this,
 	        SLOT(onChangeCompressor(bool, float, float, float, float, float, float)));
+
+	expanderController = new CompressorController(this);
+	connect(expanderController,
+	        SIGNAL(parameterChanged(bool, float, float, float, float, float, float)),
+	        this,
+	        SLOT(onChangeExpander(bool, float, float, float, float, float, float)));
 
 	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
 	ui->volumeLevelLabel->setTextSize(4, Qt::AlignRight | Qt::AlignVCenter);
@@ -125,6 +132,14 @@ void OutputController::onShowCompressor() {
 	}
 }
 
+void OutputController::onShowExpander() {
+	if(expanderController->isHidden()) {
+		expanderController->show();
+	} else {
+		expanderController->hide();
+	}
+}
+
 void OutputController::onShowBalance() {
 	if(balanceController->isHidden()) {
 		balanceController->show();
@@ -154,13 +169,14 @@ void OutputController::onChangeEq(
 	interface.sendMessage(json);
 }
 
-void OutputController::onChangeCompressor(bool enabled,
-                                          float releaseTime,
-                                          float attackTime,
-                                          float threshold,
-                                          float makeUpGain,
-                                          float compressionRatio,
-                                          float kneeWidth) {
+void OutputController::sendChangeCompressor(const char* filterName,
+                                            bool enabled,
+                                            float releaseTime,
+                                            float attackTime,
+                                            float threshold,
+                                            float makeUpGain,
+                                            float ratio,
+                                            float kneeWidth) {
 	qDebug("Changing compressor");
 
 	QJsonObject json;
@@ -171,12 +187,32 @@ void OutputController::onChangeCompressor(bool enabled,
 	filter["attackTime"] = attackTime;
 	filter["threshold"] = threshold;
 	filter["makeUpGain"] = makeUpGain;
-	filter["compressionRatio"] = compressionRatio;
+	filter["ratio"] = ratio;
 	filter["kneeWidth"] = kneeWidth;
 
-	json["compressorFilter"] = filter;
+	json[filterName] = filter;
 
 	interface.sendMessage(json);
+}
+
+void OutputController::onChangeCompressor(bool enabled,
+                                          float releaseTime,
+                                          float attackTime,
+                                          float threshold,
+                                          float makeUpGain,
+                                          float ratio,
+                                          float kneeWidth) {
+	sendChangeCompressor("compressorFilter", enabled, releaseTime, attackTime, threshold, makeUpGain, ratio, kneeWidth);
+}
+
+void OutputController::onChangeExpander(bool enabled,
+                                        float releaseTime,
+                                        float attackTime,
+                                        float threshold,
+                                        float makeUpGain,
+                                        float ratio,
+                                        float kneeWidth) {
+	sendChangeCompressor("expanderFilter", enabled, releaseTime, attackTime, threshold, makeUpGain, ratio, kneeWidth);
 }
 
 void OutputController::onChangeBalance(size_t channel, float balance) {
@@ -301,9 +337,23 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			                                    filterData["attackTime"].toDouble(),
 			                                    filterData["threshold"].toDouble(),
 			                                    filterData["makeUpGain"].toDouble(),
-			                                    filterData["compressionRatio"].toDouble(),
+			                                    filterData["ratio"].toDouble(),
 			                                    filterData["kneeWidth"].toDouble());
 			compressorController->blockSignals(false);
+		}
+
+		QJsonValue expanderValue = message.value("expanderFilter");
+		if(expanderValue.type() == QJsonValue::Object) {
+			QJsonObject filterData = expanderValue.toObject();
+			expanderController->blockSignals(true);
+			expanderController->setParameters(filterData["enabled"].toBool(),
+			                                  filterData["releaseTime"].toDouble(),
+			                                  filterData["attackTime"].toDouble(),
+			                                  filterData["threshold"].toDouble(),
+			                                  filterData["makeUpGain"].toDouble(),
+			                                  filterData["ratio"].toDouble(),
+			                                  filterData["kneeWidth"].toDouble());
+			expanderController->blockSignals(false);
 		}
 
 		QJsonValue nameValue = message.value("displayName");
@@ -312,6 +362,7 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			ui->groupBox->setTitle(title);
 			equalizersController->setWindowTitle(tr("Equalizer - %1").arg(title));
 			compressorController->setWindowTitle(tr("Compressor - %1").arg(title));
+			expanderController->setWindowTitle(tr("Expander - %1").arg(title));
 			balanceController->setWindowTitle(tr("Balance - %1").arg(title));
 		}
 

@@ -38,18 +38,35 @@ protected slots:
 	                        float makeUpGain,
 	                        float compressionRatio,
 	                        float kneeWidth);
+	void onChangeExpander(bool enabled,
+	                      float releaseTime,
+	                      float attackTime,
+	                      float threshold,
+	                      float makeUpGain,
+	                      float compressionRatio,
+	                      float kneeWidth);
 	void onChangeBalance(size_t channel, float balance);
 
 	void onMessageReceived(const QJsonObject& message);
 
 	void onShowEq();
 	void onShowCompressor();
+	void onShowExpander();
 	void onShowBalance();
 
 protected:
 	double translateLevel(double level);
 	void setDisplayedVolume(int volume);
 	void setNumChannel(int numChannel);
+
+	void sendChangeCompressor(const char* filterName,
+	                          bool enabled,
+	                          float releaseTime,
+	                          float attackTime,
+	                          float threshold,
+	                          float makeUpGain,
+	                          float ratio,
+	                          float kneeWidth);
 
 	void dragEnterEvent(QDragEnterEvent* event) override;
 	void dragMoveEvent(QDragMoveEvent* event) override;
@@ -64,6 +81,7 @@ private:
 	int numChannels;
 	EqualizersController* equalizersController;
 	CompressorController* compressorController;
+	CompressorController* expanderController;
 	BalanceController* balanceController;
 	std::vector<LevelMeterWidget*> levelWidgets;
 };

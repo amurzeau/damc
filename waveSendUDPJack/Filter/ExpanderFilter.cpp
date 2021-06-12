@@ -1,38 +1,42 @@
-#include "CompressorFilter.h"
+#include "ExpanderFilter.h"
 
 #include <math.h>
 #include <string.h>
 
-void CompressorFilter::init(size_t numChannel) {
+void ExpanderFilter::init(size_t numChannel) {
 	this->numChannel = numChannel;
 	previousPartialGainComputerOutput.resize(numChannel);
 	previousLevelDetectorOutput.resize(numChannel);
 }
 
-void CompressorFilter::reset() {
+void ExpanderFilter::reset() {
 	std::fill_n(previousPartialGainComputerOutput.begin(), numChannel, 0);
 	std::fill_n(previousLevelDetectorOutput.begin(), numChannel, 0);
 }
 
-void CompressorFilter::processSamples(float** output, const float** input, size_t count) {
+void ExpanderFilter::processSamples(float** output, const float** input, size_t count) {
 	if(enable) {
-		float staticGain = gainComputer(0) + makeUpGain;
 		for(size_t i = 0; i < count; i++) {
-			float largerCompressionDb = 0;
+			float lowestCompressionDb = -INFINITY;
 
 			for(size_t channel = 0; channel < numChannel; channel++) {
 				float dbGain = doCompression(input[channel][i],
 				                             previousPartialGainComputerOutput[channel],
 				                             previousLevelDetectorOutput[channel]);
-				if(dbGain < largerCompressionDb)
-					largerCompressionDb = dbGain;
+				if(dbGain > lowestCompressionDb)
+					lowestCompressionDb = dbGain;
 			}
 
 			// db to ratio
-			float largerCompressionRatio = powf(10, (largerCompressionDb + staticGain) / 20);
+			float largerCompressionRatio = powf(10, (lowestCompressionDb + makeUpGain) / 20);
 
 			for(size_t channel = 0; channel < numChannel; channel++) {
-				output[channel][i] = largerCompressionRatio * input[channel][i];
+				float value = largerCompressionRatio * input[channel][i];
+
+				if(!isnormal(value))
+					value = 0.0f;
+
+				output[channel][i] = value;
 			}
 		}
 	} else if(output != input) {
@@ -42,33 +46,33 @@ void CompressorFilter::processSamples(float** output, const float** input, size_
 	}
 }
 
-float CompressorFilter::doCompression(float sample, float& y1, float& yL) {
+float ExpanderFilter::doCompression(float sample, float& y1, float& yL) {
 	if(sample == 0)
-		return 0;
+		return -INFINITY;
 
 	float dbSample = 20 * log10f(fabsf(sample));
 	levelDetector(gainComputer(dbSample), y1, yL);
 	return -yL;
 }
 
-float CompressorFilter::gainComputer(float dbSample) const {
+float ExpanderFilter::gainComputer(float dbSample) {
 	float zone = 2 * (dbSample - threshold);
 	if(zone == -INFINITY || zone <= -kneeWidth) {
-		return 0;
+		return gainDiffRatio * (threshold - dbSample);
 	} else if(zone >= kneeWidth) {
-		return gainDiffRatio * (dbSample - threshold);
+		return 0;
 	} else {
-		float a = dbSample - threshold + kneeWidth / 2;
+		float a = threshold - dbSample + kneeWidth / 2;
 		return gainDiffRatio * (a * a) / (2 * kneeWidth);
 	}
 }
 
-void CompressorFilter::levelDetector(float dbSample, float& y1, float& yL) {
-	y1 = fmaxf(dbSample, alphaR * y1 + (1 - alphaR) * dbSample);
+void ExpanderFilter::levelDetector(float dbSample, float& y1, float& yL) {
+	y1 = fminf(dbSample, alphaR * y1 + (1 - alphaR) * dbSample);
 	yL = alphaA * yL + (1 - alphaA) * y1;
 }
 
-void CompressorFilter::setParameters(const nlohmann::json& json) {
+void ExpanderFilter::setParameters(const nlohmann::json& json) {
 	enable = json.at("enabled").get<bool>();
 
 	if(json.at("attackTime").get<float>() != 0)
@@ -83,11 +87,11 @@ void CompressorFilter::setParameters(const nlohmann::json& json) {
 
 	threshold = json.at("threshold").get<float>();
 	makeUpGain = json.at("makeUpGain").get<float>();
-	gainDiffRatio = 1 - 1 / json.at("ratio").get<float>();
+	gainDiffRatio = json.at("ratio").get<float>() - 1;
 	kneeWidth = json.at("kneeWidth").get<float>();
 }
 
-nlohmann::json CompressorFilter::getParameters() {
+nlohmann::json ExpanderFilter::getParameters() {
 	float attackTime, releaseTime;
 
 	if(alphaA != 0)
@@ -105,6 +109,6 @@ nlohmann::json CompressorFilter::getParameters() {
 	                               {"releaseTime", releaseTime},
 	                               {"threshold", threshold},
 	                               {"makeUpGain", makeUpGain},
-	                               {"ratio", 1 / (1 - gainDiffRatio)},
+	                               {"ratio", gainDiffRatio + 1},
 	                               {"kneeWidth", kneeWidth}});
 }

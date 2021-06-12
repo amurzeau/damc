@@ -6,6 +6,7 @@
 #include "DelayFilter.h"
 #include "DitheringFilter.h"
 #include "EqFilter.h"
+#include "ExpanderFilter.h"
 #include "ReverbFilter.h"
 #include <array>
 #include <stddef.h>
@@ -31,6 +32,7 @@ private:
 	std::vector<float> volume;
 	float masterVolume = 1.0f;
 	CompressorFilter compressorFilter;
+	ExpanderFilter expanderFilter;
 	bool mute = false;
 	bool enabled = true;
 };

@@ -13,6 +13,8 @@ add_executable(waveSendUDPJack
 	Filter/ReverbFilter.h
 	Filter/CompressorFilter.h
 	Filter/CompressorFilter.cpp
+	Filter/ExpanderFilter.h
+	Filter/ExpanderFilter.cpp
 
 	OutputInstance/IAudioEndpoint.h
 	OutputInstance/OutputInstance.cpp
