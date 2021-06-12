@@ -49,6 +49,16 @@ private:
 	//	double currentPaTime;
 	bool overflowOccured;
 	bool underflowOccured;
+
+	uint32_t bufferLatencyNr;
+	std::vector<uint32_t> bufferLatencyHistory;
+	size_t bufferLatencyMeasurePeriodSize;
+	double previousAverageLatency;
+	double clockDriftPpm;
+
+	bool isPaRunning;
+	size_t underflowSize;
+	size_t overflowSize;
 };
 
 #endif

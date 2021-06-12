@@ -74,7 +74,7 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 
 	for(size_t i = 0; i < numChannel; i++) {
 		std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)> buffer(nullptr, &jack_ringbuffer_free);
-		buffer.reset(jack_ringbuffer_create(sampleRate));
+		buffer.reset(jack_ringbuffer_create(jackBufferSize * 5));
 		ringBuffers.emplace_back(std::move(buffer));
 	}
 

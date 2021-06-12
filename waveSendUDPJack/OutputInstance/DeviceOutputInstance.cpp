@@ -67,7 +67,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	resamplingFilters.resize(numChannel);
 	for(size_t i = 0; i < numChannel; i++) {
 		std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)> buffer(nullptr, &jack_ringbuffer_free);
-		buffer.reset(jack_ringbuffer_create(sampleRate));
+		buffer.reset(jack_ringbuffer_create(jackBufferSize * 10 * sizeof(jack_default_audio_sample_t)));
 		ringBuffers.emplace_back(std::move(buffer));
 
 		resamplingFilters[i].reset();
@@ -77,7 +77,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	outputParameters.device = outputDeviceIndex;
 	outputParameters.channelCount = numChannel;
 	outputParameters.sampleFormat = paFloat32 | paNonInterleaved;  // 32 bit floating point output
-	outputParameters.suggestedLatency = jackBufferSize * 3 / 48000.0;
+	outputParameters.suggestedLatency = jackBufferSize * 1.0f / sampleRate;
 	outputParameters.hostApiSpecificStreamInfo = NULL;
 
 	int ret = Pa_OpenStream(&stream,
@@ -100,6 +100,15 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 		       Pa_GetDeviceInfo(outputDeviceIndex)->name,
 		       Pa_GetStreamInfo(stream)->outputLatency);
 	}
+
+	bufferLatencyMeasurePeriodSize = 60 * sampleRate / jackBufferSize;
+	bufferLatencyNr = 0;
+	bufferLatencyHistory.clear();
+	bufferLatencyHistory.reserve(bufferLatencyMeasurePeriodSize);
+	previousAverageLatency = 0;
+	clockDriftPpm = 0;
+	isPaRunning = false;
+	printf("Using buffer size %d\n", jackBufferSize);
 
 	Pa_StartStream(stream);
 
@@ -131,10 +140,13 @@ int DeviceOutputInstance::postProcessSamples(float** samples, size_t numChannel,
 
 		dataSize = resampledBuffer.size() * sizeof(resampledBuffer[0]);
 
-		if(dataSize < jack_ringbuffer_write_space(ringBuffers[i].get())) {
+		size_t availableData = jack_ringbuffer_write_space(ringBuffers[i].get());
+
+		if(dataSize < availableData) {
 			jack_ringbuffer_write(ringBuffers[i].get(), (const char*) resampledBuffer.data(), dataSize);
 		} else {
 			overflowOccured = true;
+			overflowSize = availableData;
 		}
 	}
 
@@ -167,14 +179,50 @@ int DeviceOutputInstance::renderCallback(const void* input,
 
 	jack_default_audio_sample_t** outputBuffers = (jack_default_audio_sample_t**) output;
 
+	bool underflowOccured = false;
+	size_t availableData = 0;
+
+	thisInstance->isPaRunning = true;
+
 	for(size_t i = 0; i < thisInstance->ringBuffers.size(); i++) {
-		size_t readData = jack_ringbuffer_read(
-		    thisInstance->ringBuffers[i].get(), (char*) outputBuffers[i], frameCount * sizeof(outputBuffers[i][0]));
-		if(readData < frameCount * sizeof(outputBuffers[i][0])) {
-			memset(reinterpret_cast<char*>(outputBuffers[i]) + readData,
-			       0,
-			       frameCount * sizeof(outputBuffers[i][0]) - readData);
-			thisInstance->underflowOccured = true;
+		availableData = jack_ringbuffer_read_space(thisInstance->ringBuffers[i].get());
+
+		if(availableData >= frameCount * sizeof(outputBuffers[i][0])) {
+			jack_ringbuffer_read(
+			    thisInstance->ringBuffers[i].get(), (char*) outputBuffers[i], frameCount * sizeof(outputBuffers[i][0]));
+		} else {
+			memset(reinterpret_cast<char*>(outputBuffers[i]), 0, frameCount * sizeof(outputBuffers[i][0]));
+			underflowOccured = true;
+			thisInstance->underflowSize = availableData;
+		}
+	}
+
+	if(underflowOccured) {
+		thisInstance->underflowOccured = true;
+		thisInstance->bufferLatencyHistory.clear();
+	} else if(availableData) {
+		thisInstance->bufferLatencyHistory.push_back(availableData / sizeof(jack_default_audio_sample_t));
+
+		if(thisInstance->bufferLatencyHistory.size() == thisInstance->bufferLatencyMeasurePeriodSize) {
+			double averageLatency = 0;
+			for(auto value : thisInstance->bufferLatencyHistory) {
+				averageLatency += value;
+			}
+			averageLatency /= thisInstance->bufferLatencyHistory.size();
+			thisInstance->bufferLatencyHistory.clear();
+
+			if(thisInstance->previousAverageLatency != 0) {
+				double sampleLatencyDiffOver1s = averageLatency - thisInstance->previousAverageLatency;
+				double sampleMeasureDuration = thisInstance->bufferLatencyMeasurePeriodSize * frameCount;
+
+				// Ignore drift of more than 0.1%
+				//				if(sampleLatencyDiffOver1s > (-sampleMeasureDuration / 1000) &&
+				//				   sampleLatencyDiffOver1s < (sampleMeasureDuration / 1000)) {
+				thisInstance->clockDriftPpm = 1000000.0 * sampleLatencyDiffOver1s / sampleMeasureDuration;
+				//				}
+			}
+
+			thisInstance->previousAverageLatency = averageLatency;
 		}
 	}
 
@@ -194,11 +242,22 @@ void DeviceOutputInstance::onTimer() {
 	//	counter++;
 
 	if(overflowOccured) {
-		printf("%s: Overflow\n", outputDevice.c_str());
+		printf("%s: Overflow: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun\n", outputDevice.c_str());
+		printf("%s: underrun: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, underflowSize);
 		underflowOccured = false;
+	}
+	if(clockDriftPpm) {
+		printf("%s: average latency: %f\n", outputDevice.c_str(), previousAverageLatency);
+		printf("%s: drift: %f\n", outputDevice.c_str(), clockDriftPpm);
+		clockDriftPpm = 0;
+	}
+
+	if(!isPaRunning) {
+		printf("%s: portaudio not running !\n", outputDevice.c_str());
+	} else {
+		isPaRunning = false;
 	}
 }
