@@ -16,7 +16,7 @@ public:
 
 protected:
 	float doCompression(float sample, float& y1, float& yL);
-	float gainComputer(float sample);
+	float gainComputer(float sample) const;
 	void levelDetector(float sample, float& y1, float& yL);
 
 private:

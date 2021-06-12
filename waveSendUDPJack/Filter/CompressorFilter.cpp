@@ -16,6 +16,7 @@ void CompressorFilter::reset() {
 
 void CompressorFilter::processSamples(float** output, const float** input, size_t count) {
 	if(enable) {
+		float staticGain = gainComputer(0) + makeUpGain;
 		for(size_t i = 0; i < count; i++) {
 			float largerCompressionDb = 0;
 
@@ -28,7 +29,7 @@ void CompressorFilter::processSamples(float** output, const float** input, size_
 			}
 
 			// db to ratio
-			float largerCompressionRatio = powf(10, (largerCompressionDb + makeUpGain) / 20);
+			float largerCompressionRatio = powf(10, (largerCompressionDb + staticGain) / 20);
 
 			for(size_t channel = 0; channel < numChannel; channel++) {
 				output[channel][i] = largerCompressionRatio * input[channel][i];
@@ -50,7 +51,7 @@ float CompressorFilter::doCompression(float sample, float& y1, float& yL) {
 	return -yL;
 }
 
-float CompressorFilter::gainComputer(float dbSample) {
+float CompressorFilter::gainComputer(float dbSample) const {
 	float zone = 2 * (dbSample - threshold);
 	if(zone == -INFINITY || zone <= -kneeWidth) {
 		return 0;
