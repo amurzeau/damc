@@ -20,7 +20,8 @@ public:
 	                   float threshold,
 	                   float makeUpGain,
 	                   float compressionRatio,
-	                   float kneeWidth);
+	                   float kneeWidth,
+	                   bool useMovingMax);
 
 	void show();
 
@@ -31,7 +32,8 @@ signals:
 	                      float threshold,
 	                      float makeUpGain,
 	                      float compressionRatio,
-	                      float kneeWidth);
+	                      float kneeWidth,
+	                      bool useMovingMax);
 
 protected slots:
 	void onParameterChanged();

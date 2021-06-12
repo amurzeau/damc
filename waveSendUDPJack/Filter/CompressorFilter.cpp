@@ -7,25 +7,29 @@ const float CompressorFilter::LOG10_VALUE_DIV_20 = std::log(10) / 20;
 
 void CompressorFilter::init(size_t numChannel) {
 	this->numChannel = numChannel;
-	previousPartialGainComputerOutput.resize(numChannel);
-	previousLevelDetectorOutput.resize(numChannel);
+	perChannelData.resize(numChannel);
 }
 
 void CompressorFilter::reset() {
-	std::fill_n(previousPartialGainComputerOutput.begin(), numChannel, 0);
-	std::fill_n(previousLevelDetectorOutput.begin(), numChannel, 0);
+	std::fill_n(perChannelData.begin(), numChannel, PerChannelData{});
 }
 
 void CompressorFilter::processSamples(float** output, const float** input, size_t count) {
 	if(enable) {
 		float staticGain = gainComputer(0) + makeUpGain;
 		for(size_t i = 0; i < count; i++) {
+			float largerCompressionDb = 0;
 			for(size_t channel = 0; channel < numChannel; channel++) {
-				float dbGain = doCompression(input[channel][i],
-				                             previousPartialGainComputerOutput[channel],
-				                             previousLevelDetectorOutput[channel]);
-				// db to ratio
-				output[channel][i] = expf(LOG10_VALUE_DIV_20 * (dbGain + staticGain)) * input[channel][i];
+				float dbGain = doCompression(input[channel][i], perChannelData[channel]);
+				if(dbGain < largerCompressionDb)
+					largerCompressionDb = dbGain;
+			}
+
+			// db to ratio
+			float largerCompressionRatio = expf(LOG10_VALUE_DIV_20 * (largerCompressionDb + staticGain));
+
+			for(size_t channel = 0; channel < numChannel; channel++) {
+				output[channel][i] = largerCompressionRatio * input[channel][i];
 			}
 		}
 	} else if(output != input) {
@@ -35,13 +39,13 @@ void CompressorFilter::processSamples(float** output, const float** input, size_
 	}
 }
 
-float CompressorFilter::doCompression(float sample, float& y1, float& yL) {
+float CompressorFilter::doCompression(float sample, PerChannelData& perChannelData) {
 	if(sample == 0)
 		return 0;
 
 	float dbSample = logf(fabsf(sample)) / LOG10_VALUE_DIV_20;
-	levelDetector(gainComputer(dbSample), y1, yL);
-	return -yL;
+	levelDetector(gainComputer(dbSample), perChannelData);
+	return -perChannelData.yL;
 }
 
 float CompressorFilter::gainComputer(float dbSample) const {
@@ -56,9 +60,31 @@ float CompressorFilter::gainComputer(float dbSample) const {
 	}
 }
 
-void CompressorFilter::levelDetector(float dbCompression, float& y1, float& yL) {
-	y1 = fmaxf(dbCompression, alphaR * y1 + (1 - alphaR) * dbCompression);
-	yL = alphaA * yL + (1 - alphaA) * y1;
+float CompressorFilter::PerChannelData::movingMax(float dbCompression) {
+	if(!compressionMovingMaxDeque.empty() && compressionMovingMaxDeque.front() == compressionHistoryPtr)
+		compressionMovingMaxDeque.pop_front();
+
+	while(!compressionMovingMaxDeque.empty() && dbCompression >= compressionHistory[compressionMovingMaxDeque.back()])
+		compressionMovingMaxDeque.pop_back();
+
+	compressionMovingMaxDeque.push_back(compressionHistoryPtr);
+	compressionHistory[compressionHistoryPtr] = dbCompression;
+	compressionHistoryPtr = (compressionHistoryPtr + 1) % compressionHistory.size();
+
+	return compressionHistory[compressionMovingMaxDeque.front()];
+}
+
+float CompressorFilter::PerChannelData::noProcessing(float dbCompression) {
+	return dbCompression;
+}
+
+void CompressorFilter::levelDetector(float dbCompression, PerChannelData& perChannelData) {
+	float decayedCompression = alphaR * perChannelData.y1 + (1 - alphaR) * dbCompression;
+	if(useMovingMax)
+		perChannelData.y1 = fmaxf(perChannelData.movingMax(dbCompression), decayedCompression);
+	else
+		perChannelData.y1 = fmaxf(dbCompression, decayedCompression);
+	perChannelData.yL = alphaA * perChannelData.yL + (1 - alphaA) * perChannelData.y1;
 }
 
 void CompressorFilter::setParameters(const nlohmann::json& json) {
@@ -78,6 +104,7 @@ void CompressorFilter::setParameters(const nlohmann::json& json) {
 	makeUpGain = json.at("makeUpGain").get<float>();
 	gainDiffRatio = 1 - 1 / json.at("ratio").get<float>();
 	kneeWidth = json.at("kneeWidth").get<float>();
+	useMovingMax = json.value("useMovingMax", true);
 }
 
 nlohmann::json CompressorFilter::getParameters() {
@@ -99,5 +126,6 @@ nlohmann::json CompressorFilter::getParameters() {
 	                               {"threshold", threshold},
 	                               {"makeUpGain", makeUpGain},
 	                               {"ratio", 1 / (1 - gainDiffRatio)},
-	                               {"kneeWidth", kneeWidth}});
+	                               {"kneeWidth", kneeWidth},
+	                               {"useMovingMax", useMovingMax}});
 }

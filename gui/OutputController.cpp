@@ -47,15 +47,15 @@ OutputController::OutputController(MainWindow* parent, int numEq)
 
 	compressorController = new CompressorController(this);
 	connect(compressorController,
-	        SIGNAL(parameterChanged(bool, float, float, float, float, float, float)),
+	        SIGNAL(parameterChanged(bool, float, float, float, float, float, float, bool)),
 	        this,
-	        SLOT(onChangeCompressor(bool, float, float, float, float, float, float)));
+	        SLOT(onChangeCompressor(bool, float, float, float, float, float, float, bool)));
 
 	expanderController = new CompressorController(this);
 	connect(expanderController,
-	        SIGNAL(parameterChanged(bool, float, float, float, float, float, float)),
+	        SIGNAL(parameterChanged(bool, float, float, float, float, float, float, bool)),
 	        this,
-	        SLOT(onChangeExpander(bool, float, float, float, float, float, float)));
+	        SLOT(onChangeExpander(bool, float, float, float, float, float, float, bool)));
 
 	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
 	ui->volumeLevelLabel->setTextSize(4, Qt::AlignRight | Qt::AlignVCenter);
@@ -176,7 +176,8 @@ void OutputController::sendChangeCompressor(const char* filterName,
                                             float threshold,
                                             float makeUpGain,
                                             float ratio,
-                                            float kneeWidth) {
+                                            float kneeWidth,
+                                            bool useMovingMax) {
 	qDebug("Changing compressor");
 
 	QJsonObject json;
@@ -189,6 +190,7 @@ void OutputController::sendChangeCompressor(const char* filterName,
 	filter["makeUpGain"] = makeUpGain;
 	filter["ratio"] = ratio;
 	filter["kneeWidth"] = kneeWidth;
+	filter["useMovingMax"] = useMovingMax;
 
 	json[filterName] = filter;
 
@@ -201,8 +203,10 @@ void OutputController::onChangeCompressor(bool enabled,
                                           float threshold,
                                           float makeUpGain,
                                           float ratio,
-                                          float kneeWidth) {
-	sendChangeCompressor("compressorFilter", enabled, releaseTime, attackTime, threshold, makeUpGain, ratio, kneeWidth);
+                                          float kneeWidth,
+                                          bool useMovingMax) {
+	sendChangeCompressor(
+	    "compressorFilter", enabled, releaseTime, attackTime, threshold, makeUpGain, ratio, kneeWidth, useMovingMax);
 }
 
 void OutputController::onChangeExpander(bool enabled,
@@ -211,8 +215,10 @@ void OutputController::onChangeExpander(bool enabled,
                                         float threshold,
                                         float makeUpGain,
                                         float ratio,
-                                        float kneeWidth) {
-	sendChangeCompressor("expanderFilter", enabled, releaseTime, attackTime, threshold, makeUpGain, ratio, kneeWidth);
+                                        float kneeWidth,
+                                        bool useMovingMax) {
+	sendChangeCompressor(
+	    "expanderFilter", enabled, releaseTime, attackTime, threshold, makeUpGain, ratio, kneeWidth, useMovingMax);
 }
 
 void OutputController::onChangeBalance(size_t channel, float balance) {
@@ -338,7 +344,8 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			                                    filterData["threshold"].toDouble(),
 			                                    filterData["makeUpGain"].toDouble(),
 			                                    filterData["ratio"].toDouble(),
-			                                    filterData["kneeWidth"].toDouble());
+			                                    filterData["kneeWidth"].toDouble(),
+			                                    filterData["useMovingMax"].toBool());
 			compressorController->blockSignals(false);
 		}
 
@@ -352,7 +359,8 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			                                  filterData["threshold"].toDouble(),
 			                                  filterData["makeUpGain"].toDouble(),
 			                                  filterData["ratio"].toDouble(),
-			                                  filterData["kneeWidth"].toDouble());
+			                                  filterData["kneeWidth"].toDouble(),
+			                                  false);
 			expanderController->blockSignals(false);
 		}
 

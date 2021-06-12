@@ -14,6 +14,7 @@ CompressorController::CompressorController(QWidget* parent) : QDialog(parent), u
 	connect(ui->staticGainSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onParameterChanged()));
 	connect(ui->ratioSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onParameterChanged()));
 	connect(ui->kneeWidthSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onParameterChanged()));
+	connect(ui->useMovingMaxCheckBox, SIGNAL(toggled(bool)), this, SLOT(onParameterChanged()));
 }
 
 CompressorController::~CompressorController() {
@@ -26,7 +27,8 @@ void CompressorController::setParameters(bool enabled,
                                          float threshold,
                                          float makeUpGain,
                                          float compressionRatio,
-                                         float kneeWidth) {
+                                         float kneeWidth,
+                                         bool useMovingMax) {
 	ui->enableCheckBox->setChecked(enabled);
 	ui->releaseTimeSpinBox->setValue(releaseTime * 1000);
 	ui->attackTimeSpinBox->setValue(attackTime * 1000);
@@ -34,6 +36,7 @@ void CompressorController::setParameters(bool enabled,
 	ui->staticGainSpinBox->setValue(makeUpGain);
 	ui->ratioSpinBox->setValue(compressionRatio);
 	ui->kneeWidthSpinBox->setValue(kneeWidth);
+	ui->useMovingMaxCheckBox->setChecked(useMovingMax);
 }
 
 void CompressorController::show() {
@@ -49,7 +52,8 @@ void CompressorController::onParameterChanged() {
 	                      ui->thresholdSpinBox->value(),
 	                      ui->staticGainSpinBox->value(),
 	                      ui->ratioSpinBox->value(),
-	                      ui->kneeWidthSpinBox->value());
+	                      ui->kneeWidthSpinBox->value(),
+	                      ui->useMovingMaxCheckBox->isChecked());
 }
 
 void CompressorController::hideEvent(QHideEvent*) {

@@ -37,14 +37,16 @@ protected slots:
 	                        float threshold,
 	                        float makeUpGain,
 	                        float compressionRatio,
-	                        float kneeWidth);
+	                        float kneeWidth,
+	                        bool useMovingMax);
 	void onChangeExpander(bool enabled,
 	                      float releaseTime,
 	                      float attackTime,
 	                      float threshold,
 	                      float makeUpGain,
 	                      float compressionRatio,
-	                      float kneeWidth);
+	                      float kneeWidth,
+	                      bool useMovingMax);
 	void onChangeBalance(size_t channel, float balance);
 
 	void onMessageReceived(const QJsonObject& message);
@@ -66,7 +68,8 @@ protected:
 	                          float threshold,
 	                          float makeUpGain,
 	                          float ratio,
-	                          float kneeWidth);
+	                          float kneeWidth,
+	                          bool useMovingMax);
 
 	void dragEnterEvent(QDragEnterEvent* event) override;
 	void dragMoveEvent(QDragMoveEvent* event) override;

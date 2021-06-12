@@ -2,10 +2,27 @@
 #define COMPRESSORFILTER_H
 
 #include "../json.h"
+#include <array>
+#include <deque>
 #include <stddef.h>
 #include <vector>
 
 class CompressorFilter {
+protected:
+	struct PerChannelData {
+		float y1;
+		float yL;
+
+		size_t compressionHistoryPtr;
+		std::array<float, 1024> compressionHistory;
+		std::deque<size_t> compressionMovingMaxDeque;
+
+		float speed;
+
+		float movingMax(float dbCompression);
+		float noProcessing(float dbCompression);
+	};
+
 public:
 	void init(size_t numChannel);
 	void reset();
@@ -15,14 +32,13 @@ public:
 	nlohmann::json getParameters();
 
 protected:
-	float doCompression(float sample, float& y1, float& yL);
+	float doCompression(float sample, PerChannelData& perChannelData);
 	float gainComputer(float sample) const;
-	void levelDetector(float sample, float& y1, float& yL);
+	void levelDetector(float sample, PerChannelData& perChannelData);
 
 private:
 	size_t numChannel;
-	std::vector<float> previousPartialGainComputerOutput;
-	std::vector<float> previousLevelDetectorOutput;
+	std::vector<PerChannelData> perChannelData;
 
 	bool enable = false;
 	float alphaR = 0.99916701379245836213502440855751;
@@ -31,6 +47,8 @@ private:
 	float makeUpGain = 0;
 	float gainDiffRatio = 0;
 	float kneeWidth = 0;
+	uint32_t gainHoldSamples = 48000 / 20;  // 20Hz period
+	bool useMovingMax = true;
 
 	static const float LOG10_VALUE_DIV_20;
 };
