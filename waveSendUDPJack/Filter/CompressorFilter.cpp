@@ -3,6 +3,8 @@
 #include <math.h>
 #include <string.h>
 
+const float CompressorFilter::LOG10_VALUE_DIV_20 = std::log(10) / 20;
+
 void CompressorFilter::init(size_t numChannel) {
 	this->numChannel = numChannel;
 	previousPartialGainComputerOutput.resize(numChannel);
@@ -18,21 +20,12 @@ void CompressorFilter::processSamples(float** output, const float** input, size_
 	if(enable) {
 		float staticGain = gainComputer(0) + makeUpGain;
 		for(size_t i = 0; i < count; i++) {
-			float largerCompressionDb = 0;
-
 			for(size_t channel = 0; channel < numChannel; channel++) {
 				float dbGain = doCompression(input[channel][i],
 				                             previousPartialGainComputerOutput[channel],
 				                             previousLevelDetectorOutput[channel]);
-				if(dbGain < largerCompressionDb)
-					largerCompressionDb = dbGain;
-			}
-
-			// db to ratio
-			float largerCompressionRatio = powf(10, (largerCompressionDb + staticGain) / 20);
-
-			for(size_t channel = 0; channel < numChannel; channel++) {
-				output[channel][i] = largerCompressionRatio * input[channel][i];
+				// db to ratio
+				output[channel][i] = expf(LOG10_VALUE_DIV_20 * (dbGain + staticGain)) * input[channel][i];
 			}
 		}
 	} else if(output != input) {
@@ -46,7 +39,7 @@ float CompressorFilter::doCompression(float sample, float& y1, float& yL) {
 	if(sample == 0)
 		return 0;
 
-	float dbSample = 20 * log10f(fabsf(sample));
+	float dbSample = logf(fabsf(sample)) / LOG10_VALUE_DIV_20;
 	levelDetector(gainComputer(dbSample), y1, yL);
 	return -yL;
 }
@@ -63,8 +56,8 @@ float CompressorFilter::gainComputer(float dbSample) const {
 	}
 }
 
-void CompressorFilter::levelDetector(float dbSample, float& y1, float& yL) {
-	y1 = fmaxf(dbSample, alphaR * y1 + (1 - alphaR) * dbSample);
+void CompressorFilter::levelDetector(float dbCompression, float& y1, float& yL) {
+	y1 = fmaxf(dbCompression, alphaR * y1 + (1 - alphaR) * dbCompression);
 	yL = alphaA * yL + (1 - alphaA) * y1;
 }
 

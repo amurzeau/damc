@@ -31,6 +31,8 @@ private:
 	float makeUpGain = 0;
 	float gainDiffRatio = 0;
 	float kneeWidth = 0;
+
+	static const float LOG10_VALUE_DIV_20;
 };
 
 #endif
