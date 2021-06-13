@@ -155,6 +155,9 @@
         <property name="text">
          <string>EQ</string>
         </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item row="6" column="0">
@@ -183,6 +186,9 @@
         </property>
         <property name="text">
          <string>Comp.</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -353,6 +359,9 @@
         </property>
         <property name="text">
          <string>Expan.</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

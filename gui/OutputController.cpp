@@ -117,6 +117,7 @@ void OutputController::onMute(bool muted) {
 }
 
 void OutputController::onShowEq() {
+	ui->eqButton->toggle();
 	if(equalizersController->isHidden()) {
 		equalizersController->show();
 	} else {
@@ -125,6 +126,7 @@ void OutputController::onShowEq() {
 }
 
 void OutputController::onShowCompressor() {
+	ui->compressorButton->toggle();
 	if(compressorController->isHidden()) {
 		compressorController->show();
 	} else {
@@ -133,6 +135,7 @@ void OutputController::onShowCompressor() {
 }
 
 void OutputController::onShowExpander() {
+	ui->expanderButton->toggle();
 	if(expanderController->isHidden()) {
 		expanderController->show();
 	} else {
@@ -322,6 +325,8 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 		QJsonValue eqFiltersValue = message.value("eqFilters");
 		if(eqFiltersValue.type() == QJsonValue::Array) {
 			QJsonArray eqFilters = eqFiltersValue.toArray();
+
+			bool atLeastOneEnabled = false;
 			for(int i = 0; i < eqFilters.size(); i++) {
 				QJsonObject eqFilter = eqFilters[i].toObject();
 
@@ -331,7 +336,9 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 				                                             eqFilter["f0"].toDouble(),
 				                                             eqFilter["Q"].toDouble(),
 				                                             eqFilter["gain"].toDouble());
+				atLeastOneEnabled = atLeastOneEnabled || eqFilter["enabled"].toBool();
 			}
+			ui->eqButton->setChecked(atLeastOneEnabled);
 		}
 
 		QJsonValue compressorValue = message.value("compressorFilter");
@@ -346,6 +353,7 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			                                    filterData["ratio"].toDouble(),
 			                                    filterData["kneeWidth"].toDouble(),
 			                                    filterData["useMovingMax"].toBool());
+			ui->compressorButton->setChecked(filterData["enabled"].toBool());
 			compressorController->blockSignals(false);
 		}
 
@@ -361,6 +369,7 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			                                  filterData["ratio"].toDouble(),
 			                                  filterData["kneeWidth"].toDouble(),
 			                                  false);
+			ui->expanderButton->setChecked(filterData["enabled"].toBool());
 			expanderController->blockSignals(false);
 		}
 
