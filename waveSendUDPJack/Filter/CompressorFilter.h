@@ -25,7 +25,7 @@ protected:
 
 public:
 	void init(size_t numChannel);
-	void reset();
+	void reset(double fs);
 	void processSamples(float** output, const float** input, size_t count);
 
 	void setParameters(const nlohmann::json& json);
@@ -41,6 +41,7 @@ private:
 	std::vector<PerChannelData> perChannelData;
 
 	bool enable = false;
+	double fs = 48000;
 	float alphaR = 0.99916701379245836213502440855751;
 	float alphaA = 0.99916701379245836213502440855751;
 	float threshold = 0;

@@ -220,7 +220,7 @@ static void do_filter_fir(std::vector<WAVESAMPLE>& data) {
 	ResamplingFilter filter;
 	std::vector<float> outputs;
 
-	filter.reset();
+	filter.reset(48000);
 
 	std::vector<WAVESAMPLE> newData;
 	newData.reserve(data.size());

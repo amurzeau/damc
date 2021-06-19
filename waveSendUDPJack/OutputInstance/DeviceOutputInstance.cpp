@@ -72,7 +72,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 		buffer.reset(jack_ringbuffer_create(jackBufferSize * 10 * sizeof(jack_default_audio_sample_t)));
 		ringBuffers.emplace_back(std::move(buffer));
 
-		resamplingFilters[i].reset();
+		resamplingFilters[i].reset(sampleRate);
 		resamplingFilters[i].setClockDrift(this->clockDrift);
 	}
 

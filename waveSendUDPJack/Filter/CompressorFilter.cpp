@@ -10,7 +10,9 @@ void CompressorFilter::init(size_t numChannel) {
 	perChannelData.resize(numChannel);
 }
 
-void CompressorFilter::reset() {
+void CompressorFilter::reset(double fs) {
+	this->fs = fs;
+	gainHoldSamples = (uint32_t)(fs / 20);
 	std::fill_n(perChannelData.begin(), numChannel, PerChannelData{});
 }
 
@@ -91,12 +93,12 @@ void CompressorFilter::setParameters(const nlohmann::json& json) {
 	enable = json.at("enabled").get<bool>();
 
 	if(json.at("attackTime").get<float>() != 0)
-		alphaA = expf(-1 / (json.at("attackTime").get<float>() * 48000.0f));
+		alphaA = expf(-1 / (json.at("attackTime").get<float>() * fs));
 	else
 		alphaA = 0;
 
 	if(json.at("releaseTime").get<float>() != 0)
-		alphaR = expf(-1 / (json.at("releaseTime").get<float>() * 48000.0f));
+		alphaR = expf(-1 / (json.at("releaseTime").get<float>() * fs));
 	else
 		alphaR = 0;
 
@@ -111,12 +113,12 @@ nlohmann::json CompressorFilter::getParameters() {
 	float attackTime, releaseTime;
 
 	if(alphaA != 0)
-		attackTime = -1 / logf(alphaA) / 48000.0f;
+		attackTime = -1 / logf(alphaA) / fs;
 	else
 		attackTime = 0;
 
 	if(alphaR != 0)
-		releaseTime = -1 / logf(alphaR) / 48000.0f;
+		releaseTime = -1 / logf(alphaR) / fs;
 	else
 		releaseTime = 0;
 

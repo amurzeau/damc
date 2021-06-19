@@ -18,7 +18,7 @@ int RemoteOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	outBuffers[0].resize(jackBufferSize);
 	outBuffers[1].resize(jackBufferSize);
 	for(ResamplingFilter& resamplingFilter : resamplingFilters) {
-		resamplingFilter.reset();
+		resamplingFilter.reset(sampleRate);
 	}
 	return remoteUdpOutput.init(index, sampleRate, ip.c_str(), port);
 }

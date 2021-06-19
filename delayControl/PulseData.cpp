@@ -48,7 +48,7 @@ int PulseData::open(const std::string& pulseFilename, jack_nframes_t bufferSize,
 		return sample / 32768.0f;  // normalize
 	});
 
-	resamplingFilter.reset();
+	resamplingFilter.reset(sampleRate);
 	resamplingFilter.setClockDrift(sampleRate / wavSampleRate);
 	resamplingFilter.processSamples(pulseResampled, pulseWave.data(), pulseWave.size());
 	pulseWave.swap(pulseResampled);
@@ -76,7 +76,7 @@ int PulseData::open(const std::string& pulseFilename, jack_nframes_t bufferSize,
 	currentPeakHistoryPos = 0;
 	insidePeak = false;
 	snapshotedThreshold = 0;
-	resamplingFilter.reset();
+	resamplingFilter.reset(sampleRate);
 
 	uv_mutex_init(&detectedPulsesMutex);
 

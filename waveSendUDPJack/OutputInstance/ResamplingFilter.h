@@ -7,7 +7,7 @@
 
 class ResamplingFilter {
 public:
-	void reset();
+	void reset(double fs);
 	void put(double sample);
 	int get(std::vector<float>& out, float period);
 
@@ -31,6 +31,7 @@ private:
 	float previousDelay;
 	std::array<double, 256> history;
 
+	double baseSamplingRate = 48000.f;
 	float downsamplingRatio = oversamplingRatio;
 
 	static bool initialized;

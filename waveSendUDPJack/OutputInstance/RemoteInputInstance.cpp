@@ -9,13 +9,14 @@ const char* RemoteInputInstance::getName() {
 }
 
 int RemoteInputInstance::start(int index, size_t numChannel, int sampleRate, int jackBufferSize) {
+	this->sampleRate = sampleRate;
 	resamplingFilters.resize(2);
 	resampledBuffer[0].resize(sampleRate);
 	resampledBuffer[1].resize(sampleRate);
 	inBuffers[0].reserve(sampleRate);
 	inBuffers[1].reserve(sampleRate);
 	for(ResamplingFilter& resamplingFilter : resamplingFilters) {
-		resamplingFilter.reset();
+		resamplingFilter.reset(sampleRate);
 	}
 	return remoteUdpInput.init(index, sampleRate, ip.c_str(), port);
 }
@@ -45,7 +46,7 @@ int RemoteInputInstance::postProcessSamples(float** samples, size_t numChannel, 
 			resamplingFilters[i].put(resampledBuffer[i][j]);
 			resamplingFilters[i].get(
 			    inBuffers[i],
-			    resamplingFilters[i].getOverSamplingRatio() / (this->clockDrift * 48000 / inputSampleRate));
+			    resamplingFilters[i].getOverSamplingRatio() / (this->clockDrift * this->sampleRate / inputSampleRate));
 		}
 	}
 

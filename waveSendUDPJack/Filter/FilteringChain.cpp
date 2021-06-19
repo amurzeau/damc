@@ -31,8 +31,8 @@ void FilterChain::reset(double fs) {
 		filter.reset(fs);
 	}
 
-	compressorFilter.reset();
-	expanderFilter.reset();
+	compressorFilter.reset(fs);
+	expanderFilter.reset(fs);
 }
 
 void FilterChain::processSamples(

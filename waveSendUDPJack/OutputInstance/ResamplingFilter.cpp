@@ -7,7 +7,7 @@
 bool ResamplingFilter::initialized;
 std::array<double, 8192> ResamplingFilter::optimized_coefs;
 
-void ResamplingFilter::reset() {
+void ResamplingFilter::reset(double fs) {
 	if(!initialized) {
 		initialized = true;
 
@@ -19,6 +19,7 @@ void ResamplingFilter::reset() {
 		}
 	}
 
+	baseSamplingRate = fs;
 	currentPos = 0;
 	previousDelay = oversamplingRatio - 1;
 	history.fill(0);
@@ -65,7 +66,7 @@ int ResamplingFilter::getNextOutputSize() {
 
 void ResamplingFilter::setClockDrift(float drift) {
 	float newRatio = oversamplingRatio / drift;
-	if(newRatio >= 1 && newRatio < 48000 * 8.0f)
+	if(newRatio >= 1 && newRatio < baseSamplingRate * 8.0f)
 		downsamplingRatio = newRatio;
 }
 float ResamplingFilter::getClockDrift() {
@@ -73,7 +74,7 @@ float ResamplingFilter::getClockDrift() {
 }
 
 void ResamplingFilter::setSamplingRate(float samplingRate) {
-	downsamplingRatio = oversamplingRatio * 48000 / samplingRate;
+	downsamplingRatio = oversamplingRatio * baseSamplingRate / samplingRate;
 }
 
 double ResamplingFilter::getLinearInterpolatedPoint(float delay) const {

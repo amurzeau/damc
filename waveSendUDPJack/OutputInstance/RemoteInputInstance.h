@@ -22,6 +22,7 @@ public:
 
 private:
 	RemoteUdpInput remoteUdpInput;
+	double sampleRate;
 	std::vector<float> resampledBuffer[2];
 	std::vector<float> inBuffers[2];
 	std::vector<ResamplingFilter> resamplingFilters;
