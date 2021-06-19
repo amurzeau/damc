@@ -54,6 +54,8 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	PaStreamParameters outputParameters;
 	int outputDeviceIndex;
 
+	stream = nullptr;
+
 	outputDeviceIndex = getDeviceIndex(outputDevice);
 
 	doDebug = outputDeviceIndex == 24;
@@ -81,11 +83,11 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	outputParameters.hostApiSpecificStreamInfo = NULL;
 
 	int ret = Pa_OpenStream(&stream,
-	                        0,
+	                        nullptr,
 	                        &outputParameters,
 	                        sampleRate,
 	                        paFramesPerBufferUnspecified,
-	                        paNoFlag,  // Clipping is on...
+	                        paClipOff | paDitherOff,
 	                        &renderCallback,
 	                        this);
 	if(ret != paNoError) {

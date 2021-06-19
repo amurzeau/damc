@@ -62,8 +62,18 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 
 	if(inputDeviceIndex < 0 || inputDeviceIndex >= Pa_GetDeviceCount()) {
 		printf("Bad portaudio input device %s\n", inputDevice.c_str());
-		inputDeviceIndex = -1;
 		return paInvalidDevice;
+	}
+
+	resampledBuffer.reserve(sampleRate);
+	resamplingFilters.resize(numChannel);
+	for(size_t i = 0; i < numChannel; i++) {
+		std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)> buffer(nullptr, &jack_ringbuffer_free);
+		buffer.reset(jack_ringbuffer_create(jackBufferSize * 5 * sizeof(jack_default_audio_sample_t)));
+		ringBuffers.emplace_back(std::move(buffer));
+
+		resamplingFilters[i].reset(sampleRate);
+		resamplingFilters[i].setClockDrift(this->clockDrift);
 	}
 
 	inputParameters.device = inputDeviceIndex;
@@ -72,28 +82,36 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 	inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
 	inputParameters.hostApiSpecificStreamInfo = NULL;
 
-	for(size_t i = 0; i < numChannel; i++) {
-		std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)> buffer(nullptr, &jack_ringbuffer_free);
-		buffer.reset(jack_ringbuffer_create(jackBufferSize * 5));
-		ringBuffers.emplace_back(std::move(buffer));
-	}
-
 	int ret = Pa_OpenStream(&stream,
 	                        &inputParameters,
-	                        NULL,
+	                        nullptr,
 	                        sampleRate,
 	                        paFramesPerBufferUnspecified,
-	                        paClipOff | paDitherOff,  // Clipping is on...
-	                        &renderCallback,
+	                        paClipOff | paDitherOff,
+	                        &renderCallbackStatic,
 	                        this);
 	if(ret != paNoError) {
-		printf("Portaudio open error: %d\n", ret);
+		printf("Portaudio open error: %d, device: %s::%s\n",
+		       ret,
+		       Pa_GetHostApiInfo(Pa_GetDeviceInfo(inputDeviceIndex)->hostApi)->name,
+		       Pa_GetDeviceInfo(inputDeviceIndex)->name);
 		return ret;
 	}
 
-	printf("Using in device %s, %s\n",
+	printf("Using output device %d %s, %s with latency %.3f\n",
+	       inputDeviceIndex,
 	       Pa_GetHostApiInfo(Pa_GetDeviceInfo(inputDeviceIndex)->hostApi)->name,
-	       Pa_GetDeviceInfo(inputDeviceIndex)->name);
+	       Pa_GetDeviceInfo(inputDeviceIndex)->name,
+	       Pa_GetStreamInfo(stream)->outputLatency);
+
+	bufferLatencyMeasurePeriodSize = 60 * sampleRate / jackBufferSize;
+	bufferLatencyNr = 0;
+	bufferLatencyHistory.clear();
+	bufferLatencyHistory.reserve(bufferLatencyMeasurePeriodSize);
+	previousAverageLatency = 0;
+	clockDriftPpm = 0;
+	isPaRunning = false;
+	printf("Using buffer size %d\n", jackBufferSize);
 
 	Pa_StartStream(stream);
 
@@ -102,40 +120,120 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 
 void DeviceInputInstance::setParameters(const nlohmann::json& json) {
 	inputDevice = json.value("device", inputDevice);
+
+	auto clockDrift = json.find("clockDrift");
+	if(clockDrift != json.end()) {
+		this->clockDrift = clockDrift.value().get<float>();
+		for(auto& resamplingFilter : resamplingFilters)
+			resamplingFilter.setClockDrift(this->clockDrift);
+	}
 }
 
 nlohmann::json DeviceInputInstance::getParameters() {
-	return nlohmann::json::object({{"device", inputDevice}});
+	return nlohmann::json::object({{"device", inputDevice}, {"clockDrift", clockDrift}});
+}
+
+int DeviceInputInstance::renderCallbackStatic(const void* input,
+                                              void* output,
+                                              unsigned long frameCount,
+                                              const PaStreamCallbackTimeInfo* timeInfo,
+                                              PaStreamCallbackFlags statusFlags,
+                                              void* userData) {
+	DeviceInputInstance* thisInstance = (DeviceInputInstance*) userData;
+	size_t numChannel = thisInstance->ringBuffers.size();
+	const jack_default_audio_sample_t* const* inputBuffers = (const jack_default_audio_sample_t**) input;
+
+	return thisInstance->renderCallback(inputBuffers, numChannel, frameCount);
+}
+
+int DeviceInputInstance::renderCallback(const float* const* samples, size_t numChannel, uint32_t nframes) {
+	isPaRunning = true;
+
+	for(size_t i = 0; i < numChannel; i++) {
+		size_t dataSize;
+		resamplingFilters[i].processSamples(resampledBuffer, samples[i], nframes);
+
+		dataSize = resampledBuffer.size() * sizeof(resampledBuffer[0]);
+
+		size_t availableData = jack_ringbuffer_write_space(ringBuffers[i].get());
+
+		if(dataSize < availableData) {
+			jack_ringbuffer_write(ringBuffers[i].get(), (const char*) resampledBuffer.data(), dataSize);
+		} else {
+			overflowOccured = true;
+			overflowSize = availableData;
+		}
+	}
+
+	return paContinue;
 }
 
 int DeviceInputInstance::postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) {
+	bool underflowOccured = false;
+	size_t availableData = 0;
+
 	for(size_t i = 0; i < ringBuffers.size(); i++) {
-		jack_ringbuffer_read(ringBuffers[i].get(), (char*) samples[i], nframes * sizeof(samples[i][0]));
+		availableData = jack_ringbuffer_read_space(ringBuffers[i].get());
+
+		if(availableData >= nframes * sizeof(samples[i][0])) {
+			jack_ringbuffer_read(ringBuffers[i].get(), (char*) samples[i], nframes * sizeof(samples[i][0]));
+		} else {
+			memset(reinterpret_cast<char*>(samples[i]), 0, nframes * sizeof(samples[i][0]));
+			underflowOccured = true;
+			underflowSize = availableData;
+		}
+	}
+
+	if(underflowOccured) {
+		underflowOccured = true;
+		bufferLatencyHistory.clear();
+	} else if(availableData) {
+		bufferLatencyHistory.push_back(availableData / sizeof(jack_default_audio_sample_t));
+
+		if(bufferLatencyHistory.size() == bufferLatencyMeasurePeriodSize) {
+			double averageLatency = 0;
+			for(auto value : bufferLatencyHistory) {
+				averageLatency += value;
+			}
+			averageLatency /= bufferLatencyHistory.size();
+			bufferLatencyHistory.clear();
+
+			if(previousAverageLatency != 0) {
+				double sampleLatencyDiffOver1s = averageLatency - previousAverageLatency;
+				double sampleMeasureDuration = bufferLatencyMeasurePeriodSize * nframes;
+
+				// Ignore drift of more than 0.1%
+				//				if(sampleLatencyDiffOver1s > (-sampleMeasureDuration / 1000) &&
+				//				   sampleLatencyDiffOver1s < (sampleMeasureDuration / 1000)) {
+				clockDriftPpm = 1000000.0 * sampleLatencyDiffOver1s / sampleMeasureDuration;
+				//				}
+			}
+
+			previousAverageLatency = averageLatency;
+		}
 	}
 
 	return 0;
 }
 
-int DeviceInputInstance::renderCallback(const void* input,
-                                        void* output,
-                                        unsigned long frameCount,
-                                        const PaStreamCallbackTimeInfo* timeInfo,
-                                        PaStreamCallbackFlags statusFlags,
-                                        void* userData) {
-	DeviceInputInstance* thisInstance = (DeviceInputInstance*) userData;
-	size_t numChannel = thisInstance->ringBuffers.size();
-
-	const jack_default_audio_sample_t** inputBuffers = (const jack_default_audio_sample_t**) input;
-
-	for(size_t i = 0; i < numChannel; i++) {
-		if(jack_ringbuffer_write_space(thisInstance->ringBuffers[i].get()) < frameCount * sizeof(inputBuffers[i][0]))
-			return 1;
+void DeviceInputInstance::onTimer() {
+	if(overflowOccured) {
+		printf("%s: Overflow: %d, %d\n", inputDevice.c_str(), bufferLatencyNr, overflowSize);
+		overflowOccured = false;
+	}
+	if(underflowOccured) {
+		printf("%s: underrun: %d, %d\n", inputDevice.c_str(), bufferLatencyNr, underflowSize);
+		underflowOccured = false;
+	}
+	if(clockDriftPpm) {
+		printf("%s: average latency: %f\n", inputDevice.c_str(), previousAverageLatency);
+		printf("%s: drift: %f\n", inputDevice.c_str(), clockDriftPpm);
+		clockDriftPpm = 0;
 	}
 
-	for(size_t i = 0; i < numChannel; i++) {
-		jack_ringbuffer_write(
-		    thisInstance->ringBuffers[i].get(), (const char*) inputBuffers[i], frameCount * sizeof(inputBuffers[i][0]));
+	if(!isPaRunning) {
+		printf("%s: portaudio not running !\n", inputDevice.c_str());
+	} else {
+		isPaRunning = false;
 	}
-
-	return paContinue;
 }
