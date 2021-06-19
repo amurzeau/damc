@@ -373,9 +373,9 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			expanderController->blockSignals(false);
 		}
 
-		QJsonValue nameValue = message.value("displayName");
-		if(nameValue.type() == QJsonValue::String) {
-			QString title = nameValue.toString().replace("waveSendUDP-", "");
+		QJsonValue displayNameValue = message.value("displayName");
+		if(displayNameValue.type() == QJsonValue::String) {
+			QString title = displayNameValue.toString().replace("waveSendUDP-", "");
 			ui->groupBox->setTitle(title);
 			equalizersController->setWindowTitle(tr("Equalizer - %1").arg(title));
 			compressorController->setWindowTitle(tr("Compressor - %1").arg(title));
@@ -384,14 +384,20 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 		}
 
 		if(ui->groupBox->toolTip().isEmpty()) {
+			QJsonValue nameValue = message.value("name");
 			QJsonValue deviceValue = message.value("device");
 			QJsonValue ipValue = message.value("ip");
 			QJsonValue portValue = message.value("port");
 
+			QString title = nameValue.toString("").replace("waveSendUDP-", "");
+
 			if(deviceValue.type() == QJsonValue::String)
-				ui->groupBox->setToolTip("Device: " + deviceValue.toString());
+				ui->groupBox->setToolTip(title + " Device: " + deviceValue.toString());
 			else if(ipValue.type() == QJsonValue::String)
-				ui->groupBox->setToolTip("Endpoint: " + ipValue.toString() + ":" + QString::number(portValue.toInt()));
+				ui->groupBox->setToolTip(title + " Endpoint: " + ipValue.toString() + ":" +
+				                         QString::number(portValue.toInt()));
+			else
+				ui->groupBox->setToolTip(title);
 		}
 	}
 }
