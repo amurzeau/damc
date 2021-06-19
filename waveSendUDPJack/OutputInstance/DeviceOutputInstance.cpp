@@ -74,6 +74,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 
 		resamplingFilters[i].reset(sampleRate);
 		resamplingFilters[i].setClockDrift(this->clockDrift);
+		resamplingFilters[i].setTargetSamplingRate(deviceSampleRate);
 	}
 
 	outputParameters.device = outputDeviceIndex;
@@ -85,16 +86,18 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	int ret = Pa_OpenStream(&stream,
 	                        nullptr,
 	                        &outputParameters,
-	                        sampleRate,
+	                        deviceSampleRate,
 	                        paFramesPerBufferUnspecified,
 	                        paClipOff | paDitherOff,
 	                        &renderCallback,
 	                        this);
 	if(ret != paNoError) {
-		printf("Portaudio open error: %d, device: %s::%s\n",
+		printf("Portaudio open error: %s(%d), device: %s::%s\n",
+		       Pa_GetErrorText(ret),
 		       ret,
 		       Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDeviceIndex)->hostApi)->name,
 		       Pa_GetDeviceInfo(outputDeviceIndex)->name);
+		return ret;
 	} else {
 		printf("Using output device %d %s, %s with latency %.3f\n",
 		       outputDeviceIndex,
@@ -110,7 +113,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	previousAverageLatency = 0;
 	clockDriftPpm = 0;
 	isPaRunning = false;
-	printf("Using buffer size %d\n", jackBufferSize);
+	printf("Using buffer size %d, device sample rate: %d\n", jackBufferSize, (int) deviceSampleRate);
 
 	Pa_StartStream(stream);
 
@@ -119,17 +122,25 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 
 void DeviceOutputInstance::setParameters(const nlohmann::json& json) {
 	outputDevice = json.value("device", outputDevice);
+	float newSampleRate = json.value("sampleRate", 0);
+	if(newSampleRate) {
+		deviceSampleRate = newSampleRate;
+	}
 
 	auto clockDrift = json.find("clockDrift");
 	if(clockDrift != json.end()) {
 		this->clockDrift = clockDrift.value().get<float>();
-		for(auto& resamplingFilter : resamplingFilters)
-			resamplingFilter.setClockDrift(this->clockDrift);
+	}
+
+	for(auto& resamplingFilter : resamplingFilters) {
+		resamplingFilter.setClockDrift(this->clockDrift);
+		resamplingFilter.setTargetSamplingRate(this->deviceSampleRate);
 	}
 }
 
 nlohmann::json DeviceOutputInstance::getParameters() {
-	return nlohmann::json::object({{"device", outputDevice}, {"clockDrift", clockDrift}});
+	return nlohmann::json::object(
+	    {{"device", outputDevice}, {"clockDrift", clockDrift}, {"sampleRate", deviceSampleRate}});
 }
 
 int DeviceOutputInstance::postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) {

@@ -65,15 +65,16 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 		return paInvalidDevice;
 	}
 
-	resampledBuffer.reserve(sampleRate);
+	resampledBuffer.reserve(deviceSampleRate);
 	resamplingFilters.resize(numChannel);
 	for(size_t i = 0; i < numChannel; i++) {
 		std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)> buffer(nullptr, &jack_ringbuffer_free);
 		buffer.reset(jack_ringbuffer_create(jackBufferSize * 5 * sizeof(jack_default_audio_sample_t)));
 		ringBuffers.emplace_back(std::move(buffer));
 
-		resamplingFilters[i].reset(sampleRate);
+		resamplingFilters[i].reset(deviceSampleRate);
 		resamplingFilters[i].setClockDrift(this->clockDrift);
+		resamplingFilters[i].setTargetSamplingRate(sampleRate);
 	}
 
 	inputParameters.device = inputDeviceIndex;
@@ -85,13 +86,14 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 	int ret = Pa_OpenStream(&stream,
 	                        &inputParameters,
 	                        nullptr,
-	                        sampleRate,
+	                        deviceSampleRate,
 	                        paFramesPerBufferUnspecified,
 	                        paClipOff | paDitherOff,
 	                        &renderCallbackStatic,
 	                        this);
 	if(ret != paNoError) {
-		printf("Portaudio open error: %d, device: %s::%s\n",
+		printf("Portaudio open error: %s(%d), device: %s::%s\n",
+		       Pa_GetErrorText(ret),
 		       ret,
 		       Pa_GetHostApiInfo(Pa_GetDeviceInfo(inputDeviceIndex)->hostApi)->name,
 		       Pa_GetDeviceInfo(inputDeviceIndex)->name);
@@ -111,7 +113,7 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 	previousAverageLatency = 0;
 	clockDriftPpm = 0;
 	isPaRunning = false;
-	printf("Using buffer size %d\n", jackBufferSize);
+	printf("Using buffer size %d, device sample rate: %d\n", jackBufferSize, (int) deviceSampleRate);
 
 	Pa_StartStream(stream);
 
@@ -120,17 +122,25 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 
 void DeviceInputInstance::setParameters(const nlohmann::json& json) {
 	inputDevice = json.value("device", inputDevice);
+	float newSampleRate = json.value("sampleRate", 0);
+	if(newSampleRate) {
+		deviceSampleRate = newSampleRate;
+	}
 
 	auto clockDrift = json.find("clockDrift");
 	if(clockDrift != json.end()) {
 		this->clockDrift = clockDrift.value().get<float>();
-		for(auto& resamplingFilter : resamplingFilters)
-			resamplingFilter.setClockDrift(this->clockDrift);
+	}
+
+	for(auto& resamplingFilter : resamplingFilters) {
+		resamplingFilter.setClockDrift(this->clockDrift);
+		resamplingFilter.setTargetSamplingRate(this->deviceSampleRate);
 	}
 }
 
 nlohmann::json DeviceInputInstance::getParameters() {
-	return nlohmann::json::object({{"device", inputDevice}, {"clockDrift", clockDrift}});
+	return nlohmann::json::object(
+	    {{"device", inputDevice}, {"clockDrift", clockDrift}, {"sampleRate", deviceSampleRate}});
 }
 
 int DeviceInputInstance::renderCallbackStatic(const void* input,
@@ -171,6 +181,9 @@ int DeviceInputInstance::renderCallback(const float* const* samples, size_t numC
 int DeviceInputInstance::postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) {
 	bool underflowOccured = false;
 	size_t availableData = 0;
+
+	if(!stream)
+		return 0;
 
 	for(size_t i = 0; i < ringBuffers.size(); i++) {
 		availableData = jack_ringbuffer_read_space(ringBuffers[i].get());

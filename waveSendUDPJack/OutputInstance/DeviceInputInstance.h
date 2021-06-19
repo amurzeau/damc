@@ -43,6 +43,7 @@ private:
 	std::vector<ResamplingFilter> resamplingFilters;
 	std::vector<float> resampledBuffer;
 	float clockDrift = 1.0f;
+	float deviceSampleRate = 48000.0f;
 	bool overflowOccured;
 	bool underflowOccured;
 

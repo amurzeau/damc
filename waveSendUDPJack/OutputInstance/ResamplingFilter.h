@@ -17,7 +17,7 @@ public:
 	void setClockDrift(float drift);
 	float getClockDrift();
 
-	void setSamplingRate(float samplingRate);
+	void setTargetSamplingRate(float samplingRate);
 
 	static constexpr unsigned int getOverSamplingRatio() { return oversamplingRatio; }
 
@@ -31,7 +31,8 @@ private:
 	float previousDelay;
 	std::array<double, 256> history;
 
-	double baseSamplingRate = 48000.f;
+	float baseSamplingRate = 48000.f;
+	float targetSamplingRate = 48000.f;
 	float downsamplingRatio = oversamplingRatio;
 
 	static bool initialized;

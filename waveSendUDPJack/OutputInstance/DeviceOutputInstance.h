@@ -42,6 +42,7 @@ private:
 	std::vector<std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)>> ringBuffers;
 	std::vector<ResamplingFilter> resamplingFilters;
 	std::vector<float> resampledBuffer;
+	float deviceSampleRate = 48000.0f;
 	float clockDrift = 1.0f;
 	//	std::atomic<jack_nframes_t> nextBufferedSampleJackTime;
 	bool doDebug;

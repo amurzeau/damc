@@ -7,6 +7,7 @@ NewOutputInstanceDialog::NewOutputInstanceDialog(WavePlayOutputInterface* interf
 	ui->setupUi(this);
 
 	connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(onConfirm()));
+	connect(ui->buttonBox, SIGNAL(rejected()), this, SLOT(hide()));
 }
 
 NewOutputInstanceDialog::~NewOutputInstanceDialog() {
@@ -36,6 +37,7 @@ void NewOutputInstanceDialog::onConfirm() {
 	json["port"] = ui->remotePortSpin->value();
 	json["device"] = ui->deviceDeviceCombo->currentText();
 	json["vban"] = ui->vbanCheckBox->isChecked();
+	json["sampleRate"] = ui->sampleRateSpinBox->value();
 
 	interface->sendMessage(json);
 	hide();
