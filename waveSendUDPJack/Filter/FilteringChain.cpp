@@ -39,16 +39,17 @@ void FilterChain::processSamples(
     float* peakOutput, float** output, const float** input, size_t numChannel, size_t count) {
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
 		delayFilters[channel].processSamples(output[channel], input[channel], count);
-		reverbFilters[channel].processSamples(output[channel], output[channel], count);
 	}
 
 	for(EqFilter& filter : eqFilters) {
 		filter.processSamples(output, const_cast<const float**>(output), count);
 	}
 
-	if(!mute) {
-		expanderFilter.processSamples(output, const_cast<const float**>(output), count);
-		compressorFilter.processSamples(output, const_cast<const float**>(output), count);
+	expanderFilter.processSamples(output, const_cast<const float**>(output), count);
+	compressorFilter.processSamples(output, const_cast<const float**>(output), count);
+
+	for(uint32_t channel = 0; channel < numChannel; channel++) {
+		reverbFilters[channel].processSamples(output[channel], output[channel], count);
 	}
 
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
