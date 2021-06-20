@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <xmmintrin.h>
 
 void onTtyAllocBuffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
 	buf->base = new char[suggested_size];
@@ -22,6 +23,10 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 
 int main(int argc, char* argv[]) {
 	uv_tty_t ttyRead;
+
+	unsigned int oldMXCSR = _mm_getcsr();      /* read the old MXCSR setting */
+	unsigned int newMXCSR = oldMXCSR | 0x8040; /* set DAZ and FZ bits */
+	_mm_setcsr(newMXCSR);                      /* write the new MXCSR setting to the MXCSR */
 
 	srand(time(nullptr));
 	Pa_Initialize();

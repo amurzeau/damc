@@ -29,13 +29,15 @@ void ExpanderFilter::processSamples(float** output, const float** input, size_t 
 			}
 
 			// db to ratio
-			float largerCompressionRatio = powf(10, (lowestCompressionDb + makeUpGain) / 20);
+			float largerCompressionRatio;
+
+			if(lowestCompressionDb != -INFINITY)
+				largerCompressionRatio = powf(10, (lowestCompressionDb + makeUpGain) / 20);
+			else
+				largerCompressionRatio = 0;
 
 			for(size_t channel = 0; channel < numChannel; channel++) {
 				float value = largerCompressionRatio * input[channel][i];
-
-				if(!isnormal(value))
-					value = 0.0f;
 
 				output[channel][i] = value;
 			}
