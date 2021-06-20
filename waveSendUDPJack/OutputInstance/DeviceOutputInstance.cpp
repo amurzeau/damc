@@ -67,6 +67,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 
 	resampledBuffer.reserve(sampleRate);
 	resamplingFilters.resize(numChannel);
+	ringBuffers.clear();
 	for(size_t i = 0; i < numChannel; i++) {
 		std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)> buffer(nullptr, &jack_ringbuffer_free);
 		buffer.reset(jack_ringbuffer_create(jackBufferSize * 10 * sizeof(jack_default_audio_sample_t)));
