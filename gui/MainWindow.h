@@ -21,11 +21,13 @@ public:
 	~MainWindow();
 
 	void moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore);
+	bool getShowDisabledOutputInstances() { return showDisabledOutputInstances; }
 
 protected slots:
 	void onMessage(const QJsonObject& message);
 	void onAddInstance();
 	void onRemoveInstance();
+	void onShowDisabled(bool showDisabled);
 
 protected:
 	void clearOutputs();
@@ -40,6 +42,8 @@ private:
 
 	NewOutputInstanceDialog addDialog;
 	bool openAddDialogRequested;
+
+	bool showDisabledOutputInstances;
 };
 
 #endif  // MAINWINDOW_H

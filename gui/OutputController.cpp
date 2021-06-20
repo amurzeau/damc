@@ -69,6 +69,11 @@ void OutputController::setInterface(int index, WavePlayInterface* interface) {
 	this->interface.setInterface(index, interface);
 }
 
+void OutputController::updateHiddenState() {
+	bool hide = !mainWindow->getShowDisabledOutputInstances() && ui->enableCheckBox->isChecked() == false;
+	setHidden(hide);
+}
+
 void OutputController::onChangeVolume(int volume) {
 	qDebug("Changing volume");
 	QJsonObject json;
@@ -97,6 +102,7 @@ void OutputController::onEnable(int state) {
 	if(state == Qt::Unchecked) {
 		json["enabled"] = false;
 		ui->groupBox->setDisabled(true);
+		updateHiddenState();
 
 		for(LevelMeterWidget* level : levelWidgets) {
 			level->setValue(translateLevel(-INFINITY));
@@ -105,6 +111,7 @@ void OutputController::onEnable(int state) {
 	} else {
 		json["enabled"] = true;
 		ui->groupBox->setDisabled(false);
+		updateHiddenState();
 	}
 	interface.sendMessage(json);
 }
@@ -273,6 +280,7 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			ui->enableCheckBox->setChecked(enableValue.toBool());
 			ui->enableCheckBox->blockSignals(false);
 			ui->groupBox->setDisabled(!enableValue.toBool());
+			updateHiddenState();
 		}
 
 		QJsonValue muteValue = message.value("mute");

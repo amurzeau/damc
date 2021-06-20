@@ -25,6 +25,8 @@ public:
 	void setInterface(int index, WavePlayInterface* interface);
 	WavePlayOutputInterface* getOutputInterface() { return &interface; };
 
+	void updateHiddenState();
+
 protected slots:
 	void onChangeVolume(int volume);
 	void onChangeDelay(double delay);

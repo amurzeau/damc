@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
 	connect(&mainControlInterface, SIGNAL(onMessage(QJsonObject)), this, SLOT(onMessage(const QJsonObject&)));
 	connect(ui->addButton, SIGNAL(clicked(bool)), this, SLOT(onAddInstance()));
 	connect(ui->removeButton, SIGNAL(clicked(bool)), this, SLOT(onRemoveInstance()));
+	connect(ui->showDisabledCheckBox, SIGNAL(toggled(bool)), this, SLOT(onShowDisabled(bool)));
 }
 
 MainWindow::~MainWindow() {
@@ -86,6 +87,13 @@ void MainWindow::onRemoveInstance() {
 		json["operation"] = "remove";
 		json["target"] = value;
 		mainControlInterface.sendMessage(json);
+	}
+}
+
+void MainWindow::onShowDisabled(bool showDisabled) {
+	showDisabledOutputInstances = showDisabled;
+	for(auto& output : outputs) {
+		output.second->updateHiddenState();
 	}
 }
 
