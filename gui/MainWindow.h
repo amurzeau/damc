@@ -36,7 +36,6 @@ private:
 	WavePlayInterface wavePlayInterface;
 	WavePlayOutputInterface mainControlInterface;
 	std::unordered_map<int, OutputController*> outputs;
-	std::vector<int> outputsOrder;
 	int numEq;
 
 	NewOutputInstanceDialog addDialog;

@@ -36,6 +36,7 @@ private:
 	int nextInstanceIndex;
 	int numEq;
 	std::map<int, std::unique_ptr<OutputInstance>> outputs;
+	std::vector<int> outputsOrder;
 	ControlServer controlServer;
 	std::string saveFileName;
 };

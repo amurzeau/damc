@@ -23,6 +23,7 @@ public:
 	~OutputController();
 
 	void setInterface(int index, WavePlayInterface* interface);
+	WavePlayOutputInterface* getOutputInterface() { return &interface; };
 
 protected slots:
 	void onChangeVolume(int volume);

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <uv.h>
 
+#include <set>
 #include <string.h>
 
 #include "OutputInstance/DeviceInputInstance.h"
@@ -61,6 +62,7 @@ void ControlInterface::loadConfig() {
 	try {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 
+		outputsOrder = jsonConfig.value("outputsOrder", std::vector<int>{});
 		for(const nlohmann::json& outputInstancesJson : jsonConfig.at("outputInstances")) {
 			addOutputInstance(outputInstancesJson);
 		}
@@ -81,6 +83,7 @@ void ControlInterface::saveConfig() {
 			outputInstancesJson.push_back(output.second->getParameters());
 		}
 
+		jsonConfigToSave["outputsOrder"] = outputsOrder;
 		jsonConfigToSave["outputInstances"] = outputInstancesJson;
 
 		std::string jsonData = jsonConfigToSave.dump(4);
@@ -182,12 +185,37 @@ void ControlInterface::onNewClient(ControlClient* client) {
 
 	client->sendMessage(jsonStr.c_str(), jsonStr.size());
 
+	std::set<int> outputsToSend;
 	for(auto& output : outputs) {
-		nlohmann::json json = {{"instance", -1}, {"operation", "add"}, {"target", output.first}};
+		outputsToSend.insert(output.first);
+	}
+
+	for(int index : outputsOrder) {
+		auto outputIt = outputsToSend.find(index);
+		if(outputIt == outputsToSend.end())
+			continue;
+
+		auto& output = outputs[index];
+
+		nlohmann::json json = {{"instance", -1}, {"operation", "add"}, {"target", index}};
 		std::string jsonStr = json.dump();
 		client->sendMessage(jsonStr.c_str(), jsonStr.size());
 
-		jsonStr = output.second->getParameters().dump();
+		jsonStr = output->getParameters().dump();
+		client->sendMessage(jsonStr.c_str(), jsonStr.size());
+
+		outputsToSend.erase(outputIt);
+	}
+
+	// Send remaning outputs that were not referenced by outputsOrder
+	for(int index : outputsToSend) {
+		auto& output = outputs[index];
+
+		nlohmann::json json = {{"instance", -1}, {"operation", "add"}, {"target", index}};
+		std::string jsonStr = json.dump();
+		client->sendMessage(jsonStr.c_str(), jsonStr.size());
+
+		jsonStr = output->getParameters().dump();
 		client->sendMessage(jsonStr.c_str(), jsonStr.size());
 	}
 }
@@ -244,6 +272,9 @@ void ControlInterface::messageProcessor(const void* data, size_t size) {
 				         {"Loopback", "RemoteOutput", "RemoteInput", "DeviceOutput", "DeviceInput"})}};
 				std::string jsonStr = json.dump();
 				controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
+			} else if(operation == "outputsOrder") {
+				outputsOrder = json.value("outputsOrder", std::vector<int>{});
+				saveConfig();
 			}
 		} else if(outputs.count(outputInstance) > 0) {
 			outputs[outputInstance]->setParameters(json);

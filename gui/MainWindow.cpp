@@ -116,6 +116,18 @@ void MainWindow::moveOutputInstance(int sourceInstance, int targetInstance, bool
 		       insertPosition,
 		       targetInstance);
 		ui->horizontalLayout->insertWidget(insertPosition, sourceWidget);
+
+		QJsonObject json;
+		json["operation"] = "outputsOrder";
+
+		QJsonArray array;
+		for(int i = 0; i < ui->horizontalLayout->count(); i++) {
+			OutputController* outputInstance = (OutputController*) ui->horizontalLayout->itemAt(i)->widget();
+			array.append(outputInstance->getOutputInterface()->getIndex());
+		}
+		json["outputsOrder"] = array;
+
+		mainControlInterface.sendMessage(json);
 	} else {
 		qDebug("Move instance %d from pos %d to %d (original pos)", sourceInstance, originalPosition, originalPosition);
 		ui->horizontalLayout->insertWidget(originalPosition, sourceWidget);
