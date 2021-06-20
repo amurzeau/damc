@@ -74,8 +74,8 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 		ringBuffers.emplace_back(std::move(buffer));
 
 		resamplingFilters[i].reset(sampleRate);
-		resamplingFilters[i].setClockDrift(this->clockDrift);
 		resamplingFilters[i].setTargetSamplingRate(deviceSampleRate);
+		resamplingFilters[i].setClockDrift(this->clockDrift);
 	}
 
 	outputParameters.device = outputDeviceIndex;
@@ -134,8 +134,8 @@ void DeviceOutputInstance::setParameters(const nlohmann::json& json) {
 	}
 
 	for(auto& resamplingFilter : resamplingFilters) {
-		resamplingFilter.setClockDrift(this->clockDrift);
 		resamplingFilter.setTargetSamplingRate(this->deviceSampleRate);
+		resamplingFilter.setClockDrift(this->clockDrift);
 	}
 }
 
