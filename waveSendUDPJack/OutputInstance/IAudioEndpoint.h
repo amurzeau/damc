@@ -11,6 +11,8 @@ class ControlClient;
 
 class IAudioEndpoint {
 public:
+	enum Direction { D_Output, D_Input };
+
 	virtual ~IAudioEndpoint() {}
 	virtual const char* getName() = 0;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) { return 0; }
@@ -20,6 +22,8 @@ public:
 	virtual void onTimer() {}
 
 	virtual int postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) = 0;
+
+	Direction direction = D_Output;
 };
 
 #endif

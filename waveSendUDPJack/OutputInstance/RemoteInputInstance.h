@@ -12,6 +12,8 @@
 
 class RemoteInputInstance : public IAudioEndpoint {
 public:
+	RemoteInputInstance() { direction = D_Input; }
+
 	virtual const char* getName() override;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) override;
 	virtual void stop() override;

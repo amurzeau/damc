@@ -266,7 +266,7 @@ nlohmann::json OutputInstance::getParameters() {
 int OutputInstance::processSamplesStatic(jack_nframes_t nframes, void* arg) {
 	OutputInstance* thisInstance = (OutputInstance*) arg;
 
-	if(thisInstance->type != DeviceInput && thisInstance->type != RemoteInput)
+	if(thisInstance->endpoint->direction == IAudioEndpoint::D_Output)
 		return thisInstance->processSamples(nframes);
 	else
 		return thisInstance->processInputSamples(nframes);

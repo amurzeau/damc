@@ -15,6 +15,8 @@
 
 class DeviceInputInstance : public IAudioEndpoint {
 public:
+	DeviceInputInstance() { direction = D_Input; }
+
 	static std::vector<std::string> getDeviceList();
 	static int getDeviceIndex(const std::string& name);
 
