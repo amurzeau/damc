@@ -13,13 +13,20 @@ public:
 
 	int processSamples(std::vector<float>& output, const float* input, size_t count);
 	int getNextOutputSize();
+	size_t getMaxRequiredOutputSize(size_t count);
+	size_t getMinRequiredOutputSize(size_t count);
 
 	void setClockDrift(float drift);
 	float getClockDrift();
 
+	void setSourceSamplingRate(float samplingRate);
+	float getSourceSamplingRate();
+
 	void setTargetSamplingRate(float samplingRate);
+	float getTargetSamplingRate();
 
 	static constexpr unsigned int getOverSamplingRatio() { return oversamplingRatio; }
+	float getDownSamplingRatio() { return downsamplingRatio; }
 
 protected:
 	inline double getLinearInterpolatedPoint(float delay) const;

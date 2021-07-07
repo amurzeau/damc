@@ -65,18 +65,40 @@ int ResamplingFilter::getNextOutputSize() {
 	return iterations;
 }
 
+size_t ResamplingFilter::getMaxRequiredOutputSize(size_t count) {
+	return ceilf(count * oversamplingRatio / downsamplingRatio);
+}
+
+size_t ResamplingFilter::getMinRequiredOutputSize(size_t count) {
+	return floorf(count * oversamplingRatio / downsamplingRatio);
+}
+
 void ResamplingFilter::setClockDrift(float drift) {
 	float newRatio = oversamplingRatio * baseSamplingRate / targetSamplingRate / drift;
 	if(newRatio >= 1)
 		downsamplingRatio = newRatio;
 }
+
 float ResamplingFilter::getClockDrift() {
-	return oversamplingRatio / downsamplingRatio;
+	return oversamplingRatio * baseSamplingRate / targetSamplingRate / downsamplingRatio;
+}
+
+void ResamplingFilter::setSourceSamplingRate(float samplingRate) {
+	baseSamplingRate = samplingRate;
+	downsamplingRatio = oversamplingRatio * baseSamplingRate / targetSamplingRate;
+}
+
+float ResamplingFilter::getSourceSamplingRate() {
+	return baseSamplingRate;
 }
 
 void ResamplingFilter::setTargetSamplingRate(float samplingRate) {
 	targetSamplingRate = samplingRate;
 	downsamplingRatio = oversamplingRatio * baseSamplingRate / targetSamplingRate;
+}
+
+float ResamplingFilter::getTargetSamplingRate() {
+	return targetSamplingRate;
 }
 
 double ResamplingFilter::getLinearInterpolatedPoint(float delay) const {
