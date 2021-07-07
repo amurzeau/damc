@@ -129,7 +129,6 @@ void BodePlotWidget::paintEvent(QPaintEvent* event) {
 	// Curves
 
 	painter.setRenderHint(QPainter::Antialiasing, true);
-	painter.setRenderHint(QPainter::HighQualityAntialiasing, true);
 
 	for(PlotCurve* curve : curves) {
 		float min, max;
