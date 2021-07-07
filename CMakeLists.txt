@@ -16,8 +16,10 @@ if(MINGW)
 	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
 	#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -Wall -fvisibility=hidden")
 
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse -mfpmath=sse -ffast-math -Wall")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse -mfpmath=sse -ffast-math -Wall")
+	set(ADD_FLAGS "-msse -mfpmath=sse -ffast-math -Wall")
+
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADD_FLAGS}")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADD_FLAGS}")
 endif()
 
 if(WIN32)
