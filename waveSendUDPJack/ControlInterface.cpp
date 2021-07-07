@@ -11,6 +11,9 @@
 #include "OutputInstance/LoopbackOutputInstance.h"
 #include "OutputInstance/RemoteInputInstance.h"
 #include "OutputInstance/RemoteOutputInstance.h"
+#ifdef _WIN32
+#include "OutputInstance/WasapiInstance.h"
+#endif
 
 ControlInterface::ControlInterface(const char* argv0) : nextInstanceIndex(0), numEq(6) {
 	char basePath[260];
@@ -125,6 +128,14 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 		case OutputInstance::DeviceInput:
 			outputInstance.reset(new OutputInstance(new DeviceInputInstance));
 			break;
+#ifdef _WIN32
+		case OutputInstance::WasapiDeviceOutput:
+			outputInstance.reset(new OutputInstance(new WasapiInstance(WasapiInstance::D_Output)));
+			break;
+		case OutputInstance::WasapiDeviceInput:
+			outputInstance.reset(new OutputInstance(new WasapiInstance(WasapiInstance::D_Input)));
+			break;
+#endif
 		default:
 			printf("Bad type %d\n", type);
 			return outputs.end();
@@ -263,13 +274,20 @@ void ControlInterface::messageProcessor(const void* data, size_t size) {
 					saveConfig();
 				}
 			} else if(operation == "query") {
-				nlohmann::json json = {
-				    {"instance", -1},
-				    {"operation", "queryResult"},
-				    {"deviceList", DeviceOutputInstance::getDeviceList()},
-				    {"typeList",
-				     nlohmann::json::array(
-				         {"Loopback", "RemoteOutput", "RemoteInput", "DeviceOutput", "DeviceInput"})}};
+				nlohmann::json json = {{"instance", -1},
+				                       {"operation", "queryResult"},
+				                       {"deviceList", DeviceOutputInstance::getDeviceList()},
+#ifdef _WIN32
+				                       {"deviceListWasapi", WasapiInstance::getDeviceList()},
+#endif
+				                       {"typeList",
+				                        nlohmann::json::array({"Loopback",
+				                                               "RemoteOutput",
+				                                               "RemoteInput",
+				                                               "DeviceOutput",
+				                                               "DeviceInput",
+				                                               "WasapiOutput",
+				                                               "WasapiInput"})}};
 				std::string jsonStr = json.dump();
 				controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
 			} else if(operation == "outputsOrder") {

@@ -40,6 +40,9 @@ void MainWindow::onMessage(const QJsonObject& message) {
 
 			addDialog.setTypeList(message["typeList"].toArray());
 			addDialog.setDeviceList(message["deviceList"].toArray());
+#ifdef _WIN32
+			addDialog.setWasapiDeviceList(message["deviceListWasapi"].toArray());
+#endif
 			addDialog.show();
 		} else if(message["operation"] == "add") {
 			int index = message["target"].toInt(-1);

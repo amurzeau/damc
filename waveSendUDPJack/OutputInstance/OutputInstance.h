@@ -16,7 +16,16 @@ class ControlClient;
 
 class OutputInstance {
 public:
-	enum Type { Loopback, RemoteOutput, RemoteInput, DeviceOutput, DeviceInput, MaxType };
+	enum Type {
+		Loopback,
+		RemoteOutput,
+		RemoteInput,
+		DeviceOutput,
+		DeviceInput,
+		WasapiDeviceOutput,
+		WasapiDeviceInput,
+		MaxType
+	};
 
 public:
 	OutputInstance(IAudioEndpoint* endpoint);

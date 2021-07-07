@@ -18,13 +18,18 @@ public:
 
 	void setTypeList(QJsonArray stringArray);
 	void setDeviceList(QJsonArray stringArray);
+	void setWasapiDeviceList(QJsonArray stringArray);
 
 protected slots:
 	void onConfirm();
+	void onDeviceTypeChanged();
 
 private:
 	Ui::NewOutputInstanceDialog* ui;
 	WavePlayOutputInterface* interface;
+
+	QJsonArray portaudioDeviceArray;
+	QJsonArray wasapiDeviceArray;
 };
 
 #endif  // DIALOG_H

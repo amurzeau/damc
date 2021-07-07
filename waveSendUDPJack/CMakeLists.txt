@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
 
+if(WIN32)
+	set(SOURCES
+		OutputInstance/WasapiInstance.cpp
+		OutputInstance/WasapiInstance.h
+	)
+else()
+	set(SOURCES)
+endif()
+
 add_executable(waveSendUDPJack
 	Filter/EqFilter.cpp
 	Filter/EqFilter.h
@@ -36,6 +45,8 @@ add_executable(waveSendUDPJack
 	OutputInstance/ResamplingFilter.cpp
 	OutputInstance/ResamplingFilter_coefs.cpp
 	OutputInstance/ResamplingFilter.h
+
+	${SOURCES}
 	
 	ControlServer.cpp
 	ControlServer.h
@@ -50,3 +61,7 @@ target_link_libraries(waveSendUDPJack uv portaudio)
 target_compile_definitions(waveSendUDPJack PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 target_link_libraries(waveSendUDPJack jack)
+
+if(WIN32)
+	target_link_libraries(waveSendUDPJack PUBLIC avrt ksuser)
+endif()

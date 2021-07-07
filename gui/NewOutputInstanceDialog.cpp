@@ -8,6 +8,7 @@ NewOutputInstanceDialog::NewOutputInstanceDialog(WavePlayOutputInterface* interf
 
 	connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(onConfirm()));
 	connect(ui->buttonBox, SIGNAL(rejected()), this, SLOT(hide()));
+	connect(ui->typeCombo, SIGNAL(activated(int)), this, SLOT(onDeviceTypeChanged()));
 }
 
 NewOutputInstanceDialog::~NewOutputInstanceDialog() {
@@ -22,10 +23,11 @@ void NewOutputInstanceDialog::setTypeList(QJsonArray stringArray) {
 }
 
 void NewOutputInstanceDialog::setDeviceList(QJsonArray stringArray) {
-	ui->deviceDeviceCombo->clear();
-	for(QJsonValueRef item : stringArray) {
-		ui->deviceDeviceCombo->addItem(item.toString());
-	}
+	portaudioDeviceArray = stringArray;
+}
+
+void NewOutputInstanceDialog::setWasapiDeviceList(QJsonArray stringArray) {
+	wasapiDeviceArray = stringArray;
 }
 
 void NewOutputInstanceDialog::onConfirm() {
@@ -38,7 +40,23 @@ void NewOutputInstanceDialog::onConfirm() {
 	json["device"] = ui->deviceDeviceCombo->currentText();
 	json["vban"] = ui->vbanCheckBox->isChecked();
 	json["sampleRate"] = ui->sampleRateSpinBox->value();
+	json["bitPerSample"] = ui->bitPerSampleSpinBox->value();
+	json["useExclusiveMode"] = ui->useExclusiveModeCheckBox->isChecked();
 
 	interface->sendMessage(json);
 	hide();
+}
+
+void NewOutputInstanceDialog::onDeviceTypeChanged() {
+	ui->deviceDeviceCombo->clear();
+
+	if(ui->typeCombo->currentText().contains("Wasapi")) {
+		for(QJsonValue item : qAsConst(wasapiDeviceArray)) {
+			ui->deviceDeviceCombo->addItem(item.toString());
+		}
+	} else {
+		for(QJsonValue item : qAsConst(portaudioDeviceArray)) {
+			ui->deviceDeviceCombo->addItem(item.toString());
+		}
+	}
 }
