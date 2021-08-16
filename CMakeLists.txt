@@ -81,6 +81,9 @@ add_subdirectory(gui)
 install(TARGETS
 	uv
 	portaudio
+	mysofa
+	fftw3f
+	zlib
 	RUNTIME DESTINATION ./
 	LIBRARY DESTINATION ./
 )
