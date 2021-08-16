@@ -57,7 +57,7 @@ private:
 	IAudioCaptureClient* pCaptureClient = nullptr;
 	HANDLE audioEvent;
 
-	size_t wasapiBufferSize;
+	UINT32 wasapiBufferSize;
 
 	std::vector<ResamplingFilter> resamplingFilters;
 	std::vector<std::vector<float>> resampledBuffer;
