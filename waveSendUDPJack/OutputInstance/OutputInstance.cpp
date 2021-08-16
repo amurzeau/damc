@@ -1,17 +1,26 @@
 #include "OutputInstance.h"
 #include "../ControlInterface.h"
 #include "../ControlServer.h"
+#include "../tinyosc.h"
 #include <algorithm>
 #include <jack/metadata.h>
 #include <jack/uuid.h>
 
-OutputInstance::OutputInstance(IAudioEndpoint* endpoint)
-    : endpoint(endpoint),
+OutputInstance::OutputInstance(OscContainer* parent, size_t index, IAudioEndpoint* endpoint)
+    : OscContainer(parent, std::to_string(index)),
+      endpoint(endpoint),
       enabled(true),
+      outputInstance(index),
       client(nullptr),
       numChannel(0),
+      filters(this),
       controlSettings(nlohmann::json::object()),
-      updateLevelTimer(nullptr) {}
+      updateLevelTimer(nullptr),
+      oscPeakGlobal(this, "meter", 0.f),
+      oscEnablePeakUpdate(this, "enable_peak", false),
+      oscEnablePeakJsonUpdate(this, "enable_peak_json", true) {
+	oscPeakPerChannelPath = getFullAddress() + "meter_per_channel";
+}
 
 OutputInstance::~OutputInstance() {
 	if(updateLevelTimer) {
@@ -31,15 +40,15 @@ OutputInstance::~OutputInstance() {
 
 int OutputInstance::init(ControlInterface* controlInterface,
                          ControlServer* controlServer,
+                         OscServer* oscServer,
                          int type,
-                         int index,
                          size_t numChannel,
                          const nlohmann::json& json) {
 	char buffer[128];
 
 	this->controlInterface = controlInterface;
 	this->controlServer = controlServer;
-	this->outputInstance = index;
+	this->oscServer = oscServer;
 	this->type = type;
 
 	if(numChannel > 32) {
@@ -56,7 +65,7 @@ int OutputInstance::init(ControlInterface* controlInterface,
 	uv_mutex_init(&filtersMutex);
 	uv_mutex_init(&peakMutex);
 
-	sprintf(buffer, "waveSendUDP-%s-%d", endpoint->getName(), index);
+	sprintf(buffer, "waveSendUDP-%s-%d", endpoint->getName(), outputInstance);
 	clientName = buffer;
 	clientDisplayName = clientName;
 
@@ -358,6 +367,7 @@ void OutputInstance::onTimeoutTimer() {
 		return;
 
 	float deltaT = (float) samples / this->sampleRate;
+	float maxLevel = 0;
 
 	for(size_t channel = 0; channel < peaks.size(); channel++) {
 		float peakDb = peaks[channel] != 0 ? 20.0 * log10(peaks[channel]) : -INFINITY;
@@ -365,11 +375,25 @@ void OutputInstance::onTimeoutTimer() {
 		float decayAmount = 11.76470588235294 * deltaT;  // -20dB / 1.7s
 		float levelDb = std::max(levelsDb[channel] - decayAmount, peakDb);
 		levelsDb[channel] = levelDb > -192 ? levelDb : -192;
+		if(channel == 0 || levelsDb[channel] > maxLevel)
+			maxLevel = levelsDb[channel];
+	}
+	if(oscEnablePeakUpdate.get()) {
+		oscPeakGlobal.set(maxLevel);
+
+		std::vector<OscArgument> arguments;
+		arguments.reserve(levelsDb.size());
+		for(const auto& v : levelsDb) {
+			arguments.emplace_back(v);
+		}
+		sendMessage(oscPeakPerChannelPath, arguments.data(), arguments.size());
 	}
 
-	nlohmann::json json = {{"instance", outputInstance}, {"levels", levelsDb}};
-	std::string jsonStr = json.dump();
-	controlServer->sendMessage(jsonStr.c_str(), jsonStr.size());
+	if(oscEnablePeakJsonUpdate.get()) {
+		nlohmann::json json = {{"instance", outputInstance}, {"levels", levelsDb}};
+		std::string jsonStr = json.dump();
+		controlServer->sendMessage(jsonStr.c_str(), jsonStr.size());
+	}
 
 	endpoint->onTimer();
 }

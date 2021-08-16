@@ -3,6 +3,8 @@
 
 #include "ControlClient.h"
 #include "ControlServer.h"
+#include "KeyBinding.h"
+#include "OscServer.h"
 #include "OutputInstance/OutputInstance.h"
 #include "json.h"
 #include <map>
@@ -38,6 +40,9 @@ private:
 	std::map<int, std::unique_ptr<OutputInstance>> outputs;
 	std::vector<int> outputsOrder;
 	ControlServer controlServer;
+	OscServer oscServer;
+	OscContainer oscRootNode;
+	KeyBinding keyBinding;
 	std::string saveFileName;
 };
 

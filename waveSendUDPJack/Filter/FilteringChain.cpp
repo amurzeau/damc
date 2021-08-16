@@ -2,7 +2,8 @@
 #include <math.h>
 #include <string.h>
 
-FilterChain::FilterChain() {}
+FilterChain::FilterChain(OscContainer* parent)
+    : OscContainer(parent, "filterChain"), masterVolume(this, "volume", 1.0f) {}
 
 void FilterChain::init(size_t numChannel) {
 	delayFilters.resize(numChannel + 1);  // +1 for side channel
@@ -37,6 +38,8 @@ void FilterChain::reset(double fs) {
 
 void FilterChain::processSamples(
     float* peakOutput, float** output, const float** input, size_t numChannel, size_t count) {
+	float masterVolume = this->masterVolume.get();
+
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
 		delayFilters[channel].processSamples(output[channel], input[channel], count);
 	}
@@ -53,7 +56,7 @@ void FilterChain::processSamples(
 	}
 
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
-		float volume = this->volume[channel] * this->masterVolume;
+		float volume = this->volume[channel] * masterVolume;
 		float peak = 0;
 		for(size_t i = 0; i < count; i++) {
 			output[channel][i] *= volume;
@@ -92,7 +95,7 @@ void FilterChain::setParameters(const nlohmann::json& json) {
 
 	auto volume = json.find("volume");
 	if(volume != json.end()) {
-		this->masterVolume = powf(10, volume.value().get<float>() / 20.0f);
+		this->masterVolume.set(powf(10, volume.value().get<float>() / 20.0f));
 	}
 
 	auto balance = json.find("balance");
@@ -156,7 +159,7 @@ void FilterChain::setParameters(const nlohmann::json& json) {
 nlohmann::json FilterChain::getParameters() {
 	nlohmann::json json = nlohmann::json::object({{"enabled", this->enabled},
 	                                              {"mute", this->mute},
-	                                              {"volume", 20.0 * log10(masterVolume)},
+	                                              {"volume", 20.0 * log10(masterVolume.get())},
 	                                              {"delayFilter", this->delayFilters[0].getParameters()},
 	                                              {"compressorFilter", this->compressorFilter.getParameters()},
 	                                              {"expanderFilter", this->expanderFilter.getParameters()}});

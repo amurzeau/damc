@@ -55,6 +55,14 @@ add_executable(waveSendUDPJack
 	ControlInterface.cpp
 	ControlInterface.h
 	json.h
+	KeyBinding.h
+	KeyBinding.cpp
+	OscAddress.h
+	OscAddress.cpp
+	OscServer.h
+	OscServer.cpp
+	tinyosc.c
+	tinyosc.h
 	waveSendUDPJack.cpp
 )
 target_link_libraries(waveSendUDPJack uv portaudio)

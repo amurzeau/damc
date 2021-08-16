@@ -1,6 +1,7 @@
 #ifndef FILTERINGCHAIN_H
 #define FILTERINGCHAIN_H
 
+#include "../OscAddress.h"
 #include "../json.h"
 #include "CompressorFilter.h"
 #include "DelayFilter.h"
@@ -12,9 +13,9 @@
 #include <stddef.h>
 #include <tuple>
 
-class FilterChain {
+class FilterChain : public OscContainer {
 public:
-	FilterChain();
+	FilterChain(OscContainer* parent);
 
 	void init(size_t numChannel);
 	void reset(double fs);
@@ -30,7 +31,7 @@ private:
 	bool eqFiltersEnabled = false;
 	std::vector<EqFilter> eqFilters;
 	std::vector<float> volume;
-	float masterVolume = 1.0f;
+	OscVariable<float, ConverterLogScale> masterVolume;
 	CompressorFilter compressorFilter;
 	ExpanderFilter expanderFilter;
 	bool mute = false;

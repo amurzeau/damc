@@ -15,7 +15,8 @@
 #include "OutputInstance/WasapiInstance.h"
 #endif
 
-ControlInterface::ControlInterface(const char* argv0) : nextInstanceIndex(0), numEq(6) {
+ControlInterface::ControlInterface(const char* argv0)
+    : nextInstanceIndex(0), numEq(6), oscRootNode(&oscServer, "strip"), keyBinding(&oscServer) {
 	char basePath[260];
 
 	size_t n = sizeof(basePath);
@@ -75,6 +76,8 @@ void ControlInterface::loadConfig() {
 	} catch(...) {
 		printf("Exception while parsing config\n");
 	}
+
+	oscServer.printAllNodes();
 }
 
 void ControlInterface::saveConfig() {
@@ -112,28 +115,37 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 	int numChannel;
 	std::unique_ptr<OutputInstance> outputInstance;
 
+	if(instance == -1)
+		instance = nextInstanceIndex;
+	else if(nextInstanceIndex < instance)
+		nextInstanceIndex = instance;
+
+	nextInstanceIndex++;
+
 	switch(type) {
 		case OutputInstance::Loopback:
-			outputInstance.reset(new OutputInstance(new LoopbackOutputInstance));
+			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new LoopbackOutputInstance));
 			break;
 		case OutputInstance::RemoteOutput:
-			outputInstance.reset(new OutputInstance(new RemoteOutputInstance));
+			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new RemoteOutputInstance));
 			break;
 		case OutputInstance::RemoteInput:
-			outputInstance.reset(new OutputInstance(new RemoteInputInstance));
+			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new RemoteInputInstance));
 			break;
 		case OutputInstance::DeviceOutput:
-			outputInstance.reset(new OutputInstance(new DeviceOutputInstance));
+			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new DeviceOutputInstance));
 			break;
 		case OutputInstance::DeviceInput:
-			outputInstance.reset(new OutputInstance(new DeviceInputInstance));
+			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new DeviceInputInstance));
 			break;
 #ifdef _WIN32
 		case OutputInstance::WasapiDeviceOutput:
-			outputInstance.reset(new OutputInstance(new WasapiInstance(WasapiInstance::D_Output)));
+			outputInstance.reset(
+			    new OutputInstance(&oscRootNode, instance, new WasapiInstance(WasapiInstance::D_Output)));
 			break;
 		case OutputInstance::WasapiDeviceInput:
-			outputInstance.reset(new OutputInstance(new WasapiInstance(WasapiInstance::D_Input)));
+			outputInstance.reset(
+			    new OutputInstance(&oscRootNode, instance, new WasapiInstance(WasapiInstance::D_Input)));
 			break;
 #endif
 		default:
@@ -148,14 +160,7 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 		printf("Missing numChannel configuration, using 2\n");
 		numChannel = 2;
 	}
-
-	if(instance == -1)
-		instance = nextInstanceIndex;
-	else if(nextInstanceIndex < instance)
-		nextInstanceIndex = instance;
-
-	nextInstanceIndex++;
-	outputInstance->init(this, &controlServer, type, instance, numChannel, outputInstancesJson);
+	outputInstance->init(this, &controlServer, &oscServer, type, numChannel, outputInstancesJson);
 
 	return outputs.emplace(std::make_pair(instance, std::move(outputInstance))).first;
 }
@@ -167,6 +172,7 @@ void ControlInterface::removeOutputInstance(std::map<int, std::unique_ptr<Output
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
 	controlServer.init(controlIp, controlPort, &messageProcessorStatic, &onNewClientStatic, this);
+	oscServer.init(controlIp, controlPort + 1);
 
 	return 0;
 }
@@ -176,6 +182,7 @@ void ControlInterface::run() {
 }
 
 void ControlInterface::stop() {
+	oscServer.stop();
 	controlServer.stop();
 
 	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {

@@ -2,6 +2,8 @@
 #define OUTPUTJACKINSTANCE_H
 
 #include "../Filter/FilteringChain.h"
+#include "../OscAddress.h"
+#include "../OscServer.h"
 #include "../json.h"
 #include "IAudioEndpoint.h"
 #include <stdint.h>
@@ -14,7 +16,7 @@ class ControlInterface;
 class ControlServer;
 class ControlClient;
 
-class OutputInstance {
+class OutputInstance : public OscContainer {
 public:
 	enum Type {
 		Loopback,
@@ -28,13 +30,13 @@ public:
 	};
 
 public:
-	OutputInstance(IAudioEndpoint* endpoint);
+	OutputInstance(OscContainer* parent, size_t index, IAudioEndpoint* endpoint);
 	virtual ~OutputInstance();
 
 	int init(ControlInterface* controlInterface,
 	         ControlServer* controlServer,
+	         OscServer* oscServer,
 	         int type,
-	         int index,
 	         size_t numChannel,
 	         const nlohmann::json& json);
 	int start();
@@ -60,6 +62,7 @@ protected:
 private:
 	ControlInterface* controlInterface;
 	ControlServer* controlServer;
+	OscServer* oscServer;
 	IAudioEndpoint* endpoint;
 	bool enabled;
 	int outputInstance;
@@ -82,6 +85,10 @@ private:
 	uv_mutex_t peakMutex;
 	int samplesInPeaks;
 	std::vector<float> peaksPerChannel;
+	OscReadOnlyVariable<float> oscPeakGlobal;
+	std::string oscPeakPerChannelPath;
+	OscVariable<bool> oscEnablePeakUpdate;
+	OscVariable<bool> oscEnablePeakJsonUpdate;
 };
 
 #endif
