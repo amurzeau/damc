@@ -176,11 +176,18 @@ std::vector<std::string> WasapiInstance::getDeviceList() {
 
 	for(UINT i = 0; i < count; i++) {
 		IMMDevice* pEndpoint;
+		DWORD state;
 		IPropertyStore* pProps = NULL;
 		PROPVARIANT varName;
 		std::string deviceName;
 
 		pMMDeviceCollection->Item(i, &pEndpoint);
+
+		hr = pEndpoint->GetState(&state);
+		if(FAILED(hr) || state != DEVICE_STATE_ACTIVE) {
+			pEndpoint->Release();
+			continue;
+		}
 
 		hr = pEndpoint->OpenPropertyStore(STGM_READ, &pProps);
 		if(FAILED(hr)) {
@@ -215,6 +222,7 @@ exit:
 	SAFE_RELEASE(pMMDeviceCollection);
 	SAFE_RELEASE(pMMDeviceEnumerator);
 
+	std::sort(result.begin(), result.end());
 	return result;
 }
 
