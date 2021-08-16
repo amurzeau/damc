@@ -1,0 +1,45 @@
+version: 0.1.1.{build}
+image: Visual Studio 2019
+environment:
+  matrix:
+    # 64 bits
+    - TARGET_NAME: win64
+      QT_TARGET: mingw81_64
+      COMPILER_PATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64
+    # 32 bits
+    - TARGET_NAME: win32
+      QT_TARGET: mingw81_32
+      COMPILER_PATH: C:\mingw-w64\i686-8.1.0-posix-dwarf-rt_v6-rev0\mingw32
+install:
+- ps: |
+    $JACK_VERSION="v1.9.19"
+    Write-Host "Downloading Jack $env:TARGET_NAME $JACK_VERSION ..."
+    $exePath = "$($env:TEMP)\jack2_installer.exe"
+    (New-Object Net.WebClient).DownloadFile("https://github.com/jackaudio/jack2-releases/releases/download/$JACK_VERSION/jack2-$env:TARGET_NAME-$JACK_VERSION.exe", $exePath)
+    Write-Host "Installing..."
+    cmd /c start /wait $exePath /SILENT /NORESTART /NOICONS /TYPE=full
+    Write-Host "Done installing Jack $env:TARGET_NAME $JACK_VERSION"
+build_script:
+- ps: |
+    git submodule -q update --init --recursive 2>$null
+    mkdir "build_$env:TARGET_NAME"
+    cd "build_$env:TARGET_NAME"
+    $env:CC="gcc.exe"
+    $env:CXX="g++.exe"
+    $env:PATH="$env:COMPILER_PATH\bin;$env:PATH"
+    cmake .. -GNinja "-DCMAKE_BUILD_TYPE=RelWithDebInfo" "-DBUILD_TESTS=OFF" "-DBUILD_SHARED_LIBS=TRUE" "-DCMAKE_PREFIX_PATH=C:\Qt\5.15\$env:QT_TARGET\lib\cmake\Qt5" "-DCPACK_PACKAGE_VERSION=$env:APPVEYOR_BUILD_VERSION"
+    cmake --build . --target package --config RelWithDebInfo
+    foreach ($file in $(ls waveOverUDP-*.zip)) { Push-AppveyorArtifact $file }
+deploy:
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  release: waveOverUDP $(APPVEYOR_REPO_TAG_NAME)
+  description: 'waveOverUDP release $(APPVEYOR_REPO_TAG_NAME)'
+  provider: GitHub
+  auth_token:
+    secure: ZLpI8aoNJxwWCJ9AFsXSBz7+bSOLOR0nuHi0engVUbpKZivwtwgKR7exIpnqawgM
+  artifact: /waveOverUDP.*\.zip/  # upload all binaries package (not tests logs)
+  draft: false
+  prerelease: false
+  force_update: true
+  on:
+    APPVEYOR_REPO_TAG: true        # deploy on tag push only
