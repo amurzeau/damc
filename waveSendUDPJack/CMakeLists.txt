@@ -71,3 +71,8 @@ target_compile_definitions(waveSendUDPJack PRIVATE _USE_MATH_DEFINES _CRT_SECURE
 if(WIN32)
 	target_link_libraries(waveSendUDPJack PUBLIC avrt ksuser)
 endif()
+
+install(TARGETS waveSendUDPJack
+	RUNTIME DESTINATION ./
+	LIBRARY DESTINATION ./
+)

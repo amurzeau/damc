@@ -79,8 +79,6 @@ add_subdirectory(binauralSynthesis)
 add_subdirectory(gui)
 
 install(TARGETS
-	waveSendUDPJack
-	waveSendUDPJackGui
 	uv
 	portaudio
 	RUNTIME DESTINATION ./

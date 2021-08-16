@@ -51,7 +51,7 @@ set(SOURCES
 	BodePlotWidget.cpp
 )
 
-find_package(Qt5 QUIET COMPONENTS Core Gui Widgets Network)
+find_package(Qt5 COMPONENTS Core Gui Widgets Network)
 if(Qt5_FOUND)
 
 set(CMAKE_AUTOMOC ON)
