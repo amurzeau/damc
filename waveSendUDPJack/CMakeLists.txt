@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 if(WIN32)
 	set(SOURCES
@@ -65,10 +65,8 @@ add_executable(waveSendUDPJack
 	tinyosc.h
 	waveSendUDPJack.cpp
 )
-target_link_libraries(waveSendUDPJack uv portaudio)
+target_link_libraries(waveSendUDPJack PUBLIC uv portaudio jack)
 target_compile_definitions(waveSendUDPJack PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
-
-target_link_libraries(waveSendUDPJack jack)
 
 if(WIN32)
 	target_link_libraries(waveSendUDPJack PUBLIC avrt ksuser)

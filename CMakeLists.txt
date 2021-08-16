@@ -12,14 +12,34 @@ set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_POSITION_INDEPENDENT_CODE True)
 
 if(MINGW)
-	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fvisibility=hidden")
-	#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
-	#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -Wall -fvisibility=hidden")
+	set(COMPILER_FLAGS "-msse -mfpmath=sse -ffast-math -Wall")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_FLAGS}")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COMPILER_FLAGS}")
 
-	set(ADD_FLAGS "-msse -mfpmath=sse -ffast-math -Wall")
+	# set(LINKER_FLAGS "-static-libgcc -static-libstdc++")
+	# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
+	# set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
+	# set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} ${LINKER_FLAGS}")
+	# set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
+	message( STATUS "Installing system-libraries: MinGW DLLs." )
+	get_filename_component( MINGW_PATH ${CMAKE_CXX_COMPILER} PATH )
 
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADD_FLAGS}")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADD_FLAGS}")
+	if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
+		set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS
+			${MINGW_PATH}/libgcc_s_dw2-1.dll
+			${MINGW_PATH}/libstdc++-6.dll
+			${MINGW_PATH}/libwinpthread-1.dll
+		)
+	else()
+		set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS
+			${MINGW_PATH}/libgcc_s_seh-1.dll
+			${MINGW_PATH}/libstdc++-6.dll
+			${MINGW_PATH}/libwinpthread-1.dll
+		)
+	endif()
+
+	set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ./)
+	include(InstallRequiredSystemLibraries)
 endif()
 
 if(WIN32)
@@ -39,7 +59,7 @@ if(WIN32)
 		set(JACK_INCLUDE_DIR ${JACK_BASE_INCLUDE_DIR}/..)
 	endif()
 
-	message(STATUS "Jack found at ${JACK_INCLUDE_DIR} / ${JACK_LIBRARY} / ${JACK_LIBRARY_DLL}")
+	message(STATUS "Jack found at ${JACK_INCLUDE_DIR} / ${JACK_LIBRARY}")
 	add_library(jack SHARED IMPORTED GLOBAL)
 	target_include_directories(jack INTERFACE ${JACK_INCLUDE_DIR})
 	set_property(TARGET jack PROPERTY IMPORTED_LOCATION ${JACK_LIBRARY})
@@ -60,20 +80,36 @@ if(UNIX)
 	target_link_libraries(wavePlayUDPJack jack)
 endif()
 
-add_subdirectory(portaudio)
-add_subdirectory(libuv)
+add_subdirectory(portaudio EXCLUDE_FROM_ALL)
+add_subdirectory(libuv EXCLUDE_FROM_ALL)
 
 add_subdirectory(waveSendUDPJack)
 add_subdirectory(delayControl)
 add_subdirectory(parseWave)
-add_subdirectory(zlib)
-add_subdirectory(libmysofa)
+add_subdirectory(zlib EXCLUDE_FROM_ALL)
+add_subdirectory(libmysofa EXCLUDE_FROM_ALL)
 target_compile_definitions(mysofa PUBLIC VDEBUG)
 
 option (BUILD_TESTS "Build tests" OFF)
 set (DISABLE_FORTRAN ON)
 set (ENABLE_FLOAT ON)
-add_subdirectory(fftw-3.3.8)
+option(DISABLE_FORTRAN "" ON)
+option(ENABLE_FLOAT "" ON)
+add_subdirectory(fftw-3.3.8 EXCLUDE_FROM_ALL)
 
 add_subdirectory(binauralSynthesis)
 add_subdirectory(gui)
+
+install(TARGETS
+	waveSendUDPJack
+	waveSendUDPJackGui
+	uv
+	portaudio
+	RUNTIME DESTINATION ./
+	LIBRARY DESTINATION ./
+)
+
+set(CPACK_GENERATOR ZIP)
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+
+include(CPack)

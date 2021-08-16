@@ -4,7 +4,7 @@
 # http://www.portaudio.com/trac/wiki/TutorialDir/Compile/CMake
 #
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 # Check if the user is building PortAudio stand-alone or as part of a larger
 # project. If this is part of a larger project (i.e. the CMakeLists.txt has
