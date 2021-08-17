@@ -17,7 +17,7 @@ add_executable(delayControl
 	../waveSendUDPJack/OutputInstance/ResamplingFilter.cpp
 	../waveSendUDPJack/OutputInstance/ResamplingFilter_coefs.cpp
 )
-target_link_libraries(delayControl uv)
+target_link_libraries(delayControl uv::uv)
 target_compile_definitions(delayControl PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 target_link_libraries(delayControl Jack::Jack)

@@ -58,35 +58,20 @@ if(UNIX)
 	target_link_libraries(wavePlayUDPJack Jack::Jack)
 endif()
 
-add_subdirectory(portaudio EXCLUDE_FROM_ALL)
-add_subdirectory(libuv EXCLUDE_FROM_ALL)
+
+set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "deps")
+add_subdirectory(deps)
+
+set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "waveSendUDPJack")
 
 add_subdirectory(waveSendUDPJack)
-add_subdirectory(delayControl)
-add_subdirectory(parseWave)
-add_subdirectory(zlib EXCLUDE_FROM_ALL)
-add_subdirectory(libmysofa EXCLUDE_FROM_ALL)
-target_compile_definitions(mysofa PUBLIC VDEBUG)
-
-option (BUILD_TESTS "Build tests" OFF)
-set (DISABLE_FORTRAN ON)
-set (ENABLE_FLOAT ON)
-option(DISABLE_FORTRAN "" ON)
-option(ENABLE_FLOAT "" ON)
-add_subdirectory(fftw-3.3.8 EXCLUDE_FROM_ALL)
-
-add_subdirectory(binauralSynthesis)
 add_subdirectory(gui)
 
-install(TARGETS
-	uv
-	portaudio
-	mysofa
-	fftw3f
-	zlib
-	RUNTIME DESTINATION ./
-	LIBRARY DESTINATION ./
-)
+set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "tools")
+
+add_subdirectory(delayControl)
+add_subdirectory(parseWave)
+add_subdirectory(binauralSynthesis)
 
 set(CPACK_GENERATOR ZIP)
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
