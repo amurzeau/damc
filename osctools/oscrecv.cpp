@@ -3,6 +3,17 @@
 #include <uv.h>
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef _WIN32
+typedef SOCKET socket_t;
+typedef int socketaddr_len_t;
+#else
+#include <unistd.h>
+typedef int socket_t;
+typedef socklen_t socketaddr_len_t;
+#endif
 
 void close_socket(int s) {
 #ifndef _WIN32
@@ -13,11 +24,7 @@ void close_socket(int s) {
 }
 
 int main() {
-#ifdef _WIN32
-	SOCKET sock_fd;
-#else
-	int sock_fd
-#endif
+	socket_t sock_fd;
 	char recvBuffer[65536];
 
 #ifdef _WIN32
@@ -29,7 +36,7 @@ int main() {
 
 	// Setup socket server
 	sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
-	if(sock_fd == -1)
+	if(sock_fd == (socket_t) -1)
 		return 1;
 
 	memset(&sin, 0, sizeof(sin));
@@ -41,7 +48,7 @@ int main() {
 		return 2;
 
 	struct sockaddr_in recvaddr;
-	int recvaddr_size = sizeof(recvaddr);
+	socketaddr_len_t recvaddr_size = sizeof(recvaddr);
 	int recvsize;
 	while((recvsize = recvfrom(
 	           sock_fd, recvBuffer, sizeof(recvBuffer), 0, (struct sockaddr*) &recvaddr, &recvaddr_size)) >= 0) {
