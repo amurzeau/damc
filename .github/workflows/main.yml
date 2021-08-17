@@ -24,6 +24,7 @@ jobs:
       matrix:
         config:
           - arch: 32
+            choco_opts: "--forceX86"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -32,19 +33,27 @@ jobs:
       
       - name: Install dependencies
         run: |
-          choco install jack --forceX86
-          choco install qt5-default --forceX86
+          $JACK_VERSION="v1.9.19"
+          echo "Downloading Jack win${{ matrix.config.arch }} $JACK_VERSION ..."
+          $exePath = "$($env:TEMP)\jack2_installer.exe"
+          (New-Object Net.WebClient).DownloadFile("https://github.com/jackaudio/jack2-releases/releases/download/$JACK_VERSION/jack2-win${{ matrix.config.arch }}-$JACK_VERSION.exe", $exePath)
+          echo "Installing..."
+          cmd /c start /wait $exePath /SILENT /NORESTART /NOICONS /TYPE=full
+          echo "Done installing Jack win${{ matrix.config.arch }} $JACK_VERSION"
+          
+          choco install qt5-default ${{ matrix.config.choco_opts }}
+          choco install mingw --force --version=8.1.0 ${{ matrix.config.choco_opts }} 
 
       # Runs a set of commands using the runners shell
       - name: Build
         run: |
           $env:CC="gcc.exe"
           $env:CXX="g++.exe"
-          $env:PATH="C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw${{ matrix.config.arch }}\bin;$env:PATH"
+          $env:PATH="C:\msys64\mingw${{ matrix.config.arch }}\bin;$env:PATH"
           git submodule -q update --init --recursive
           mkdir build
           echo $env:PATH
-          ls -Recurse C:\ProgramData\chocolatey\lib\mingw
+          ls -Recurse C:\msys64
           cmake -S . -B build "-GMinGW Makefiles" "-DCMAKE_BUILD_TYPE=RelWithDebInfo" "-DBUILD_TESTS=OFF" "-DBUILD_SHARED_LIBS=TRUE" "-DCMAKE_PREFIX_PATH=C:\Qt\5.15.2\mingw81_${{ matrix.config.arch }}\lib\cmake\Qt5"
           cmake --build build --target package --config RelWithDebInfo -- -j4
 
