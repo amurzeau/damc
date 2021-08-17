@@ -54,7 +54,7 @@ jobs:
           mkdir build
           echo $env:PATH
           ls -Recurse C:\msys64
-          cmake -S . -B build "-GMinGW Makefiles" "-DCMAKE_BUILD_TYPE=RelWithDebInfo" "-DBUILD_TESTS=OFF" "-DBUILD_SHARED_LIBS=TRUE" "-DCMAKE_PREFIX_PATH=C:\Qt\5.15.2\mingw81_${{ matrix.config.arch }}\lib\cmake\Qt5"
+          cmake -S . -B build "-GMinGW Makefiles" "-DCMAKE_PREFIX_PATH=C:\Qt\5.15.2\mingw81_${{ matrix.config.arch }}\lib\cmake\Qt5"
           cmake --build build --target package --config RelWithDebInfo -- -j4
 
       - name: Upload a Build Artifact
