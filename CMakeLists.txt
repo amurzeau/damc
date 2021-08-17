@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 project(waveOverUDP)
 
+# option() honors normal variables
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
