@@ -50,18 +50,24 @@ if(PULSEAUDIO_FOUND)
   set(PULSEAUDIO_LIBRARIES ${PULSEAUDIO_LIBRARY} ${PULSEAUDIO_MAINLOOP_LIBRARY} ${PULSEAUDIO_SIMPLE_LIBRARY})
   set(PULSEAUDIO_DEFINITIONS -DHAS_PULSEAUDIO=1)
 
+  if(NOT TARGET PulseAudio::PulseAudio)
+    add_library(PulseAudio::PulseAudio UNKNOWN IMPORTED)
+    set_target_properties(PulseAudio::PulseAudio PROPERTIES
+                                                 IMPORTED_LOCATION "${PULSEAUDIO_LIBRARY}")
+	target_include_directories(PulseAudio::PulseAudio INTERFACE ${PULSEAUDIO_INCLUDE_DIR})
+	target_compile_definitions(PulseAudio::PulseAudio INTERFACE HAVE_LIBPULSE=1 _REENTRANT=1)
+  endif()
   if(NOT TARGET PulseAudio::PulseAudioMainloop)
     add_library(PulseAudio::PulseAudioMainloop UNKNOWN IMPORTED)
     set_target_properties(PulseAudio::PulseAudioMainloop PROPERTIES
                                                          IMPORTED_LOCATION "${PULSEAUDIO_MAINLOOP_LIBRARY}")
+	target_link_libraries(PulseAudio::PulseAudioMainloop INTERFACE PulseAudio::PulseAudio)
   endif()
-  if(NOT TARGET PulseAudio::PulseAudio)
-    add_library(PulseAudio::PulseAudio UNKNOWN IMPORTED)
-    set_target_properties(PulseAudio::PulseAudio PROPERTIES
-                                                 IMPORTED_LOCATION "${PULSEAUDIO_LIBRARY}"
-                                                 INTERFACE_INCLUDE_DIRECTORIES "${PULSEAUDIO_INCLUDE_DIR}"
-                                                 INTERFACE_COMPILE_DEFINITIONS HAVE_LIBPULSE=1
-                                                 INTERFACE_LINK_LIBRARIES PulseAudio::PulseAudioMainloop)
+  if(NOT TARGET PulseAudio::PulseAudioSimple)
+    add_library(PulseAudio::PulseAudioSimple UNKNOWN IMPORTED)
+    set_target_properties(PulseAudio::PulseAudioSimple PROPERTIES
+                                                       IMPORTED_LOCATION "${PULSEAUDIO_SIMPLE_LIBRARY}")
+	target_link_libraries(PulseAudio::PulseAudioSimple INTERFACE PulseAudio::PulseAudio)
   endif()
 endif()
 

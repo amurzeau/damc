@@ -59,7 +59,7 @@ if(UNIX)
 
 	if(PULSEAUDIO_FOUND)
 		add_executable(waveSendUDPPulse waveSendUDPPulse.cpp Logger.cpp Logger.h)
-		target_link_libraries(waveSendUDPPulse PulseAudio::PulseAudio)
+		target_link_libraries(waveSendUDPPulse PulseAudio::PulseAudioSimple)
 	endif()
 
 	add_executable(wavePlayUDPJack wavePlayUDPJack.cpp Logger.cpp Logger.h)
