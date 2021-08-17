@@ -18,27 +18,22 @@ if(MINGW)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMPILER_FLAGS}")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COMPILER_FLAGS}")
 
-	# set(LINKER_FLAGS "-static-libgcc -static-libstdc++")
-	# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
-	# set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
-	# set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} ${LINKER_FLAGS}")
-	# set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
-	message( STATUS "Installing system-libraries: MinGW DLLs." )
 	get_filename_component( MINGW_PATH ${CMAKE_CXX_COMPILER} PATH )
 
-	if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
-		set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS
-			${MINGW_PATH}/libgcc_s_dw2-1.dll
-			${MINGW_PATH}/libstdc++-6.dll
-			${MINGW_PATH}/libwinpthread-1.dll
-		)
-	else()
-		set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS
-			${MINGW_PATH}/libgcc_s_seh-1.dll
-			${MINGW_PATH}/libstdc++-6.dll
-			${MINGW_PATH}/libwinpthread-1.dll
-		)
-	endif()
+	macro(list_append_if_exists LIST_NAME FILE_NAME)
+		if(EXISTS ${FILE_NAME})
+			list(APPEND ${LIST_NAME} ${FILE_NAME})
+		endif()
+	endmacro()
+
+	set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
+	list_append_if_exists(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${MINGW_PATH}/libgcc_s_dw2-1.dll)
+	list_append_if_exists(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${MINGW_PATH}/libgcc_s_seh-1.dll)
+	list_append_if_exists(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${MINGW_PATH}/libgcc_s_sjlj-1.dll)
+	list_append_if_exists(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${MINGW_PATH}/libstdc++-6.dll)
+	list_append_if_exists(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS ${MINGW_PATH}/libwinpthread-1.dll)
+
+	message( STATUS "Installing system-libraries: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}" )
 
 	set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ./)
 	include(InstallRequiredSystemLibraries)
