@@ -78,7 +78,6 @@ void OscServer::sendMessage(const std::string& address, const OscArgument* argum
 		instance->availableBuffersToSend.pop_front();
 	}
 	if(sendBuffer.buffer.size() == 0) {
-		printf("Buffer size is %u\n", (unsigned int) sendBuffer.buffer.size());
 		sendBuffer.buffer.resize(1024);
 	}
 
@@ -146,7 +145,7 @@ void OscServer::addAddress(std::string address, OscNode* oscAddress) {
 		return;
 
 	instance->variables.emplace(address, oscAddress);
-	printf("Adding address %s\n", address.c_str());
+	// printf("Adding address %s\n", address.c_str());
 }
 
 void OscServer::removeAddress(OscNode* oscAddress) {
