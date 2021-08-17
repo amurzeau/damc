@@ -78,7 +78,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install qtbase5-dev libasound2-dev libjack-dev libpulse-dev portaudio19-dev ninja-build
+          sudo apt-get install qtbase5-dev libasound2-dev libjack-jackd2-dev libpulse-dev portaudio19-dev ninja-build
 
       # Runs a set of commands using the runners shell
       - name: Build
