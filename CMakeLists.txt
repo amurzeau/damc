@@ -45,27 +45,6 @@ if(MINGW)
 	include(InstallRequiredSystemLibraries)
 endif()
 
-if(UNIX)
-	find_package(ALSA)
-	find_package(PulseAudio)
-
-	if(ALSA_FOUND)
-		add_executable(wavePlayUDP wavePlayUDP.cpp filter.h filter_fir2.h Logger.cpp Logger.h)
-		target_link_libraries(wavePlayUDP ALSA::ALSA)
-
-		add_executable(waveSendUDP waveSendUDP.cpp Logger.cpp Logger.h)
-		target_link_libraries(waveSendUDP ALSA::ALSA)
-	endif()
-
-	if(PULSEAUDIO_FOUND)
-		add_executable(waveSendUDPPulse waveSendUDPPulse.cpp Logger.cpp Logger.h)
-		target_link_libraries(waveSendUDPPulse PulseAudio::PulseAudioSimple)
-	endif()
-
-	add_executable(wavePlayUDPJack wavePlayUDPJack.cpp Logger.cpp Logger.h)
-	target_link_libraries(wavePlayUDPJack Jack::Jack)
-endif()
-
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "deps")
 add_subdirectory(deps)
@@ -76,6 +55,31 @@ add_subdirectory(waveSendUDPJack)
 add_subdirectory(gui)
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "tools")
+
+if(UNIX)
+	find_package(ALSA)
+	find_package(PulseAudio)
+
+	if(ALSA_FOUND)
+		add_executable(wavePlayUDP wavePlayUDP.cpp filter.h filter_fir2.h Logger.cpp Logger.h)
+		target_link_libraries(wavePlayUDP ALSA::ALSA)
+		install(TARGETS wavePlayUDP RUNTIME DESTINATION ./)
+
+		add_executable(waveSendUDP waveSendUDP.cpp Logger.cpp Logger.h)
+		target_link_libraries(waveSendUDP ALSA::ALSA)
+		install(TARGETS waveSendUDP RUNTIME DESTINATION ./)
+	endif()
+
+	if(PULSEAUDIO_FOUND)
+		add_executable(waveSendUDPPulse waveSendUDPPulse.cpp Logger.cpp Logger.h)
+		target_link_libraries(waveSendUDPPulse PulseAudio::PulseAudioSimple)
+		install(TARGETS waveSendUDPPulse RUNTIME DESTINATION ./)
+	endif()
+
+	add_executable(wavePlayUDPJack wavePlayUDPJack.cpp Logger.cpp Logger.h)
+	target_link_libraries(wavePlayUDPJack Jack::Jack)
+	install(TARGETS wavePlayUDPJack RUNTIME DESTINATION ./)
+endif()
 
 add_subdirectory(delayControl)
 add_subdirectory(parseWave)
