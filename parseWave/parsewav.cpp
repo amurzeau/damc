@@ -10,11 +10,15 @@
 #ifdef WIN32
 #include <Windows.h>
 static LARGE_INTEGER QPCfrequency;
-#define CALLGRIND_START_INSTRUMENTATION
-#define CALLGRIND_STOP_INSTRUMENTATION
 #else
 #include <time.h>
+#endif
+
+#ifdef HAVE_VALGRIND
 #include <valgrind/callgrind.h>
+#else
+#define CALLGRIND_START_INSTRUMENTATION
+#define CALLGRIND_STOP_INSTRUMENTATION
 #endif
 
 static void initTimestamp() {
