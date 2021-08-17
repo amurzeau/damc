@@ -1,7 +1,6 @@
 #include "OutputInstance.h"
 #include "../ControlInterface.h"
 #include "../ControlServer.h"
-#include "../tinyosc.h"
 #include <algorithm>
 #include <jack/metadata.h>
 #include <jack/uuid.h>

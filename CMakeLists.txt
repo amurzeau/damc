@@ -51,6 +51,7 @@ add_subdirectory(deps)
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "waveSendUDPJack")
 
+add_subdirectory(tinyosc)
 add_subdirectory(waveSendUDPJack)
 add_subdirectory(gui)
 
@@ -84,6 +85,7 @@ endif()
 add_subdirectory(delayControl)
 add_subdirectory(parseWave)
 add_subdirectory(binauralSynthesis)
+add_subdirectory(osctools)
 
 set(CPACK_GENERATOR ZIP)
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
