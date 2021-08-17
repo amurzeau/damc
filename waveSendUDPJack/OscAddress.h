@@ -75,22 +75,6 @@ public:
 
 	virtual std::string getAsString() = 0;
 
-protected:
-	template<class Converter, typename T> static T getFromOsc(T value) {
-		if constexpr(std::is_void_v<Converter>) {
-			return value;
-		} else {
-			return Converter::toOsc(value);
-		}
-	}
-	template<class Converter, typename T> static T setFromOsc(T v) {
-		if constexpr(std::is_void_v<Converter>) {
-			return v;
-		} else {
-			return Converter::fromOsc(v);
-		}
-	}
-
 private:
 	std::string name;
 	std::string fullAddress;
@@ -126,64 +110,129 @@ private:
 	std::function<void(std::vector<OscArgument>)> onExecute;
 };
 
-template<typename T, class Converter = void> class OscReadOnlyVariable : protected OscContainer {
+template<typename T> class OscReadOnlyVariable : protected OscContainer {
 public:
-	OscReadOnlyVariable(OscContainer* parent, std::string name, T initialValue) noexcept
-	    : OscContainer(parent, name), value(initialValue) {}
+	using underlying_type = T;
 
-	void set(T v) {
-		value = v;
+	OscReadOnlyVariable(OscContainer* parent, std::string name, T initialValue = {}) noexcept
+	    : OscContainer(parent, name), value(initialValue) {
 		notifyOsc();
 	}
+	OscReadOnlyVariable(const OscReadOnlyVariable&) = delete;
 
-	T get() { return value; }
-
-	std::string getAsString() override {
-		if constexpr(std::is_same_v<T, std::string>) {
-			return value;
-		} else {
-			return std::to_string(value);
+	void set(T v) {
+		if(value != v) {
+			value = v;
+			notifyOsc();
+			if(onChange) {
+				onChange(this->get());
+			}
 		}
 	}
 
-protected:
-	template<typename TArray, class ConverterArray> friend class OscArray;
+	T& get() { return value; }
+	const T& get() const { return value; }
 
+	template<typename U = T> std::enable_if_t<std::is_same_v<U, std::string>, const char*> c_str() {
+		return value.c_str();
+	}
+
+	operator T() const { return value; }
+
+	using OscContainer::operator=;
+	OscReadOnlyVariable& operator=(const T& v) {
+		set(v);
+		return *this;
+	}
+	OscReadOnlyVariable& operator=(const OscReadOnlyVariable<T>& v) {
+		set(v.value);
+		return *this;
+	}
+	template<typename U = T>
+	std::enable_if_t<std::is_same_v<U, std::string>, OscReadOnlyVariable&> operator=(const char* v) {
+		set(v);
+		return *this;
+	}
+	bool operator==(const OscReadOnlyVariable<T>& other) { return value == other.value; }
+	bool operator!=(const OscReadOnlyVariable<T>& other) { return !(*this == other); }
+
+	std::string getAsString() override {
+		if constexpr(std::is_same_v<T, std::string>) {
+			return "\"" + getToOsc() + "\"";
+		} else {
+			return std::to_string(getToOsc());
+		}
+	}
+
+	void setOscConverters(std::function<T(T)> convertToOsc, std::function<T(T)> convertFromOsc) {
+		this->convertToOsc = convertToOsc;
+		this->convertFromOsc = convertFromOsc;
+	}
+
+	void setChangeCallback(std::function<void(T)> onChange) {
+		this->onChange = onChange;
+		onChange(this->get());
+	}
+
+protected:
 	void notifyOsc() {
-		OscArgument valueToSend = OscNode::getFromOsc<Converter>(value);
+		OscArgument valueToSend = getToOsc();
 		sendMessage(&valueToSend, 1);
+	}
+
+	T getToOsc() {
+		if(!convertToOsc)
+			return get();
+		else
+			return convertToOsc(get());
+	}
+	void setFromOsc(T value) {
+		if(!convertFromOsc)
+			set(value);
+		else
+			set(convertFromOsc(value));
 	}
 
 private:
 	T value{};
+
+	std::function<T(T)> convertToOsc;
+	std::function<T(T)> convertFromOsc;
+	std::function<void(T)> onChange;
 };
 
-template<typename T, class Converter = void> class OscVariable : public OscReadOnlyVariable<T, Converter> {
+template<typename T> class OscVariable : public OscReadOnlyVariable<T> {
 public:
-	OscVariable(OscContainer* parent, std::string name, T initialValue) noexcept
-	    : OscReadOnlyVariable<T, Converter>(parent, name, initialValue) {
+	OscVariable(OscContainer* parent, std::string name, T initialValue = {}) noexcept
+	    : OscReadOnlyVariable<T>(parent, name, initialValue) {
 		if constexpr(std::is_same_v<T, bool>) {
 			subEndpoint.emplace_back(new OscEndpoint(this, "toggle"))->setCallback([this](auto) {
-				this->setFromOsc(!OscNode::getFromOsc<Converter>(this->get()));
-				this->notifyOsc();
+				this->setFromOsc(!this->getToOsc());
 			});
+		} else if constexpr(std::is_same_v<T, std::string>) {
+			// No toggle/increment/decrement
 		} else {
+			incrementAmount = (T) 1;
 			subEndpoint.emplace_back(new OscEndpoint(this, "increment"))->setCallback([this](auto) {
-				this->setFromOsc(OscNode::getFromOsc<Converter>(this->get()) + incrementAmount);
-				this->notifyOsc();
+				this->setFromOsc(this->getToOsc() + incrementAmount);
 			});
 			subEndpoint.emplace_back(new OscEndpoint(this, "decrement"))->setCallback([this](auto) {
-				this->setFromOsc(OscNode::getFromOsc<Converter>(this->get()) - incrementAmount);
-				this->notifyOsc();
+				this->setFromOsc(this->getToOsc() - incrementAmount);
 			});
 		}
+	}
+
+	using OscReadOnlyVariable<T>::operator=;
+	OscVariable& operator=(const OscVariable<T>& v) {
+		this->set(v.get());
+		return *this;
 	}
 
 	void execute(const std::vector<OscArgument>& arguments) override {
 		if(!arguments.empty()) {
 			T v;
 			if(this->template getArgumentAs<T>(arguments[0], v)) {
-				setFromOsc(std::move(v));
+				this->setFromOsc(std::move(v));
 			} else {
 				printf("Bad argument 0 type: %d\n", arguments[0].index());
 			}
@@ -192,83 +241,42 @@ public:
 
 	void setIncrementAmount(T amount) { incrementAmount = amount; }
 
-	void setChangeCallback(std::function<void(T)> onChange) { this->onChange = onChange; }
-
-protected:
-	void setFromOsc(T v) {
-		this->set(OscNode::setFromOsc<Converter>(v));
-		if(onChange) {
-			onChange(this->get());
-		}
-	}
-
 private:
-	T incrementAmount = (T) 1;
-
-	std::function<void(T)> onChange;
+	T incrementAmount;
 	std::vector<std::unique_ptr<OscEndpoint>> subEndpoint;
 };
 
-template<typename T, class Converter = void> class OscArray : protected OscContainer {
+template<typename T> class OscGenericArray : protected OscContainer {
 public:
-	OscArray(OscContainer* parent, std::string name) noexcept
+	OscGenericArray(OscContainer* parent, std::string name) noexcept
 	    : OscContainer(parent, name),
-	      size(this, "size"),
 	      oscAddEndpoint(this, "add"),
-	      oscRemoveEndpoint(this, "remove") {
-		oscAddEndpoint.setCallback([this](auto&& arguments) {
-			if(!arguments.empty()) {
-				T argument;
-				if(this->template getArgumentAs<T>(arguments[0], argument)) {
-					printf("Adding item to %s\n", getFullAddress().c_str());
-					T v = OscNode::setFromOsc<Converter>(argument);
-					this->push_back(v);
-					this->onAdd(v);
-				} else {
-					printf("Bad argument 0 type: %d\n", arguments[0].index());
-				}
-			}
-		});
-		oscRemoveEndpoint.setCallback([this](auto&& arguments) {
-			if(!check_osc_arguments<int32_t>(arguments))
-				return;
+	      oscRemoveEndpoint(this, "remove"),
+	      oscSize(this, "size") {}
 
-			int32_t index = std::get<int32_t>(arguments[0]);
-			printf("Removing item at index %d from %s\n", index, getFullAddress().c_str());
+	T& operator[](size_t index) { return *value[index]; }
+	const T& operator[](size_t index) const { return *value[index]; }
 
-			this->onRemove();
-			this->erase(index);
-		});
-	}
+	template<typename... Args> void push_back(Args... args) {
+		oscAddEndpoint.sendMessage(nullptr, 0);
 
-	OscVariable<T>& operator[](size_t index) { return *value[index]; }
-	const OscVariable<T>& operator[](size_t index) const { return *value[index]; }
+		T* newValue = new T(this, std::to_string(value.size()), args...);
 
-	void push_back(T v) {
-		std::array<OscArgument, 2> arguments;
+		initializeItem(newValue);
+		value.emplace_back(newValue);
 
-		value.emplace_back(new OscVariable<T>(this, value.size() - 1, v));
-
-		arguments[0] = int32_t(value.size() - 1);
-		arguments[1] = OscNode::getFromOsc<Converter>(v);
-		oscAddEndpoint.sendMessage(arguments.data(), arguments.size());
-
-		size.set(value.size());
+		oscSize.set(value.size());
 	}
 
 	void pop_back() {
-		std::array<OscArgument, 2> arguments;
-
-		arguments[0] = int32_t(value.size() - 1);
-		arguments[1] = OscNode::getFromOsc<Converter>(value.back()->get());
-		oscRemoveEndpoint.sendMessage(arguments.data(), arguments.size());
+		oscRemoveEndpoint.sendMessage(nullptr, 0);
 
 		value.pop_back();
 
-		size.set(value.size());
+		oscSize.set(value.size());
 	}
 
-	void resize(size_t newSize, T defaultValue = {}) {
+	template<typename... Args> void resize(size_t newSize, Args... args) {
 		if(newSize == value.size())
 			return;
 
@@ -278,13 +286,18 @@ public:
 			}
 		} else {
 			while(value.size() < newSize) {
-				push_back(defaultValue);
+				push_back(args...);
 			}
 		}
 	}
 
-	void setAddCallback(std::function<void(T)> onAdd) { this->onAdd = onAdd; }
-	void setRemoveCallback(std::function<void()> onRemove) { this->onRemove = onRemove; }
+	auto size() const { return value.size(); }
+	auto begin() const { return value.begin(); }
+	auto begin() { return value.begin(); }
+	auto end() const { return value.end(); }
+	auto end() { return value.end(); }
+	const auto& back() const { return *value.back(); }
+	auto& back() { return *value.back(); }
 
 	std::string getAsString() override {
 		std::string result = "[";
@@ -299,14 +312,81 @@ public:
 		return result + " ]";
 	}
 
+protected:
+	virtual void initializeItem(T*) {}
+
+	OscEndpoint oscAddEndpoint;
+	OscEndpoint oscRemoveEndpoint;
+
 private:
-	OscReadOnlyVariable<int32_t> size;
-	std::vector<std::unique_ptr<OscVariable<T>>> value;
+	OscReadOnlyVariable<int32_t> oscSize;
+	std::vector<std::unique_ptr<T>> value;
+};
+
+template<typename T> class OscArray : public OscGenericArray<OscVariable<T>> {
+public:
+	OscArray(OscContainer* parent, std::string name) : OscGenericArray<OscVariable<T>>(parent, name) {
+		this->oscAddEndpoint.setCallback([this](auto&&) {
+			printf("Adding item to %s\n", this->getFullAddress().c_str());
+			T v{};
+			this->push_back(v);
+			this->onAdd(v);
+		});
+		this->oscRemoveEndpoint.setCallback([this](auto&&) {
+			printf("Removing last item from %s\n", this->getFullAddress().c_str());
+			this->onRemove();
+			this->pop_back();
+		});
+	}
+
+	void setOscConverters(std::function<T(T)> convertToOsc, std::function<T(T)> convertFromOsc) {
+		this->convertToOsc = convertToOsc;
+		this->convertFromOsc = convertFromOsc;
+	}
+	void setChangeCallback(std::function<void(T)> onChange) { this->onChange = onChange; }
+
+	void setAddCallback(std::function<void(T)> onAdd) { this->onAdd = onAdd; }
+	void setRemoveCallback(std::function<void()> onRemove) { this->onRemove = onRemove; }
+
+protected:
+	void initializeItem(OscVariable<T>* item) override {
+		if(convertToOsc || convertFromOsc) {
+			item->setOscConverters(convertToOsc, convertFromOsc);
+		}
+		if(onChange) {
+			item->setChangeCallback(onChange);
+		}
+	}
+
+private:
+	std::function<T(T)> convertToOsc;
+	std::function<T(T)> convertFromOsc;
+	std::function<void(T)> onChange;
 
 	std::function<void(T)> onAdd;
 	std::function<void()> onRemove;
-	OscEndpoint oscAddEndpoint;
-	OscEndpoint oscRemoveEndpoint;
+};
+template<typename T> class OscContainerArray : public OscGenericArray<T> {
+public:
+	OscContainerArray(OscContainer* parent, std::string name) : OscGenericArray<T>(parent, name) {
+		this->oscAddEndpoint.setCallback([this](auto&&) {
+			printf("Adding item to %s\n", this->getFullAddress().c_str());
+			this->push_back();
+			this->onAdd();
+		});
+		this->oscRemoveEndpoint.setCallback([this](auto&&) {
+			printf("Removing last item from %s\n", this->getFullAddress().c_str());
+			this->onRemove();
+			this->pop_back();
+		});
+	}
+
+	void setAddCallback(std::function<void()> onAdd) { this->onAdd = onAdd; }
+	void setRemoveCallback(std::function<void()> onRemove) { this->onRemove = onRemove; }
+
+private:
+	std::function<void()> onAdd;
+	std::function<void()> onRemove;
 };
 
 class ConverterLogScale {

@@ -17,7 +17,7 @@ set(FORMS
 set(HEADERS
 	MainWindow.h
 	BodePlot.h
-	../waveSendUDPJack/Filter/EqFilter.h
+	../waveSendUDPJack/Filter/BiquadFilter.h
 	OutputController.h
 	WavePlayInterface.h
 	WavePlayOutputInterface.h
@@ -36,7 +36,7 @@ set(SOURCES
 	main.cpp
 	MainWindow.cpp
 	BodePlot.cpp
-	../waveSendUDPJack/Filter/EqFilter.cpp
+	../waveSendUDPJack/Filter/BiquadFilter.cpp
 	OutputController.cpp
 	WavePlayInterface.cpp
 	WavePlayOutputInterface.cpp

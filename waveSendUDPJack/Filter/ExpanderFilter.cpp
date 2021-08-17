@@ -3,6 +3,20 @@
 #include <math.h>
 #include <string.h>
 
+ExpanderFilter::ExpanderFilter(OscContainer* parent)
+    : OscContainer(parent, "expanderFilter"),
+      enable(this, "enable", false),
+      attackTime(this, "attackTime", 0),
+      releaseTime(this, "releaseTime", 8000),
+      threshold(this, "threshold", -50),
+      makeUpGain(this, "makeUpGain", 0),
+      ratio(this, "ratio", 4),
+      kneeWidth(this, "kneeWidth", 0) {
+	attackTime.setChangeCallback([this](float oscValue) { alphaA = oscValue != 0 ? expf(-1 / (oscValue * fs)) : 0; });
+	releaseTime.setChangeCallback([this](float oscValue) { alphaR = oscValue != 0 ? expf(-1 / (oscValue * fs)) : 0; });
+	ratio.setChangeCallback([this](float oscValue) { gainDiffRatio = oscValue - 1; });
+}
+
 void ExpanderFilter::init(size_t numChannel) {
 	this->numChannel = numChannel;
 	previousPartialGainComputerOutput.resize(numChannel);
@@ -17,6 +31,8 @@ void ExpanderFilter::reset(double fs) {
 
 void ExpanderFilter::processSamples(float** output, const float** input, size_t count) {
 	if(enable) {
+		float makeUpGain = this->makeUpGain;
+
 		for(size_t i = 0; i < count; i++) {
 			float lowestCompressionDb = -INFINITY;
 
@@ -77,41 +93,20 @@ void ExpanderFilter::levelDetector(float dbSample, float& y1, float& yL) {
 
 void ExpanderFilter::setParameters(const nlohmann::json& json) {
 	enable = json.at("enabled").get<bool>();
-
-	if(json.at("attackTime").get<float>() != 0)
-		alphaA = expf(-1 / (json.at("attackTime").get<float>() * fs));
-	else
-		alphaA = 0;
-
-	if(json.at("releaseTime").get<float>() != 0)
-		alphaR = expf(-1 / (json.at("releaseTime").get<float>() * fs));
-	else
-		alphaR = 0;
-
+	attackTime = json.at("attackTime").get<float>();
+	releaseTime = json.at("releaseTime").get<float>();
 	threshold = json.at("threshold").get<float>();
 	makeUpGain = json.at("makeUpGain").get<float>();
-	gainDiffRatio = json.at("ratio").get<float>() - 1;
+	ratio = json.at("ratio").get<float>();
 	kneeWidth = json.at("kneeWidth").get<float>();
 }
 
 nlohmann::json ExpanderFilter::getParameters() {
-	float attackTime, releaseTime;
-
-	if(alphaA != 0)
-		attackTime = -1 / logf(alphaA) / fs;
-	else
-		attackTime = 0;
-
-	if(alphaR != 0)
-		releaseTime = -1 / logf(alphaR) / fs;
-	else
-		releaseTime = 0;
-
-	return nlohmann::json::object({{"enabled", enable},
-	                               {"attackTime", attackTime},
-	                               {"releaseTime", releaseTime},
-	                               {"threshold", threshold},
-	                               {"makeUpGain", makeUpGain},
-	                               {"ratio", gainDiffRatio + 1},
-	                               {"kneeWidth", kneeWidth}});
+	return nlohmann::json::object({{"enabled", enable.get()},
+	                               {"attackTime", attackTime.get()},
+	                               {"releaseTime", releaseTime.get()},
+	                               {"threshold", threshold.get()},
+	                               {"makeUpGain", makeUpGain.get()},
+	                               {"ratio", ratio.get()},
+	                               {"kneeWidth", kneeWidth.get()}});
 }

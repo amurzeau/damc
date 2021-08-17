@@ -19,7 +19,7 @@ public:
 	void setParameters(bool enabled, int type, double f0, double q, double gain);
 
 signals:
-	void changeParameters(int index, bool enabled, EqFilter::FilterType type, double f0, double q, double gain);
+	void changeParameters(int index, bool enabled, FilterType type, double f0, double q, double gain);
 
 private slots:
 	void onParameterChanged();

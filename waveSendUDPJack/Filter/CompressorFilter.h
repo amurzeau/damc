@@ -1,13 +1,14 @@
 #ifndef COMPRESSORFILTER_H
 #define COMPRESSORFILTER_H
 
+#include "../OscAddress.h"
 #include "../json.h"
 #include <array>
 #include <deque>
 #include <stddef.h>
 #include <vector>
 
-class CompressorFilter {
+class CompressorFilter : public OscContainer {
 protected:
 	struct PerChannelData {
 		float y1;
@@ -24,6 +25,7 @@ protected:
 	};
 
 public:
+	CompressorFilter(OscContainer* parent);
 	void init(size_t numChannel);
 	void reset(double fs);
 	void processSamples(float** output, const float** input, size_t count);
@@ -40,16 +42,19 @@ private:
 	size_t numChannel;
 	std::vector<PerChannelData> perChannelData;
 
-	bool enable = false;
+	OscVariable<bool> enable;
 	double fs = 48000;
-	float alphaR = 0.99916701379245836213502440855751;
-	float alphaA = 0.99916701379245836213502440855751;
-	float threshold = 0;
-	float makeUpGain = 0;
+	float alphaR;
+	float alphaA;
+	OscVariable<float> attackTime;
+	OscVariable<float> releaseTime;
+	OscVariable<float> threshold;
+	OscVariable<float> makeUpGain;
+	OscVariable<float> ratio;
 	float gainDiffRatio = 0;
-	float kneeWidth = 0;
+	OscVariable<float> kneeWidth;
 	uint32_t gainHoldSamples = 48000 / 20;  // 20Hz period
-	bool useMovingMax = true;
+	OscVariable<bool> useMovingMax;
 
 	static const float LOG10_VALUE_DIV_20;
 };

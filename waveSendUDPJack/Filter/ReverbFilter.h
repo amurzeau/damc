@@ -1,14 +1,15 @@
 #ifndef REVERBFILTER_H
 #define REVERBFILTER_H
 
+#include "../OscAddress.h"
 #include "../json.h"
 #include "DelayFilter.h"
 #include <stddef.h>
 #include <vector>
 
-class ReverbFilter {
+class ReverbFilter : public OscContainer {
 public:
-	ReverbFilter();
+	ReverbFilter(OscContainer* parent, const std::string& name);
 	void reset(int depth = 1, unsigned int innerReverberatorCount = 5);
 	void processSamples(float* output, const float* input, size_t count);
 	float processOneSample(float input);
@@ -17,10 +18,11 @@ public:
 	nlohmann::json getParameters();
 
 private:
-	bool enabled = false;
+	OscVariable<bool> enabled;
+	OscVariable<int32_t> delay;
 	DelayFilter delayFilter;
-	float gain = 0.893;
-	std::vector<ReverbFilter> reverberators;
+	OscVariable<float> gain;
+	OscContainerArray<ReverbFilter> reverberators;
 
 	float previousDelayOutput = 0.0f;
 };

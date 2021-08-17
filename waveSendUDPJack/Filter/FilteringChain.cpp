@@ -3,17 +3,33 @@
 #include <string.h>
 
 FilterChain::FilterChain(OscContainer* parent)
-    : OscContainer(parent, "filterChain"), masterVolume(this, "volume", 1.0f) {}
+    : OscContainer(parent, "filterChain"),
+      reverbFilters(this, "reverbFilter"),
+      eqFilters(this, "eqFilters"),
+      delay(this, "delay", 0),
+      volume(this, "balance"),
+      masterVolume(this, "volume", 1.0f),
+      compressorFilter(this),
+      expanderFilter(this),
+      mute(this, "mute", false) {
+	delay.setChangeCallback([this](int32_t newValue) {
+		for(DelayFilter& filter : delayFilters) {
+			filter.setParameters(newValue);
+		}
+	});
+	volume.setOscConverters(&ConverterLogScale::toOsc, &ConverterLogScale::fromOsc);
+	masterVolume.setOscConverters(&ConverterLogScale::toOsc, &ConverterLogScale::fromOsc);
+}
 
 void FilterChain::init(size_t numChannel) {
 	delayFilters.resize(numChannel + 1);  // +1 for side channel
 	reverbFilters.resize(numChannel);
-	volume.resize(numChannel, 1);
+	volume.resize(numChannel, 1.0f);
 
 	eqFilters.resize(6);
 
-	for(EqFilter& filter : eqFilters) {
-		filter.init(numChannel);
+	for(auto& filter : eqFilters) {
+		filter->init(numChannel);
 	}
 
 	compressorFilter.init(numChannel);
@@ -24,12 +40,12 @@ void FilterChain::reset(double fs) {
 	for(DelayFilter& delayFilter : delayFilters) {
 		delayFilter.reset();
 	}
-	for(ReverbFilter& reverbFilter : reverbFilters) {
-		reverbFilter.reset();
+	for(auto& reverbFilter : reverbFilters) {
+		reverbFilter->reset();
 	}
 
-	for(EqFilter& filter : eqFilters) {
-		filter.reset(fs);
+	for(auto& filter : eqFilters) {
+		filter->reset(fs);
 	}
 
 	compressorFilter.reset(fs);
@@ -44,8 +60,8 @@ void FilterChain::processSamples(
 		delayFilters[channel].processSamples(output[channel], input[channel], count);
 	}
 
-	for(EqFilter& filter : eqFilters) {
-		filter.processSamples(output, const_cast<const float**>(output), count);
+	for(auto& filter : eqFilters) {
+		filter->processSamples(output, const_cast<const float**>(output), count);
 	}
 
 	expanderFilter.processSamples(output, const_cast<const float**>(output), count);
@@ -56,7 +72,7 @@ void FilterChain::processSamples(
 	}
 
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
-		float volume = this->volume[channel] * masterVolume;
+		float volume = this->volume[channel].get() * masterVolume;
 		float peak = 0;
 		for(size_t i = 0; i < count; i++) {
 			output[channel][i] *= volume;
@@ -83,11 +99,6 @@ void FilterChain::setParameters(const nlohmann::json& json) {
 		return;
 	}
 
-	auto enabled = json.find("enabled");
-	if(enabled != json.end()) {
-		this->enabled = enabled.value().get<bool>();
-	}
-
 	auto mute = json.find("mute");
 	if(mute != json.end()) {
 		this->mute = mute.value().get<bool>();
@@ -110,9 +121,7 @@ void FilterChain::setParameters(const nlohmann::json& json) {
 
 	auto delayFilter = json.find("delayFilter");
 	if(delayFilter != json.end()) {
-		for(DelayFilter& filter : delayFilters) {
-			filter.setParameters(delayFilter.value());
-		}
+		delay.set(delayFilter.value()["delay"].get<unsigned int>());
 	}
 
 	auto eqFiltersJson = json.find("eqFilters");
@@ -127,7 +136,7 @@ void FilterChain::setParameters(const nlohmann::json& json) {
 			int index = eqFilterJson.at("index").get<int>();
 			if(index >= 0) {
 				while(index >= (int) this->eqFilters.size()) {
-					this->eqFilters.emplace_back();
+					this->eqFilters.push_back();
 					this->eqFilters.back().init(this->volume.size());
 				}
 				this->eqFilters[index].setParameters(eqFilterJson);
@@ -157,8 +166,7 @@ void FilterChain::setParameters(const nlohmann::json& json) {
 }
 
 nlohmann::json FilterChain::getParameters() {
-	nlohmann::json json = nlohmann::json::object({{"enabled", this->enabled},
-	                                              {"mute", this->mute},
+	nlohmann::json json = nlohmann::json::object({{"mute", this->mute.get()},
 	                                              {"volume", 20.0 * log10(masterVolume.get())},
 	                                              {"delayFilter", this->delayFilters[0].getParameters()},
 	                                              {"compressorFilter", this->compressorFilter.getParameters()},
@@ -182,8 +190,8 @@ nlohmann::json FilterChain::getParameters() {
 	}
 
 	json["reverbFilter"] = nlohmann::json::array();
-	for(ReverbFilter& filter : reverbFilters) {
-		json["reverbFilter"].push_back(filter.getParameters());
+	for(auto& filter : reverbFilters) {
+		json["reverbFilter"].push_back(filter->getParameters());
 	}
 
 	return json;

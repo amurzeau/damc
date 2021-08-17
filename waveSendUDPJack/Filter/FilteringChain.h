@@ -27,15 +27,14 @@ public:
 
 private:
 	std::vector<DelayFilter> delayFilters;
-	std::vector<ReverbFilter> reverbFilters;
-	bool eqFiltersEnabled = false;
-	std::vector<EqFilter> eqFilters;
-	std::vector<float> volume;
-	OscVariable<float, ConverterLogScale> masterVolume;
+	OscContainerArray<ReverbFilter> reverbFilters;
+	OscContainerArray<EqFilter> eqFilters;
+	OscVariable<int32_t> delay;
+	OscArray<float> volume;
+	OscVariable<float> masterVolume;
 	CompressorFilter compressorFilter;
 	ExpanderFilter expanderFilter;
-	bool mute = false;
-	bool enabled = true;
+	OscVariable<bool> mute;
 };
 
 #endif

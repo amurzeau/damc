@@ -10,6 +10,8 @@ else()
 endif()
 
 add_executable(waveSendUDPJack
+	Filter/BiquadFilter.cpp
+	Filter/BiquadFilter.h
 	Filter/EqFilter.cpp
 	Filter/EqFilter.h
 	Filter/DitheringFilter.cpp

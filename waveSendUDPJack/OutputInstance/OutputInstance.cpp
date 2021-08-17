@@ -8,10 +8,13 @@
 OutputInstance::OutputInstance(OscContainer* parent, size_t index, IAudioEndpoint* endpoint)
     : OscContainer(parent, std::to_string(index)),
       endpoint(endpoint),
-      enabled(true),
-      outputInstance(index),
+      enabled(this, "enable", true),
+      outputInstance(this, "instance", index),
+      type(this, "type", 0),
       client(nullptr),
-      numChannel(0),
+      clientName(this, "name"),
+      clientDisplayName(this, "display_name"),
+      numChannel(this, "channels", 0),
       filters(this),
       controlSettings(nlohmann::json::object()),
       updateLevelTimer(nullptr),
@@ -64,7 +67,7 @@ int OutputInstance::init(ControlInterface* controlInterface,
 	uv_mutex_init(&filtersMutex);
 	uv_mutex_init(&peakMutex);
 
-	sprintf(buffer, "waveSendUDP-%s-%d", endpoint->getName(), outputInstance);
+	sprintf(buffer, "waveSendUDP-%s-%d", endpoint->getName(), outputInstance.get());
 	clientName = buffer;
 	clientDisplayName = clientName;
 
@@ -74,6 +77,15 @@ int OutputInstance::init(ControlInterface* controlInterface,
 
 	if(enabled)
 		start();
+
+	enabled.setChangeCallback([this](bool newValue) {
+		printf("New state: %d\n", newValue);
+		if(newValue) {
+			start();
+		} else {
+			stop();
+		}
+	});
 
 	return 0;
 }
@@ -102,7 +114,7 @@ int OutputInstance::start() {
 
 	inputPorts.resize(numChannel);
 	outputPorts.resize(numChannel);
-	for(size_t i = 0; i < numChannel; i++) {
+	for(int32_t i = 0; i < numChannel; i++) {
 		char name[64];
 
 		sprintf(name, "input_%zd", i + 1);
@@ -168,7 +180,7 @@ int OutputInstance::start() {
 		printf("cannot activate client: %d\n", ret);
 	}
 
-	printf("Processing interface %d...\n", outputInstance);
+	printf("Processing interface %d...\n", outputInstance.get());
 
 	return 0;
 }
@@ -216,8 +228,8 @@ void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
 				break;
 		}
 
-		nlohmann::json json = {{"instance", thisInstance->outputInstance},
-		                       {"displayName", thisInstance->clientDisplayName}};
+		nlohmann::json json = {{"instance", thisInstance->outputInstance.get()},
+		                       {"displayName", thisInstance->clientDisplayName.get()}};
 		std::string jsonStr = json.dump();
 		thisInstance->controlServer->sendMessage(jsonStr.c_str(), jsonStr.size());
 		thisInstance->controlInterface->saveConfig();
@@ -229,9 +241,11 @@ void OutputInstance::setParameters(const nlohmann::json& json) {
 
 	uv_mutex_lock(&filtersMutex);
 	try {
-		clientName = json.value("name", clientName);
-		clientDisplayName = json.value("displayName", clientDisplayName);
-		newEnabledState = json.value("enabled", enabled);
+		if(json.contains("name"))
+			clientName = json.value("name", clientName.get());
+		if(json.contains("displayName"))
+			clientDisplayName = json.value("displayName", clientDisplayName.get());
+		newEnabledState = json.value("enabled", enabled.get());
 		if(json.find("controlSettings") != json.end())
 			controlSettings = json["controlSettings"];
 		filters.setParameters(json);
@@ -243,7 +257,7 @@ void OutputInstance::setParameters(const nlohmann::json& json) {
 	}
 	uv_mutex_unlock(&filtersMutex);
 
-	printf("Old state: %d, new state: %d\n", enabled, newEnabledState);
+	printf("Old state: %d, new state: %d\n", enabled.get(), newEnabledState);
 	if(newEnabledState != enabled && newEnabledState) {
 		enabled = newEnabledState;
 		start();
@@ -256,12 +270,12 @@ void OutputInstance::setParameters(const nlohmann::json& json) {
 nlohmann::json OutputInstance::getParameters() {
 	nlohmann::json json = filters.getParameters();
 	nlohmann::json subClassJson = endpoint->getParameters();
-	json["enabled"] = enabled;
-	json["instance"] = outputInstance;
-	json["type"] = type;
-	json["numChannels"] = numChannel;
-	json["name"] = clientName;
-	json["displayName"] = clientDisplayName;
+	json["enabled"] = enabled.get();
+	json["instance"] = outputInstance.get();
+	json["type"] = type.get();
+	json["numChannels"] = numChannel.get();
+	json["name"] = clientName.get();
+	json["displayName"] = clientDisplayName.get();
 	json["controlSettings"] = controlSettings;
 
 	for(const auto& j : subClassJson.items()) {
@@ -284,11 +298,11 @@ int OutputInstance::processInputSamples(jack_nframes_t nframes) {
 	float* buffers[32];
 	float peaks[32];
 
-	if(numChannel > sizeof(buffers) / sizeof(buffers[0])) {
+	if(numChannel > (int32_t)(sizeof(buffers) / sizeof(buffers[0]))) {
 		printf("Too many channels, buffer too small !!!\n");
 	}
 
-	for(size_t i = 0; i < numChannel; i++) {
+	for(int32_t i = 0; i < numChannel; i++) {
 		buffers[i] = (jack_default_audio_sample_t*) jack_port_get_buffer(outputPorts[i], nframes);
 	}
 
@@ -300,7 +314,7 @@ int OutputInstance::processInputSamples(jack_nframes_t nframes) {
 
 	uv_mutex_lock(&peakMutex);
 	this->samplesInPeaks += nframes;
-	for(size_t i = 0; i < numChannel; i++) {
+	for(int32_t i = 0; i < numChannel; i++) {
 		this->peaksPerChannel[i] = std::max(peaks[i], this->peaksPerChannel[i]);
 	}
 	uv_mutex_unlock(&peakMutex);
@@ -313,11 +327,11 @@ int OutputInstance::processSamples(jack_nframes_t nframes) {
 	const float* inputs[32];
 	float peaks[32];
 
-	if(numChannel > sizeof(outputs) / sizeof(outputs[0])) {
+	if(numChannel > (int32_t)(sizeof(outputs) / sizeof(outputs[0]))) {
 		printf("Too many channels, buffer too small !!!\n");
 	}
 
-	for(size_t i = 0; i < numChannel; i++) {
+	for(int32_t i = 0; i < numChannel; i++) {
 		inputs[i] = (jack_default_audio_sample_t*) jack_port_get_buffer(inputPorts[i], nframes);
 		outputs[i] = (jack_default_audio_sample_t*) jack_port_get_buffer(outputPorts[i], nframes);
 	}
@@ -327,7 +341,7 @@ int OutputInstance::processSamples(jack_nframes_t nframes) {
 	uv_mutex_unlock(&filtersMutex);
 
 	// add side channel on channel 0
-	if(numChannel < inputPorts.size()) {
+	if(numChannel < (int32_t) inputPorts.size()) {
 		jack_default_audio_sample_t* sideChannel =
 		    (jack_default_audio_sample_t*) jack_port_get_buffer(inputPorts[numChannel], nframes);
 		for(jack_nframes_t i = 0; i < nframes; i++) {
@@ -337,7 +351,7 @@ int OutputInstance::processSamples(jack_nframes_t nframes) {
 
 	uv_mutex_lock(&peakMutex);
 	this->samplesInPeaks += nframes;
-	for(size_t i = 0; i < numChannel; i++) {
+	for(int32_t i = 0; i < numChannel; i++) {
 		this->peaksPerChannel[i] = std::max(peaks[i], this->peaksPerChannel[i]);
 	}
 	uv_mutex_unlock(&peakMutex);
@@ -389,7 +403,7 @@ void OutputInstance::onTimeoutTimer() {
 	}
 
 	if(oscEnablePeakJsonUpdate.get()) {
-		nlohmann::json json = {{"instance", outputInstance}, {"levels", levelsDb}};
+		nlohmann::json json = {{"instance", outputInstance.get()}, {"levels", levelsDb}};
 		std::string jsonStr = json.dump();
 		controlServer->sendMessage(jsonStr.c_str(), jsonStr.size());
 	}

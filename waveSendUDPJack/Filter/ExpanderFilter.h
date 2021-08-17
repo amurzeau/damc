@@ -1,12 +1,14 @@
 #ifndef EXPANDERFILTER_H
 #define EXPANDERFILTER_H
 
+#include "../OscAddress.h"
 #include "../json.h"
 #include <stddef.h>
 #include <vector>
 
-class ExpanderFilter {
+class ExpanderFilter : public OscContainer {
 public:
+	ExpanderFilter(OscContainer* parent);
 	void init(size_t numChannel);
 	void reset(double fs);
 	void processSamples(float** output, const float** input, size_t count);
@@ -24,14 +26,17 @@ private:
 	std::vector<float> previousPartialGainComputerOutput;
 	std::vector<float> previousLevelDetectorOutput;
 
-	bool enable = false;
-	double fs = 48000.0;
-	float alphaR = 0.99916701379245836213502440855751;
-	float alphaA = 0.99916701379245836213502440855751;
-	float threshold = 0;
-	float makeUpGain = 0;
+	OscVariable<bool> enable;
+	double fs = 48000;
+	float alphaR;
+	float alphaA;
+	OscVariable<float> attackTime;
+	OscVariable<float> releaseTime;
+	OscVariable<float> threshold;
+	OscVariable<float> makeUpGain;
+	OscVariable<float> ratio;
 	float gainDiffRatio = 0;
-	float kneeWidth = 0;
+	OscVariable<float> kneeWidth;
 };
 
 #endif

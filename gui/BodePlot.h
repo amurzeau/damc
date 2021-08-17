@@ -1,7 +1,7 @@
 #ifndef BODEPLOT_H
 #define BODEPLOT_H
 
-#include "../waveSendUDPJack/Filter/EqFilter.h"
+#include "../waveSendUDPJack/Filter/BiquadFilter.h"
 #include "BodePlotWidget.h"
 #include <complex>
 
@@ -15,7 +15,7 @@ public:
 	QSize sizeHint() const override { return minimumSizeHint(); }
 
 public Q_SLOTS:
-	void setParameters(int index, bool enabled, EqFilter::FilterType filterType, double f0, double Q, double gain);
+	void setParameters(int index, bool enabled, FilterType filterType, double f0, double Q, double gain);
 
 private:
 	void showData(const double* frequency, const double* amplitude, const double* phase, int count);
@@ -23,7 +23,7 @@ private:
 	PlotCurve d_curve1;
 	PlotCurve d_curve2;
 
-	std::vector<EqFilter> eqFilters;
+	std::vector<BiquadFilter> eqFilters;
 };
 
 #endif  // BODEPLOT_H

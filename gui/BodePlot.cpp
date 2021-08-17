@@ -20,11 +20,6 @@ static void logSpace(double* array, int size, double xmin, double xmax) {
 }
 
 BodePlot::BodePlot(QWidget* parent) : BodePlotWidget(parent) {
-	for(EqFilter& eqFilter : eqFilters) {
-		eqFilter.init(1);
-		eqFilter.reset(48000);
-	}
-
 	setBackgroundBrush(Qt::darkBlue);
 
 	xAxis = PlotAxis("Frequency", 20.0f, 24000.0f);
@@ -42,10 +37,6 @@ BodePlot::BodePlot(QWidget* parent) : BodePlotWidget(parent) {
 
 void BodePlot::setNumEq(int numEq) {
 	eqFilters.resize(numEq);
-	for(EqFilter& eqFilter : eqFilters) {
-		eqFilter.init(1);
-		eqFilter.reset(48000);
-	}
 }
 
 void BodePlot::showData(const double* frequency, const double* amplitude, const double* phase, int count) {
@@ -57,15 +48,15 @@ void BodePlot::showData(const double* frequency, const double* amplitude, const 
 //
 // re-calculate frequency response
 //
-void BodePlot::setParameters(
-    int index, bool enabled, EqFilter::FilterType filterType, double f0, double Q, double gain) {
-	const int ArraySize = 2000;
+void BodePlot::setParameters(int index, bool enabled, FilterType filterType, double f0, double Q, double gain) {
+	static constexpr int ArraySize = 2000;
+	static constexpr float SAMPLE_RATE = 48000;
 
-	double frequency[ArraySize];
+	double frequency[ArraySize] = {0};
 	double amplitude[ArraySize];
 	double phase[ArraySize];
 
-	eqFilters[index].setParameters(enabled, filterType, f0, gain, Q);
+	eqFilters[index].computeFilter(enabled, filterType, f0, SAMPLE_RATE, gain, Q);
 
 	// build frequency vector with logarithmic division
 	logSpace(frequency, ArraySize, 20, 24000);
@@ -74,8 +65,8 @@ void BodePlot::setParameters(
 		const double f = frequency[i];
 		std::complex<double> g(1, 0);
 
-		for(EqFilter& eqFilter : eqFilters)
-			g *= eqFilter.getResponse(f);
+		for(BiquadFilter& eqFilter : eqFilters)
+			g *= eqFilter.getResponse(f, SAMPLE_RATE);
 
 		amplitude[i] = 20.0 * log10(sqrt(g.real() * g.real() + g.imag() * g.imag()));
 		phase[i] = atan2(g.imag(), g.real()) * (180.0 / M_PI);

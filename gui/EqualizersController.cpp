@@ -31,7 +31,7 @@ void EqualizersController::connectEqualizers(QObject* obj, const char* slot) {
 
 void EqualizersController::setEqualizerParameters(int index, bool enabled, int type, double f0, double q, double gain) {
 	equalizers[index]->setParameters(enabled, type, f0, q, gain);
-	ui->bodePlot->setParameters(index, enabled, (EqFilter::FilterType) type, f0, q, gain);
+	ui->bodePlot->setParameters(index, enabled, (FilterType) type, f0, q, gain);
 }
 
 void EqualizersController::show() {

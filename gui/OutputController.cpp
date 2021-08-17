@@ -158,8 +158,7 @@ void OutputController::onShowBalance() {
 	}
 }
 
-void OutputController::onChangeEq(
-    int index, bool enabled, EqFilter::FilterType type, double f0, double q, double gain) {
+void OutputController::onChangeEq(int index, bool enabled, FilterType type, double f0, double q, double gain) {
 	qDebug("Changing eq %d", index);
 
 	QJsonObject json;

@@ -5,6 +5,21 @@
 
 const float CompressorFilter::LOG10_VALUE_DIV_20 = std::log(10) / 20;
 
+CompressorFilter::CompressorFilter(OscContainer* parent)
+    : OscContainer(parent, "compressorFilter"),
+      enable(this, "enable", false),
+      attackTime(this, "attackTime", 0),
+      releaseTime(this, "releaseTime", 2000),
+      threshold(this, "threshold", -50),
+      makeUpGain(this, "makeUpGain", 0),
+      ratio(this, "ratio", 1000),
+      kneeWidth(this, "kneeWidth", 0),
+      useMovingMax(this, "useMovingMax", true) {
+	attackTime.setChangeCallback([this](float oscValue) { alphaA = oscValue != 0 ? expf(-1 / (oscValue * fs)) : 0; });
+	releaseTime.setChangeCallback([this](float oscValue) { alphaR = oscValue != 0 ? expf(-1 / (oscValue * fs)) : 0; });
+	ratio.setChangeCallback([this](float oscValue) { gainDiffRatio = 1 - 1 / oscValue; });
+}
+
 void CompressorFilter::init(size_t numChannel) {
 	this->numChannel = numChannel;
 	perChannelData.resize(numChannel);
@@ -91,43 +106,22 @@ void CompressorFilter::levelDetector(float dbCompression, PerChannelData& perCha
 
 void CompressorFilter::setParameters(const nlohmann::json& json) {
 	enable = json.at("enabled").get<bool>();
-
-	if(json.at("attackTime").get<float>() != 0)
-		alphaA = expf(-1 / (json.at("attackTime").get<float>() * fs));
-	else
-		alphaA = 0;
-
-	if(json.at("releaseTime").get<float>() != 0)
-		alphaR = expf(-1 / (json.at("releaseTime").get<float>() * fs));
-	else
-		alphaR = 0;
-
+	attackTime = json.at("attackTime").get<float>();
+	releaseTime = json.at("releaseTime").get<float>();
 	threshold = json.at("threshold").get<float>();
 	makeUpGain = json.at("makeUpGain").get<float>();
-	gainDiffRatio = 1 - 1 / json.at("ratio").get<float>();
+	ratio = json.at("ratio").get<float>();
 	kneeWidth = json.at("kneeWidth").get<float>();
 	useMovingMax = json.value("useMovingMax", true);
 }
 
 nlohmann::json CompressorFilter::getParameters() {
-	float attackTime, releaseTime;
-
-	if(alphaA != 0)
-		attackTime = -1 / logf(alphaA) / fs;
-	else
-		attackTime = 0;
-
-	if(alphaR != 0)
-		releaseTime = -1 / logf(alphaR) / fs;
-	else
-		releaseTime = 0;
-
-	return nlohmann::json::object({{"enabled", enable},
-	                               {"attackTime", attackTime},
-	                               {"releaseTime", releaseTime},
-	                               {"threshold", threshold},
-	                               {"makeUpGain", makeUpGain},
-	                               {"ratio", 1 / (1 - gainDiffRatio)},
-	                               {"kneeWidth", kneeWidth},
-	                               {"useMovingMax", useMovingMax}});
+	return nlohmann::json::object({{"enabled", enable.get()},
+	                               {"attackTime", attackTime.get()},
+	                               {"releaseTime", releaseTime.get()},
+	                               {"threshold", threshold.get()},
+	                               {"makeUpGain", makeUpGain.get()},
+	                               {"ratio", ratio.get()},
+	                               {"kneeWidth", kneeWidth.get()},
+	                               {"useMovingMax", useMovingMax.get()}});
 }

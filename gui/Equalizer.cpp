@@ -41,7 +41,7 @@ void Equalizer::setParameters(bool enabled, int type, double f0, double q, doubl
 void Equalizer::onParameterChanged() {
 	emit changeParameters(index,
 	                      ui->parametricEqGroupBox->isChecked(),
-	                      EqFilter::FilterType(ui->typeComboBox->currentIndex()),
+	                      FilterType(ui->typeComboBox->currentIndex()),
 	                      ui->f0SpinBox->value(),
 	                      ui->qSpinBox->value(),
 	                      ui->gainSpinBox->value());
