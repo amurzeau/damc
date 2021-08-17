@@ -3,7 +3,7 @@ project(waveOverUDP)
 
 set(CMAKE_CXX_STANDARD 17)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 get_filename_component(BUILD_DIR_NAME ${CMAKE_BINARY_DIR} NAME)
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
@@ -45,14 +45,21 @@ if(MINGW)
 endif()
 
 if(UNIX)
-	add_executable(wavePlayUDP wavePlayUDP.cpp filter.h filter_fir2.h Logger.cpp Logger.h)
-	target_link_libraries(wavePlayUDP asound)
+	find_package(ALSA)
+	find_package(PulseAudio)
 
-	add_executable(waveSendUDP waveSendUDP.cpp Logger.cpp Logger.h)
-	target_link_libraries(waveSendUDP asound)
+	if(ALSA_FOUND)
+		add_executable(wavePlayUDP wavePlayUDP.cpp filter.h filter_fir2.h Logger.cpp Logger.h)
+		target_link_libraries(wavePlayUDP ALSA::ALSA)
 
-	# add_executable(waveSendUDPPulse waveSendUDPPulse.cpp Logger.cpp Logger.h)
-	# target_link_libraries(waveSendUDPPulse pulse-simple)
+		add_executable(waveSendUDP waveSendUDP.cpp Logger.cpp Logger.h)
+		target_link_libraries(waveSendUDP ALSA::ALSA)
+	endif()
+
+	if(PULSEAUDIO_FOUND)
+		add_executable(waveSendUDPPulse waveSendUDPPulse.cpp Logger.cpp Logger.h)
+		target_link_libraries(waveSendUDPPulse PulseAudio::PulseAudio)
+	endif()
 
 	add_executable(wavePlayUDPJack wavePlayUDPJack.cpp Logger.cpp Logger.h)
 	target_link_libraries(wavePlayUDPJack Jack::Jack)
