@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.13)
 project(waveOverUDP)
 
-set(CMAKE_CXX_STANDARD 17)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -10,6 +9,10 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE True)
+set(CMAKE_CXX_STANDARD 17)
+
+option (BUILD_TESTS "Build tests" OFF)
+option (BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 find_package(Jack REQUIRED)
 
