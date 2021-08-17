@@ -2,6 +2,7 @@
 
 #include "OscAddress.h"
 #include <atomic>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <stdint.h>
@@ -47,8 +48,10 @@ private:
 	OscEndpoint oscAddShortcutEnpoint;
 	OscEndpoint oscRemoveShortcutEnpoint;
 
-	std::thread hotkeyListenerThread;
+#ifdef _WIN32
+	std::unique_ptr<std::thread> hotkeyListenerThread;
 	std::atomic<uint32_t> hotkeyListenerThreadId;
+#endif
 
 	uv_async_t oscTriggerAsync;
 	std::mutex pendingTriggeredOscAddressesMutex;

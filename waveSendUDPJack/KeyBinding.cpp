@@ -1,12 +1,15 @@
 #include "KeyBinding.h"
 #include "OscServer.h"
-#include <Windows.h>
 #include <functional>
+
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 uint32_t KeyBinding::next_hotkey_id;
 
-static constexpr UINT WM_HOTKEY_ADD = WM_USER;
-static constexpr UINT WM_HOTKEY_REMOVE = WM_USER + 1;
+#define WM_HOTKEY_ADD WM_USER
+#define WM_HOTKEY_REMOVE (WM_USER + 1)
 
 struct MessageHotkeyControlData {
 	uint32_t modifiers;
@@ -15,23 +18,28 @@ struct MessageHotkeyControlData {
 };
 
 KeyBinding::KeyBinding(OscContainer* parent)
-    : oscAddShortcutEnpoint(parent, "add"),
-      oscRemoveShortcutEnpoint(parent, "remove"),
-      hotkeyListenerThread(&KeyBinding::threadHandleShortcuts, this) {
+    : oscAddShortcutEnpoint(parent, "add"), oscRemoveShortcutEnpoint(parent, "remove") {
 	uv_async_init(uv_default_loop(), &oscTriggerAsync, &KeyBinding::onOscTriggered);
 	oscTriggerAsync.data = this;
 	uv_unref((uv_handle_t*) &oscTriggerAsync);
 
 	oscAddShortcutEnpoint.setCallback([this](auto arg) { oscAddShortcut(arg); });
 	oscRemoveShortcutEnpoint.setCallback([this](auto arg) { oscRemoveShortcut(arg); });
+
+#ifdef _WIN32
+	hotkeyListenerThread = std::make_unique<std::thread>(&KeyBinding::threadHandleShortcuts, this);
+#endif
 }
 
 KeyBinding::~KeyBinding() {
+#ifdef _WIN32
 	PostThreadMessage(hotkeyListenerThreadId, WM_QUIT, 0, 0);
-	hotkeyListenerThread.join();
+	hotkeyListenerThread->join();
+#endif
 }
 
 void KeyBinding::oscAddShortcut(std::vector<OscArgument> args) {
+#ifdef _WIN32
 	if(!check_osc_arguments<int32_t, int32_t, std::string>(args))
 		return;
 
@@ -44,9 +52,11 @@ void KeyBinding::oscAddShortcut(std::vector<OscArgument> args) {
 	if(PostThreadMessage(hotkeyListenerThreadId, WM_HOTKEY_ADD, 0, (LPARAM) message) == FALSE) {
 		delete message;
 	}
+#endif
 }
 
 void KeyBinding::oscRemoveShortcut(std::vector<OscArgument> args) {
+#ifdef _WIN32
 	if(!check_osc_arguments<int32_t, int32_t, std::string>(args))
 		return;
 
@@ -59,9 +69,11 @@ void KeyBinding::oscRemoveShortcut(std::vector<OscArgument> args) {
 	if(PostThreadMessage(hotkeyListenerThreadId, WM_HOTKEY_REMOVE, 0, (LPARAM) message) == FALSE) {
 		delete message;
 	}
+#endif
 }
 
 void KeyBinding::threadHandleShortcuts() {
+#ifdef _WIN32
 	std::unordered_map<Hotkey, HotkeyData, HotkeyHasher> registeredKeys;
 
 	hotkeyListenerThreadId = GetCurrentThreadId();
@@ -156,6 +168,7 @@ void KeyBinding::threadHandleShortcuts() {
 			}
 		}
 	}
+#endif
 }
 
 void KeyBinding::onOscTriggered(uv_async_t* handle) {
