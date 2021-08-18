@@ -40,6 +40,24 @@ ControlInterface::ControlInterface(const char* argv0)
 
 		saveFileName = std::string(basePath) + "/waveSendUDPJack.json";
 	}
+
+	jack_status_t status;
+
+	jackNotificationPending.data = this;
+	uv_async_init(uv_default_loop(), &jackNotificationPending, &ControlInterface::onJackNotificationStatic);
+	uv_unref((uv_handle_t*) &jackNotificationPending);
+
+	monitoringJackClient = jack_client_open("wavePlayUDP-monitoringclient", JackNullOption, &status);
+	if(monitoringJackClient != nullptr) {
+		printf("Started monitoring client\n");
+		jack_set_port_connect_callback(monitoringJackClient, &ControlInterface::jackOnPortConnectStatic, this);
+		jack_set_graph_order_callback(monitoringJackClient, &ControlInterface::jackOnGraphReorderedStatic, this);
+		jack_set_port_registration_callback(
+		    monitoringJackClient, &ControlInterface::jackOnPortRegistrationStatic, this);
+		jack_activate(monitoringJackClient);
+	} else {
+		printf("Failed to start monitoring client: %d\n", status);
+	}
 }
 
 ControlInterface::~ControlInterface() {}
@@ -67,8 +85,17 @@ void ControlInterface::loadConfig() {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 
 		outputsOrder = jsonConfig.value("outputsOrder", std::vector<int>{});
+		outputPortConnections = jsonConfig.value("portConnections", std::map<std::string, std::set<std::string>>{});
+
 		for(const nlohmann::json& outputInstancesJson : jsonConfig.at("outputInstances")) {
 			addOutputInstance(outputInstancesJson);
+		}
+
+		// Construct inputPortConnections from outputPortConnections
+		for(const auto& outputPort : outputPortConnections) {
+			for(const auto& inputPort : outputPort.second) {
+				inputPortConnections[inputPort].insert(outputPort.first);
+			}
 		}
 	} catch(const nlohmann::json::exception& e) {
 		printf("Exception while parsing config: %s\n", e.what());
@@ -77,7 +104,7 @@ void ControlInterface::loadConfig() {
 		printf("Exception while parsing config\n");
 	}
 
-	oscServer.printAllNodes();
+	// oscServer.printAllNodes();
 }
 
 void ControlInterface::saveConfig() {
@@ -91,6 +118,7 @@ void ControlInterface::saveConfig() {
 
 		jsonConfigToSave["outputsOrder"] = outputsOrder;
 		jsonConfigToSave["outputInstances"] = outputInstancesJson;
+		jsonConfigToSave["portConnections"] = outputPortConnections;
 
 		std::string jsonData = jsonConfigToSave.dump(4);
 		std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
@@ -182,6 +210,12 @@ void ControlInterface::run() {
 }
 
 void ControlInterface::stop() {
+	if(monitoringJackClient) {
+		printf("Stopping monitoring client\n");
+		jack_deactivate(monitoringJackClient);
+		jack_client_close(monitoringJackClient);
+	}
+
 	oscServer.stop();
 	controlServer.stop();
 
@@ -315,5 +349,207 @@ void ControlInterface::messageProcessor(const void* data, size_t size) {
 		printf("Exception while parsing message: %s\n", e.what());
 	} catch(...) {
 		printf("Exception while parsing message\n");
+	}
+}
+
+void ControlInterface::jackOnPortConnectStatic(jack_port_id_t a, jack_port_id_t b, int connect, void* arg) {
+	ControlInterface* thisInstance = (ControlInterface*) arg;
+
+	JackNotification notification;
+	notification.type = JackNotification::PortConnect;
+	notification.data.portConnect.a = a;
+	notification.data.portConnect.b = b;
+	notification.data.portConnect.connect = connect;
+
+	{
+		std::lock_guard guard(thisInstance->jackNotificationMutex);
+		thisInstance->jackNotifications.push_back(notification);
+	}
+	uv_async_send(&thisInstance->jackNotificationPending);
+}
+
+int ControlInterface::jackOnGraphReorderedStatic(void* arg) {
+	ControlInterface* thisInstance = (ControlInterface*) arg;
+
+	JackNotification notification;
+	notification.type = JackNotification::GraphReordered;
+
+	{
+		std::lock_guard guard(thisInstance->jackNotificationMutex);
+		thisInstance->jackNotifications.push_back(notification);
+	}
+	uv_async_send(&thisInstance->jackNotificationPending);
+
+	return 0;
+}
+
+void ControlInterface::jackOnPortRegistrationStatic(jack_port_id_t port, int is_registered, void* arg) {
+	ControlInterface* thisInstance = (ControlInterface*) arg;
+
+	JackNotification notification;
+	notification.type = JackNotification::PortRegistration;
+	notification.data.portRegistration.port = port;
+	notification.data.portRegistration.is_registered = is_registered;
+
+	{
+		std::lock_guard guard(thisInstance->jackNotificationMutex);
+		thisInstance->jackNotifications.push_back(notification);
+	}
+	uv_async_send(&thisInstance->jackNotificationPending);
+}
+
+void ControlInterface::onJackNotificationStatic(uv_async_t* handle) {
+	ControlInterface* thisInstance = (ControlInterface*) handle->data;
+	std::vector<JackNotification> pendingNotifications;
+
+	{
+		std::lock_guard guard(thisInstance->jackNotificationMutex);
+		pendingNotifications.swap(thisInstance->jackNotifications);
+	}
+
+	for(const auto& notification : pendingNotifications) {
+		switch(notification.type) {
+			case JackNotification::PortConnect:
+				thisInstance->jackOnPortConnect(notification.data.portConnect.a,
+				                                notification.data.portConnect.b,
+				                                notification.data.portConnect.connect);
+				break;
+			case JackNotification::GraphReordered:
+				thisInstance->jackOnGraphReordered();
+				break;
+			case JackNotification::PortRegistration:
+				thisInstance->jackOnPortRegistration(notification.data.portRegistration.port,
+				                                     notification.data.portRegistration.is_registered);
+				break;
+		}
+	}
+}
+
+void ControlInterface::jackOnPortConnect(jack_port_id_t a, jack_port_id_t b, int connect) {
+	PortConnectionStateChange portChange;
+	portChange.a = a;
+	portChange.b = b;
+	portChange.connect = connect;
+
+	pendingPortChanges.push_back(portChange);
+}
+
+void ControlInterface::jackOnGraphReordered() {
+	std::vector<PortConnectionStateChange> portChanges;
+
+	pendingPortChanges.swap(portChanges);
+
+	for(PortConnectionStateChange& portChange : portChanges) {
+		jack_port_t* portA = jack_port_by_id(monitoringJackClient, portChange.a);
+		jack_port_t* portB = jack_port_by_id(monitoringJackClient, portChange.b);
+
+		if(portA == nullptr || portB == nullptr) {
+			// There was a disconnect because a client disconnected
+			// Don't save it
+			continue;
+		}
+
+		const char* aName = jack_port_name(portA);
+		const char* bName = jack_port_name(portB);
+		if(aName == nullptr || bName == nullptr) {
+			// There was a disconnect because a client disconnected
+			// Don't save it
+			continue;
+		}
+
+		jack_port_t* portAByName = jack_port_by_name(monitoringJackClient, aName);
+		jack_port_t* portBByName = jack_port_by_name(monitoringJackClient, bName);
+
+		// printf("port %s:\n  a = %p, name: %s, byname = %p\n  b = %p, name: %s, byname = %p\n",
+		//        portChange.connect ? "connected" : "disconnected",
+		//        portA,
+		//        aName,
+		//        portAByName,
+		//        portB,
+		//        bName,
+		//        portBByName);
+
+		if(portAByName == nullptr || portBByName == nullptr) {
+			// There was a disconnect because a client disconnected
+			// Don't save it
+			continue;
+		}
+
+		const char* inputPort;
+		const char* outputPort;
+
+		int portAFlags = jack_port_flags(portAByName);
+		int portBFlags = jack_port_flags(portBByName);
+
+		if((portAFlags & JackPortIsOutput) != 0 && (portBFlags & JackPortIsInput) != 0) {
+			inputPort = bName;
+			outputPort = aName;
+		} else if((portAFlags & JackPortIsOutput) != 0 && (portBFlags & JackPortIsInput) != 0) {
+			inputPort = aName;
+			outputPort = bName;
+		} else {
+			printf("Not a output to input connection between %s and %s, ignore\n", aName, bName);
+			continue;
+		}
+
+		if(portChange.connect) {
+			outputPortConnections[outputPort].insert(inputPort);
+			inputPortConnections[inputPort].insert(outputPort);
+			// printf("Port connection %s to %s\n", outputPort, inputPort);
+		} else {
+			// printf("Port disconnection %s to %s\n", outputPort, inputPort);
+			if(outputPortConnections.count(outputPort)) {
+				outputPortConnections[outputPort].erase(inputPort);
+				if(outputPortConnections[outputPort].empty())
+					outputPortConnections.erase(outputPort);
+			}
+			if(inputPortConnections.count(inputPort)) {
+				inputPortConnections[inputPort].erase(outputPort);
+				if(inputPortConnections[inputPort].empty())
+					inputPortConnections.erase(inputPort);
+			}
+		}
+	}
+}
+
+void ControlInterface::jackOnPortRegistration(jack_port_id_t port, int is_registered) {
+	if(!is_registered)
+		return;
+
+	jack_port_t* portPtr = jack_port_by_id(monitoringJackClient, port);
+	if(!portPtr)
+		return;
+
+	int portFlags = jack_port_flags(portPtr);
+
+	const char* portName = jack_port_name(portPtr);
+	if(!portName)
+		return;
+	// printf("Port %s registered\n", portName);
+
+	std::map<std::string, std::set<std::string>>* portConnections;
+
+	if(portFlags & JackPortIsOutput) {
+		portConnections = &outputPortConnections;
+	} else if(portFlags & JackPortIsInput) {
+		portConnections = &inputPortConnections;
+	} else {
+		printf("Port %s not an input or output\n", portName);
+		return;
+	}
+
+	auto it = portConnections->find(portName);
+
+	if(it == portConnections->end())
+		return;
+
+	for(const auto& inputPorts : it->second) {
+		if(portConnections == &inputPortConnections) {
+			// printf("Autoconnect %s to %s\n", inputPorts.c_str(), it->first.c_str());
+			jack_connect(monitoringJackClient, inputPorts.c_str(), it->first.c_str());
+		} else {
+			// printf("Autoconnect %s to %s\n", it->first.c_str(), inputPorts.c_str());
+			jack_connect(monitoringJackClient, it->first.c_str(), inputPorts.c_str());
+		}
 	}
 }
