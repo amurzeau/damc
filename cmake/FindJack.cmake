@@ -7,6 +7,9 @@ FindJack
 
 Find the Jack libraries
 
+Set Jack_ROOT cmake or environment variable to the Jack install root directory
+to use a specific Jack installation.
+
 IMPORTED targets
 ^^^^^^^^^^^^^^^^
 
@@ -32,26 +35,27 @@ if(WIN32)
 	if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
 		set(JACK_DEFAULT_PATHS "C:/Program Files (x86)/JACK2;C:/Program Files/JACK2")
 		set(JACK_DEFAULT_NAME "libjack")
-		set(JACK_DEFAULT_LIB_SUFFIX "lib;lib32")
+		set(JACK_DEFAULT_LIB_SUFFIX "lib32;lib")
 	else()
 		set(JACK_DEFAULT_PATHS "C:/Program Files/JACK2")
-		set(JACK_DEFAULT_NAME "libjack64")
+		set(JACK_DEFAULT_NAME "libjack64;libjack64.lib")
 		set(JACK_DEFAULT_LIB_SUFFIX "lib")
 	endif()
 else()
 	set(JACK_DEFAULT_LIB_SUFFIX "lib")
 endif()
 
-message(STATUS "Using hint ${JACK_ROOT_DIR}")
-message(STATUS "Using path ${JACK_DEFAULT_PATHS}")
+find_package (PkgConfig)
+if(PKG_CONFIG_FOUND)
+	pkg_check_modules (PC_JACK jack>=0.100.0)
+endif()
 
 # Look for the necessary header
 find_path(Jack_INCLUDE_DIR
 	NAMES jack/jack.h
 	PATH_SUFFIXES include includes
 	HINTS
-		${JACK_ROOT_DIR}
-		ENV JACK_ROOT_DIR
+		${PC_JACK_INCLUDE_DIRS}
 	PATHS
 		${JACK_DEFAULT_PATHS}
 )
@@ -59,12 +63,11 @@ mark_as_advanced(Jack_INCLUDE_DIR)
 
 # Look for the necessary library
 find_library(Jack_LIBRARY
-	NAMES jack ${JACK_DEFAULT_NAME} ${JACK_DEFAULT_NAME}.lib
+	NAMES jack ${PC_JACK_LIBRARIES} ${JACK_DEFAULT_NAME} ${JACK_DEFAULT_NAME}.lib
 	NAMES_PER_DIR
 	PATH_SUFFIXES ${JACK_DEFAULT_LIB_SUFFIX}
 	HINTS
-		${JACK_ROOT_DIR}
-		ENV JACK_ROOT_DIR
+		${PC_JACK_LIBRARY_DIRS}
 	PATHS
 		${JACK_DEFAULT_PATHS}
 )
@@ -80,8 +83,7 @@ if(Jack_FOUND)
     set(Jack_LIBRARIES ${Jack_LIBRARY})
     if(NOT TARGET Jack::Jack)
         add_library(Jack::Jack UNKNOWN IMPORTED)
-        set_target_properties(Jack::Jack PROPERTIES
-            IMPORTED_LOCATION             "${Jack_LIBRARY}"
-            INTERFACE_INCLUDE_DIRECTORIES "${Jack_INCLUDE_DIR}")
+        set_target_properties(Jack::Jack PROPERTIES IMPORTED_LOCATION "${Jack_LIBRARY}")
+        target_include_directories(Jack::Jack INTERFACE "${Jack_INCLUDE_DIR}")
     endif()
 endif()
