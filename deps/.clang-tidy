@@ -1,0 +1,6 @@
+---
+Checks: '-*,misc-definitions-in-headers'
+FormatStyle: file
+CheckOptions:
+  - { key: HeaderFileExtensions,          value: "x" }
+...
