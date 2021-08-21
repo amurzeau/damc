@@ -3,6 +3,8 @@ project(waveOverUDP)
 
 # option() honors normal variables
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+# Honor visibility properties for all target types.
+set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -49,9 +51,12 @@ endif()
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "deps")
 add_subdirectory(deps)
 
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "waveSendUDPJack")
 
-add_subdirectory(tinyosc)
+add_subdirectory(common)
 add_subdirectory(waveSendUDPJack)
 add_subdirectory(gui)
 

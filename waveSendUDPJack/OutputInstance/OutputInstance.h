@@ -2,7 +2,7 @@
 #define OUTPUTJACKINSTANCE_H
 
 #include "../Filter/FilteringChain.h"
-#include "../OscAddress.h"
+#include "OscAddress.h"
 #include "../OscServer.h"
 #include "../json.h"
 #include "IAudioEndpoint.h"

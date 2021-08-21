@@ -1,5 +1,5 @@
 #include "OscAddress.h"
-#include "OscServer.h"
+#include "OscRoot.h"
 #include <math.h>
 
 float ConverterLogScale::fromOsc(float value) {
@@ -28,14 +28,11 @@ OscNode::OscNode(OscContainer* parent, std::string name) noexcept : name(name), 
 	} else {
 		fullAddress = "";
 	}
-
-	OscServer::addAddress(getFullAddress(), this);
 }
 
 OscNode::~OscNode() {
 	if(parent)
 		parent->removeChild(name);
-	OscServer::removeAddress(this);
 }
 
 const std::string& OscNode::getFullAddress() {
@@ -43,11 +40,12 @@ const std::string& OscNode::getFullAddress() {
 }
 
 void OscNode::sendMessage(const OscArgument* arguments, size_t number) {
-	OscServer::sendMessage(getFullAddress(), arguments, number);
+	sendMessage(getFullAddress(), arguments, number);
 }
 
 void OscNode::sendMessage(const std::string& address, const OscArgument* arguments, size_t number) {
-	OscServer::sendMessage(address, arguments, number);
+	if(parent)
+		parent->sendMessage(address, arguments, number);
 }
 
 void OscNode::execute(std::string_view address, const std::vector<OscArgument>& arguments) {

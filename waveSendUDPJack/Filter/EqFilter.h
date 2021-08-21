@@ -1,7 +1,7 @@
 #ifndef EQFILTER_H
 #define EQFILTER_H
 
-#include "../OscAddress.h"
+#include "OscAddress.h"
 #include "../json.h"
 #include "BiquadFilter.h"
 #include <complex>

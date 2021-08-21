@@ -1,7 +1,7 @@
 #ifndef COMPRESSORFILTER_H
 #define COMPRESSORFILTER_H
 
-#include "../OscAddress.h"
+#include "OscAddress.h"
 #include "../json.h"
 #include <array>
 #include <deque>

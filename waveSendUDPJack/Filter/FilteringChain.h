@@ -1,13 +1,13 @@
 #ifndef FILTERINGCHAIN_H
 #define FILTERINGCHAIN_H
 
-#include "../OscAddress.h"
 #include "../json.h"
 #include "CompressorFilter.h"
 #include "DelayFilter.h"
 #include "DitheringFilter.h"
 #include "EqFilter.h"
 #include "ExpanderFilter.h"
+#include "OscAddress.h"
 #include "ReverbFilter.h"
 #include <array>
 #include <stddef.h>

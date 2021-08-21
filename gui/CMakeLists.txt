@@ -17,7 +17,6 @@ set(FORMS
 set(HEADERS
 	MainWindow.h
 	BodePlot.h
-	../waveSendUDPJack/Filter/BiquadFilter.h
 	OutputController.h
 	WavePlayInterface.h
 	WavePlayOutputInterface.h
@@ -36,7 +35,6 @@ set(SOURCES
 	main.cpp
 	MainWindow.cpp
 	BodePlot.cpp
-	../waveSendUDPJack/Filter/BiquadFilter.cpp
 	OutputController.cpp
 	WavePlayInterface.cpp
 	WavePlayOutputInterface.cpp
@@ -65,11 +63,13 @@ endif()
 target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 if(Qt5_FOUND)
-	target_link_libraries(${TARGET_NAME} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network)
+	target_link_libraries(${TARGET_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network)
 else()
-	target_link_libraries(${TARGET_NAME} Qt4::QtCore Qt4::QtGui Qt4::QtNetwork)
+	target_link_libraries(${TARGET_NAME} PRIVATE Qt4::QtCore Qt4::QtGui Qt4::QtNetwork)
 	target_compile_options(${TARGET_NAME} PRIVATE -Zc:wchar_t-)
 endif()
+
+target_link_libraries(${TARGET_NAME} PRIVATE common)
 
 install(TARGETS ${TARGET_NAME} DESTINATION ./)
 

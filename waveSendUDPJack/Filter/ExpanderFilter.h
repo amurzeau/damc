@@ -1,7 +1,7 @@
 #ifndef EXPANDERFILTER_H
 #define EXPANDERFILTER_H
 
-#include "../OscAddress.h"
+#include "OscAddress.h"
 #include "../json.h"
 #include <stddef.h>
 #include <vector>

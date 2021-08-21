@@ -10,8 +10,6 @@ else()
 endif()
 
 add_executable(waveSendUDPJack
-	Filter/BiquadFilter.cpp
-	Filter/BiquadFilter.h
 	Filter/EqFilter.cpp
 	Filter/EqFilter.h
 	Filter/DitheringFilter.cpp
@@ -59,13 +57,11 @@ add_executable(waveSendUDPJack
 	json.h
 	KeyBinding.h
 	KeyBinding.cpp
-	OscAddress.h
-	OscAddress.cpp
 	OscServer.h
 	OscServer.cpp
 	waveSendUDPJack.cpp
 )
-target_link_libraries(waveSendUDPJack PUBLIC uv::uv PortAudio JACK::jack tinyosc)
+target_link_libraries(waveSendUDPJack PUBLIC uv::uv PortAudio JACK::jack common)
 target_compile_definitions(waveSendUDPJack PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 if(WIN32)

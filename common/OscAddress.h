@@ -47,7 +47,7 @@ public:
 	OscNode& operator=(OscNode const&) = delete;
 	virtual ~OscNode();
 
-	template<typename T> bool getArgumentAs(const OscArgument& argument, T& v) {
+	template<typename T> static bool getArgumentAs(const OscArgument& argument, T& v) {
 		bool ret = false;
 		std::visit(
 		    [&v, &ret](auto&& arg) -> void {
@@ -67,13 +67,20 @@ public:
 
 	const std::string& getFullAddress();
 
-	void sendMessage(const OscArgument* arguments, size_t number);
-	void sendMessage(const std::string& address, const OscArgument* arguments, size_t number);
-
 	virtual void execute(std::string_view address, const std::vector<OscArgument>& arguments);
-	virtual void execute(const std::vector<OscArgument>&) {}
 
 	virtual std::string getAsString() = 0;
+
+	// Called from derived types when their value is changed
+	void sendMessage(const OscArgument* arguments, size_t number);
+
+protected:
+	// Called by the sendMessage above and bubble the call to OscRoot instance
+	virtual void sendMessage(const std::string& address, const OscArgument* arguments, size_t number);
+
+	// Called by the public execute to really execute the action on this node (rather than descending through the tree
+	// of nodes)
+	virtual void execute(const std::vector<OscArgument>&) {}
 
 private:
 	std::string name;
@@ -366,6 +373,7 @@ private:
 	std::function<void(T)> onAdd;
 	std::function<void()> onRemove;
 };
+
 template<typename T> class OscContainerArray : public OscGenericArray<T> {
 public:
 	OscContainerArray(OscContainer* parent, std::string name) : OscGenericArray<T>(parent, name) {

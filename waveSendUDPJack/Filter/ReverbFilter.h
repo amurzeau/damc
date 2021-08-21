@@ -1,9 +1,9 @@
 #ifndef REVERBFILTER_H
 #define REVERBFILTER_H
 
-#include "../OscAddress.h"
 #include "../json.h"
 #include "DelayFilter.h"
+#include "OscAddress.h"
 #include <stddef.h>
 #include <vector>
 

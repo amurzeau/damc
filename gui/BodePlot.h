@@ -1,7 +1,7 @@
 #ifndef BODEPLOT_H
 #define BODEPLOT_H
 
-#include "../waveSendUDPJack/Filter/BiquadFilter.h"
+#include "BiquadFilter.h"
 #include "BodePlotWidget.h"
 #include <complex>
 
