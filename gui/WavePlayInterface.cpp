@@ -3,14 +3,21 @@
 #include <QJsonDocument>
 #include <QMessageBox>
 
-WavePlayInterface::WavePlayInterface() {
-	connect(&controlSocket, SIGNAL(readyRead()), this, SLOT(onDataReceived()));
-	connect(&controlSocket,
-	        SIGNAL(stateChanged(QAbstractSocket::SocketState)),
-	        this,
-	        SLOT(onConnectionStateChanged(QAbstractSocket::SocketState)));
+static constexpr uint8_t SLIP_END = 0xC0;
+static constexpr uint8_t SLIP_ESC = 0xDB;
+static constexpr uint8_t SLIP_ESC_END = 0xDC;
+static constexpr uint8_t SLIP_ESC_ESC = 0xDD;
 
-	controlSocket.connectToHost("127.0.0.1", 2306);
+WavePlayInterface::WavePlayInterface() : oscIsEscaping(false) {
+	connect(&controlSocket, &QTcpSocket::readyRead, this, &WavePlayInterface::onDataReceived);
+	connect(&controlSocket, &QTcpSocket::stateChanged, this, &WavePlayInterface::onConnectionStateChanged);
+
+	onReconnect();
+
+	connect(&oscSocket, &QTcpSocket::readyRead, this, &WavePlayInterface::onOscDataReceived);
+	connect(&oscSocket, &QTcpSocket::stateChanged, this, &WavePlayInterface::onOscConnectionStateChanged);
+
+	onOscReconnect();
 }
 
 void WavePlayInterface::sendMessage(const QJsonObject& message) {
@@ -23,6 +30,81 @@ void WavePlayInterface::sendMessage(const QJsonObject& message) {
 
 	controlSocket.write((const char*) &sizeData, sizeof(sizeData));
 	controlSocket.write(data.constData(), sizeData);
+}
+
+void WavePlayInterface::onOscDataReceived() {
+	do {
+		QByteArray receivedData = oscSocket.readAll();
+
+		// Decode SLIP frame
+		for(uint8_t c : receivedData) {
+			if(!oscIsEscaping) {
+				if(c == SLIP_ESC) {
+					oscIsEscaping = true;
+					continue;
+				} else if(c == SLIP_END) {
+					if(!oscNetworkBuffer.empty()) {
+						onPacketReceived(oscNetworkBuffer.data(), oscNetworkBuffer.size());
+						oscNetworkBuffer.clear();
+					}
+					continue;
+				}
+				// else this is a regular character
+			} else {
+				if(c == SLIP_ESC_END) {
+					c = SLIP_END;
+				} else if(c == SLIP_ESC_ESC) {
+					c = SLIP_ESC;
+				}
+				// else this is an error, escaped character doesn't need to be escaped
+			}
+			oscIsEscaping = false;
+			oscNetworkBuffer.push_back(c);
+		}
+	} while(oscSocket.bytesAvailable());
+}
+
+void WavePlayInterface::onOscConnectionStateChanged(QAbstractSocket::SocketState state) {
+	if(state == QAbstractSocket::UnconnectedState) {
+		oscReconnectTimer.singleShot(1000, this, &WavePlayInterface::onOscReconnect);
+	}
+}
+
+void WavePlayInterface::onOscReconnect() {
+	oscIsEscaping = false;
+	oscSocket.connectToHost("127.0.0.1", 2308);
+}
+
+void WavePlayInterface::sendNextMessage(const uint8_t* data, size_t size) {
+	if(oscSocket.state() != QTcpSocket::ConnectedState) {
+		onOscReconnect();
+		return;
+	}
+
+	oscOutputNetworkBuffer.clear();
+
+	// Encode SLIP frame with double-END variant (one at the start, one at the end)
+	oscOutputNetworkBuffer.push_back(SLIP_END);
+
+	for(size_t i = 0; i < size; i++) {
+		const uint8_t c = data[i];
+
+		if(c == SLIP_END) {
+			oscOutputNetworkBuffer.push_back(SLIP_ESC);
+			oscOutputNetworkBuffer.push_back(SLIP_ESC_END);
+		} else if(c == SLIP_ESC) {
+			oscOutputNetworkBuffer.push_back(SLIP_ESC);
+			oscOutputNetworkBuffer.push_back(SLIP_ESC_ESC);
+		} else {
+			oscOutputNetworkBuffer.push_back(c);
+		}
+	}
+
+	oscOutputNetworkBuffer.push_back(SLIP_END);
+
+	oscSocket.write(oscOutputNetworkBuffer);
+
+	onMessageSent();
 }
 
 void WavePlayInterface::onDataReceived() {
@@ -57,7 +139,7 @@ void WavePlayInterface::onDataReceived() {
 
 void WavePlayInterface::onConnectionStateChanged(QAbstractSocket::SocketState state) {
 	if(state == QAbstractSocket::UnconnectedState)
-		reconnectTimer.singleShot(1000, this, SLOT(onReconnect()));
+		reconnectTimer.singleShot(1000, this, &WavePlayInterface::onReconnect);
 }
 
 void WavePlayInterface::onReconnect() {

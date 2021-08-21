@@ -1,6 +1,7 @@
 #ifndef WAVEPLAYINTERFACE_H
 #define WAVEPLAYINTERFACE_H
 
+#include "OscRoot.h"
 #include <QJsonObject>
 #include <QObject>
 #include <QTcpSocket>
@@ -11,7 +12,7 @@
 
 class WavePlayOutputInterface;
 
-class WavePlayInterface : public QObject {
+class WavePlayInterface : public QObject, public OscRoot {
 	Q_OBJECT
 public:
 	WavePlayInterface();
@@ -27,10 +28,21 @@ protected slots:
 	void onConnectionStateChanged(QAbstractSocket::SocketState state);
 	void onReconnect();
 
+	void onOscDataReceived();
+	void onOscConnectionStateChanged(QAbstractSocket::SocketState state);
+	void onOscReconnect();
+
 protected:
+	void sendNextMessage(const uint8_t* data, size_t size) override;
 	void onPacketReceived(const void* data, size_t size);
 
 private:
+	QTcpSocket oscSocket;
+	QTimer oscReconnectTimer;
+	std::vector<uint8_t> oscNetworkBuffer;
+	QByteArray oscOutputNetworkBuffer;
+	bool oscIsEscaping;
+
 	QTcpSocket controlSocket;
 	QTimer reconnectTimer;
 	std::vector<uint8_t> networkBuffer;
