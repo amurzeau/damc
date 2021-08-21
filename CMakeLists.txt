@@ -17,7 +17,7 @@ option(BUILD_TESTING "Build tests" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type")
 
-find_package(Jack REQUIRED)
+find_package(JACK REQUIRED)
 
 if(MINGW)
 	set(COMPILER_FLAGS "-msse -mfpmath=sse -ffast-math -Wall")
@@ -78,7 +78,7 @@ if(UNIX)
 	endif()
 
 	add_executable(wavePlayUDPJack wavePlayUDPJack.cpp Logger.cpp Logger.h)
-	target_link_libraries(wavePlayUDPJack Jack::Jack)
+	target_link_libraries(wavePlayUDPJack JACK::jack)
 	install(TARGETS wavePlayUDPJack RUNTIME DESTINATION ./)
 endif()
 

@@ -2,31 +2,31 @@
 # file Copyright.txt or https://cmake.org/licensing for details.
 
 #[=======================================================================[.rst:
-FindJack
+FindJACK
 -----------
 
-Find the Jack libraries
+Find the JACK libraries
 
-Set Jack_ROOT cmake or environment variable to the Jack install root directory
-to use a specific Jack installation.
+Set JACK_ROOT cmake or environment variable to the JACK install root directory
+to use a specific JACK installation.
 
 IMPORTED targets
 ^^^^^^^^^^^^^^^^
 
 This module defines the following :prop_tgt:`IMPORTED` target:
 
-``Jack::Jack``
+``JACK::jack``
 
 Result variables
 ^^^^^^^^^^^^^^^^
 
 This module will set the following variables if found:
 
-``Jack_INCLUDE_DIRS``
-  where to find Jack.h, etc.
-``Jack_LIBRARIES``
-  the libraries to link against to use Jack.
-``Jack_FOUND``
+``JACK_INCLUDE_DIRS``
+  where to find jack.h, etc.
+``JACK_LIBRARIES``
+  the libraries to link against to use JACK.
+``JACK_FOUND``
   TRUE if found
 
 #]=======================================================================]
@@ -53,7 +53,7 @@ if(PKG_CONFIG_FOUND)
 endif()
 
 # Look for the necessary header
-find_path(Jack_INCLUDE_DIR
+find_path(JACK_INCLUDE_DIR
 	NAMES jack/jack.h
 	PATH_SUFFIXES include includes
 	HINTS
@@ -61,10 +61,10 @@ find_path(Jack_INCLUDE_DIR
 	PATHS
 		${JACK_DEFAULT_PATHS}
 )
-mark_as_advanced(Jack_INCLUDE_DIR)
+mark_as_advanced(JACK_INCLUDE_DIR)
 
 # Look for the necessary library
-find_library(Jack_LIBRARY
+find_library(JACK_LIBRARY
 	NAMES ${PC_JACK_LIBRARIES} ${JACK_DEFAULT_NAME}
 	NAMES_PER_DIR
 	PATH_SUFFIXES ${JACK_DEFAULT_LIB_SUFFIX}
@@ -73,21 +73,21 @@ find_library(Jack_LIBRARY
 	PATHS
 		${JACK_DEFAULT_PATHS}
 )
-mark_as_advanced(Jack_LIBRARY)
+mark_as_advanced(JACK_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Jack
-	REQUIRED_VARS Jack_LIBRARY Jack_INCLUDE_DIR)
+find_package_handle_standard_args(JACK
+	REQUIRED_VARS JACK_LIBRARY JACK_INCLUDE_DIR)
 
 # Create the imported target
-if(Jack_FOUND)
-	set(Jack_INCLUDE_DIRS ${Jack_INCLUDE_DIR})
-	set(Jack_LIBRARIES ${Jack_LIBRARY})
-	if(NOT TARGET Jack::Jack)
-		add_library(Jack::Jack UNKNOWN IMPORTED)
-		set_target_properties(Jack::Jack PROPERTIES IMPORTED_LOCATION "${Jack_LIBRARY}")
-		target_include_directories(Jack::Jack INTERFACE "${Jack_INCLUDE_DIR}")
+if(JACK_FOUND)
+	set(JACK_INCLUDE_DIRS ${JACK_INCLUDE_DIR})
+	set(JACK_LIBRARIES ${JACK_LIBRARY})
+	if(NOT TARGET JACK::jack)
+		add_library(JACK::jack UNKNOWN IMPORTED)
+		set_target_properties(JACK::jack PROPERTIES IMPORTED_LOCATION "${JACK_LIBRARY}")
+		target_include_directories(JACK::jack INTERFACE "${JACK_INCLUDE_DIR}")
 	endif()
 else()
-	message(STATUS "Set Jack_ROOT cmake or environment variable to the Jack install root directory to use a specific Jack installation.")
+	message(STATUS "Set JACK_ROOT cmake or environment variable to the JACK install root directory to use a specific JACK installation.")
 endif()

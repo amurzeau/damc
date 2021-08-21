@@ -24,10 +24,9 @@ else()
 endif()
 
 install(TARGETS
-	portaudio
+	PortAudio
 	zlib
 	mysofa
 	fftw3f
 	RUNTIME DESTINATION ./
-	LIBRARY DESTINATION ./
 )

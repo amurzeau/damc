@@ -65,7 +65,7 @@ add_executable(waveSendUDPJack
 	OscServer.cpp
 	waveSendUDPJack.cpp
 )
-target_link_libraries(waveSendUDPJack PUBLIC uv::uv portaudio Jack::Jack tinyosc)
+target_link_libraries(waveSendUDPJack PUBLIC uv::uv PortAudio JACK::jack tinyosc)
 target_compile_definitions(waveSendUDPJack PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 if(WIN32)
