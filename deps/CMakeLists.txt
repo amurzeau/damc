@@ -5,8 +5,9 @@ add_subdirectory(libuv EXCLUDE_FROM_ALL)
 add_subdirectory(zlib EXCLUDE_FROM_ALL)
 add_subdirectory(libmysofa EXCLUDE_FROM_ALL)
 
-set (DISABLE_FORTRAN ON)
-set (ENABLE_FLOAT ON)
+set(DISABLE_FORTRAN ON)
+set(ENABLE_FLOAT ON)
+set(BUILD_TESTS ${BUILD_TESTING})
 add_subdirectory(fftw-3.3.8 EXCLUDE_FROM_ALL)
 
 target_compile_definitions(mysofa PUBLIC VDEBUG)

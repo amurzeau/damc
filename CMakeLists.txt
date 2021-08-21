@@ -13,7 +13,7 @@ set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_POSITION_INDEPENDENT_CODE True)
 set(CMAKE_CXX_STANDARD 17)
 
-option(BUILD_TESTS "Build tests" OFF)
+option(BUILD_TESTING "Build tests" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type")
 
