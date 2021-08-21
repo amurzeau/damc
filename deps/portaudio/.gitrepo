@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = github-amurzeau:PortAudio/portaudio
+	branch = master
+	commit = 093d7f7fdf2cd1dbed0cb888257b6b39b4bed7db
+	parent = 5c1d19f94c87417e87683d1012ba9a76c717b1de
+	method = merge
+	cmdver = 0.4.3
