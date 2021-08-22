@@ -59,6 +59,7 @@ jobs:
       - name: Install dependencies
         id: dependencies
         run: |
+          $QT_ROOT="$env:GITHUB_WORKSPACE\Qt"
           echo "Checking latest version of Jack ..."
           $JACK_RELEASES_URL = "https://api.github.com/repos/jackaudio/jack2/releases"
           $jack_releases = Invoke-WebRequest $JACK_RELEASES_URL | ConvertFrom-Json
@@ -92,28 +93,81 @@ jobs:
             $qt_latest_version = python3 -m aqt list-qt windows desktop --spec 5 --latest-version
           }
           
-          echo "Installing Qt $qt_latest_version"
-          $cnt = 0
-          do {
-              $cnt++
-              python3 -m aqt install-qt -O c:\Qt windows desktop $qt_latest_version win${{ matrix.config.arch }}_mingw81
-              if ($lastexitcode -ne 0 -and $cnt -ge 5) {
-                exit $lastexitcode
-              }
-          } while ($lastexitcode -ne 0)
+          $qt_path="$QT_ROOT\$qt_latest_version\mingw81_${{ matrix.config.arch }}"
+          $mingw_path="$QT_ROOT\Tools\mingw810_${{ matrix.config.arch }}"
+          $ninja_path="$QT_ROOT\Tools\Ninja"
           
-          echo "Installing win${{ matrix.config.arch }}_mingw810"
-          $cnt = 0
-          do {
-              $cnt++
-              python3 -m aqt install-tool -O c:\Qt windows desktop tools_mingw qt.tools.win${{ matrix.config.arch }}_mingw810
-              if ($lastexitcode -ne 0 -and $cnt -ge 5) {
-                exit $lastexitcode
-              }
-          } while ($lastexitcode -ne 0)
+          echo "::set-output name=QT_ROOT::$QT_ROOT"
+          echo "::set-output name=QT_VERSION::$qt_latest_version"
+          echo "::set-output name=QT_PATH::$qt_path"
+          echo "::set-output name=MINGW_PATH::$mingw_path"
+          echo "::set-output name=NINJA_PATH::$ninja_path"
+      
+      - name: Cache Qt
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.dependencies.outputs.QT_ROOT }}
+          key: "3${{ runner.os }}-${{ matrix.config.arch }}-${{ steps.dependencies.outputs.QT_VERSION }}"
+
+      - name: Install Qt
+        run: |
+          $QT_ROOT="${{ steps.dependencies.outputs.QT_ROOT }}"
+          $qt_latest_version = "${{ steps.dependencies.outputs.QT_VERSION }}"
+          $qt_path="${{ steps.dependencies.outputs.QT_PATH }}"
+          $mingw_path="${{ steps.dependencies.outputs.MINGW_PATH }}"
+          $ninja_path="${{ steps.dependencies.outputs.NINJA_PATH }}"
           
-          echo "::set-output name=QT_PATH::C:\Qt\$qt_latest_version\mingw81_${{ matrix.config.arch }}"
-          echo "::set-output name=MINGW_PATH::C:\Qt\Tools\mingw810_${{ matrix.config.arch }}"
+          if ( -not (Test-Path -Path $QT_ROOT)) {
+              mkdir $QT_ROOT
+          }
+          echo $QT_ROOT
+          cd $QT_ROOT
+          
+          if ( -not (Test-Path -Path $qt_path)) {
+              echo "Installing Qt $qt_latest_version"
+              $cnt = 0
+              do {
+                  $cnt++
+                  python3 -m aqt install-qt windows desktop $qt_latest_version win${{ matrix.config.arch }}_mingw81
+                  if ($lastexitcode -ne 0 -and $cnt -ge 5) {
+                    exit $lastexitcode
+                  }
+              } while ($lastexitcode -ne 0)
+          } else {
+              echo "Qt $qt_latest_version already installed at $qt_path"
+          }
+          
+          if ( -not (Test-Path -Path $mingw_path)) {
+              echo "Installing win${{ matrix.config.arch }}_mingw810"
+              $cnt = 0
+              do {
+                  $cnt++
+                  python3 -m aqt install-tool windows desktop tools_mingw qt.tools.win${{ matrix.config.arch }}_mingw810
+                  if ($lastexitcode -ne 0 -and $cnt -ge 5) {
+                    exit $lastexitcode
+                  }
+              } while ($lastexitcode -ne 0)
+          } else {
+              echo "win${{ matrix.config.arch }}_mingw810 already installed at $mingw_path"
+          }
+          
+          if ( -not (Test-Path -Path $ninja_path)) {
+              echo "Installing ninja"
+              $cnt = 0
+              do {
+                  $cnt++
+                  python3 -m aqt install-tool windows desktop tools_ninja qt.tools.ninja
+                  if ($lastexitcode -ne 0 -and $cnt -ge 5) {
+                    exit $lastexitcode
+                  }
+              } while ($lastexitcode -ne 0)
+          } else {
+              echo "ninja already installed at $ninja_path"
+          }
+          
+          dir -Recurse -Depth 1
+          
+          cd $env:GITHUB_WORKSPACE
 
       # Runs a set of commands using the runners shell
       - name: Build
@@ -123,11 +177,11 @@ jobs:
           
           $env:CC="gcc.exe"
           $env:CXX="g++.exe"
-          $env:PATH="${{ steps.dependencies.outputs.MINGW_PATH }}\bin;$env:PATH"
+          $env:PATH="${{ steps.dependencies.outputs.NINJA_PATH }};${{ steps.dependencies.outputs.MINGW_PATH }}\bin;$env:PATH"
           git submodule -q update --init --recursive
           mkdir build
           
-          cmake -S . -B build "-GMinGW Makefiles" "-DCMAKE_PREFIX_PATH=${{ steps.dependencies.outputs.QT_PATH }}\lib\cmake"
+          cmake -S . -B build "-GNinja" "-DCMAKE_PREFIX_PATH=${{ steps.dependencies.outputs.QT_PATH }}\lib\cmake"
           if ($lastexitcode -ne 0) { exit $lastexitcode }
           
           cmake --build build --target package --config RelWithDebInfo -- -j4
