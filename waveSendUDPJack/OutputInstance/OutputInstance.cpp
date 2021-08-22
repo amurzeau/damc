@@ -21,7 +21,7 @@ OutputInstance::OutputInstance(OscContainer* parent, size_t index, IAudioEndpoin
       oscPeakGlobal(this, "meter", 0.f),
       oscEnablePeakUpdate(this, "enable_peak", false),
       oscEnablePeakJsonUpdate(this, "enable_peak_json", true) {
-	oscPeakPerChannelPath = getFullAddress() + "meter_per_channel";
+	oscPeakPerChannelPath = getFullAddress() + "/meter_per_channel";
 }
 
 OutputInstance::~OutputInstance() {
