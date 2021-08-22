@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
+set(JACK OFF)
+set(PA_USE_JACK OFF)
 add_subdirectory(portaudio EXCLUDE_FROM_ALL)
 add_subdirectory(libuv EXCLUDE_FROM_ALL)
 add_subdirectory(zlib EXCLUDE_FROM_ALL)
@@ -17,12 +19,12 @@ if(BUILD_SHARED_LIBS)
 	install(TARGETS
 		uv
 		RUNTIME DESTINATION ./
-		LIBRARY DESTINATION ./
 	)
 else()
 	add_library(uv::uv ALIAS uv_a)
 endif()
 
+set_target_properties(PortAudio PROPERTIES PUBLIC_HEADER "")
 install(TARGETS
 	PortAudio
 	zlib
