@@ -1,7 +1,7 @@
 #ifndef OUTPUTCONTROLLER_H
 #define OUTPUTCONTROLLER_H
 
-#include "../waveSendUDPJack/Filter/EqFilter.h"
+#include "BiquadFilter.h"
 #include "WavePlayOutputInterface.h"
 #include <QWidget>
 
