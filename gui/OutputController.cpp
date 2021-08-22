@@ -104,7 +104,7 @@ void OutputController::onEnable(int state) {
 		updateHiddenState();
 
 		for(LevelMeterWidget* level : levelWidgets) {
-			level->setValue(translateLevel(-INFINITY));
+			level->setValue(-INFINITY);
 		}
 		ui->levelLabel->setText("--");
 	} else {
@@ -255,7 +255,7 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 
 			for(int i = 0; i < levelNumber; i++) {
 				double level = levels[i].toDouble();
-				levelWidgets[i]->setValue(translateLevel(level));
+				levelWidgets[i]->setValue(level);
 				if(level > maxLevel)
 					maxLevel = level;
 			}
@@ -408,12 +408,6 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 	}
 }
 
-double OutputController::translateLevel(double level) {
-	if(level < -80)
-		return -80;
-	return level;
-}
-
 void OutputController::setDisplayedVolume(int volume) {
 	ui->volumeLevelLabel->setText(QString::number(volume));
 }
@@ -434,20 +428,6 @@ void OutputController::setNumChannel(int numChannels) {
 	levelWidgets.clear();
 
 	for(int i = 0; i < numChannels; i++) {
-		//		QwtThermo* level = new QwtThermo(this);
-		//		level->setObjectName(QStringLiteral("level") + QString::number(i + 1));
-		//		level->setLowerBound(-80);
-		//		level->setUpperBound(6);
-		//		level->setScalePosition(/*i == 0 ? QwtThermo::TrailingScale :*/ QwtThermo::NoScale);
-		//		level->setAlarmEnabled(true);
-		//		level->setSpacing(0);
-		//		level->setBorderWidth(0);
-		//		level->setPipeWidth(3);
-		//		level->setScaleMaxMinor(10);
-		//		level->setScaleMaxMajor(0);
-		//		level->setValue(translateLevel(-INFINITY));
-		//		level->setOriginMode(QwtThermo::OriginMinimum);
-
 		LevelMeterWidget* level = new LevelMeterWidget(this);
 		levelWidgets.push_back(level);
 		ui->levelContainerLayout->addWidget(level);

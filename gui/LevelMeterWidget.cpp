@@ -33,6 +33,8 @@ LevelMeterWidget::LevelMeterWidget(QWidget* parent)
 LevelMeterWidget::~LevelMeterWidget() {}
 
 void LevelMeterWidget::setValue(float peakLevel) {
+	peakLevel = std::clamp(peakLevel, MIN_VALUE, MAX_VALUE);
+
 	if(m_decayedPeakLevel != peakLevel) {
 		m_decayedPeakLevel = peakLevel;
 
@@ -55,10 +57,7 @@ void LevelMeterWidget::redrawTimerExpired() {
 }
 
 float LevelMeterWidget::getNormalizedLevel(float levelDb) {
-	static constexpr float maxValue = 6;
-	static constexpr float minValue = -80;
-
-	return (levelDb - minValue) / (maxValue - minValue);
+	return (levelDb - MIN_VALUE) / (MAX_VALUE - MIN_VALUE);
 }
 
 void LevelMeterWidget::paintEvent(QPaintEvent* event) {

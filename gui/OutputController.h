@@ -60,7 +60,6 @@ protected slots:
 	void onShowBalance();
 
 protected:
-	double translateLevel(double level);
 	void setDisplayedVolume(int volume);
 	void setNumChannel(int numChannel);
 
