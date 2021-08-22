@@ -19,7 +19,24 @@ void OscEndpoint::execute(const std::vector<OscArgument>& arguments) {
 		onExecute(std::move(arguments));
 }
 
-OscNode::OscNode(OscContainer* parent, std::string name) noexcept : name(name), parent(parent) {
+OscNode::OscNode(OscContainer* parent, std::string name) noexcept : name(name), parent(nullptr) {
+	setOscParent(parent);
+}
+
+OscNode::~OscNode() {
+	if(parent)
+		parent->removeChild(name);
+}
+
+void OscNode::setOscParent(OscContainer* parent) {
+	if(parent == this->parent)
+		return;
+
+	if(this->parent) {
+		this->parent->removeChild(name);
+		this->parent = nullptr;
+	}
+
 	if(parent) {
 		parent->addChild(name, this);
 		fullAddress = parent->getFullAddress() + "/" + name;
@@ -28,11 +45,7 @@ OscNode::OscNode(OscContainer* parent, std::string name) noexcept : name(name), 
 	} else {
 		fullAddress = "";
 	}
-}
-
-OscNode::~OscNode() {
-	if(parent)
-		parent->removeChild(name);
+	this->parent = parent;
 }
 
 const std::string& OscNode::getFullAddress() {
@@ -50,6 +63,14 @@ void OscNode::sendMessage(const std::string& address, const OscArgument* argumen
 
 void OscNode::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
 	execute(arguments);
+}
+
+OscContainer::~OscContainer() {
+	auto childrenToDetach = std::move(children);
+
+	for(auto& child : childrenToDetach) {
+		child.second->setOscParent(nullptr);
+	}
 }
 
 void OscContainer::execute(std::string_view address, const std::vector<OscArgument>& arguments) {

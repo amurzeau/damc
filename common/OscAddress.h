@@ -65,6 +65,7 @@ public:
 		return ret;
 	}
 
+	void setOscParent(OscContainer* parent);
 	const std::string& getFullAddress();
 
 	virtual void execute(std::string_view address, const std::vector<OscArgument>& arguments);
@@ -91,6 +92,8 @@ private:
 class OscContainer : public OscNode {
 public:
 	using OscNode::OscNode;
+
+	~OscContainer() override;
 
 	void addChild(std::string name, OscNode* child);
 	void removeChild(std::string name);
