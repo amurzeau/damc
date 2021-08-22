@@ -29,6 +29,7 @@ set(HEADERS
 	LevelMeterWidget.h
 	FastLabelWidget.h
 	BodePlotWidget.h
+	OscWidgetMapper.h
 )
 
 set(SOURCES
@@ -47,6 +48,7 @@ set(SOURCES
 	LevelMeterWidget.cpp
 	FastLabelWidget.cpp
 	BodePlotWidget.cpp
+	OscWidgetMapper.cpp
 )
 
 find_package(Qt5 COMPONENTS Core Gui Widgets Network)

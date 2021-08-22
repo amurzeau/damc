@@ -18,11 +18,50 @@
 
 #define DRAG_FORMAT "application/x-dndwaveoutputinstancewidget"
 
-OutputController::OutputController(MainWindow* parent, int numEq)
-    : QWidget(parent), ui(new Ui::OutputController), mainWindow(parent) {
+OutputController::OutputController(MainWindow* parent, int index, int numEq)
+    : QWidget(parent),
+      OscContainer(parent, std::to_string(index)),
+      ui(new Ui::OutputController),
+      mainWindow(parent),
+      index(index),
+      oscFilterChain(this, "filterChain"),
+      oscMeterPerChannel(this, "meter_per_channel"),
+      oscEnable(this, "enable"),
+      oscDelay(&oscFilterChain, "delay"),
+      oscClockDrift(&oscFilterChain, "clockDrift"),
+      oscVolume(&oscFilterChain, "volume") {
 	ui->setupUi(this);
 
 	numChannels = 0;
+	oscMeterPerChannel.setCallback([this](const std::vector<OscArgument>& arguments) {
+		float maxLevel = -INFINITY;
+
+		setNumChannel(arguments.size());
+
+		size_t levelNumber = std::min(levelWidgets.size(), arguments.size());
+
+		for(size_t i = 0; i < levelNumber; i++) {
+			const auto& argument = arguments[i];
+			float level;
+
+			if(!OscNode::getArgumentAs<float>(argument, level))
+				level = 0;
+
+			levelWidgets[i]->setValue(level);
+			if(level > maxLevel)
+				maxLevel = level;
+		}
+
+		if(maxLevel <= -192)
+			ui->levelLabel->setText("--");
+		else
+			ui->levelLabel->setText(QString::number((int) maxLevel));
+	});
+
+	oscEnable.setWidget(ui->enableCheckBox);
+	oscDelay.setWidget(ui->delaySpinBox);
+	oscClockDrift.setWidget(ui->clockDriftSpinBox);
+	oscVolume.setWidget(ui->volumeSlider);
 
 	equalizersController = new EqualizersController(this, numEq);
 	equalizersController->connectEqualizers(this, SLOT(onChangeEq(int, bool, FilterType, double, double, double)));
@@ -64,7 +103,7 @@ OutputController::~OutputController() {
 	delete ui;
 }
 
-void OutputController::setInterface(int index, WavePlayInterface* interface) {
+void OutputController::setInterface(WavePlayInterface* interface) {
 	this->interface.setInterface(index, interface);
 }
 

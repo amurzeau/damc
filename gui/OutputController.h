@@ -2,6 +2,8 @@
 #define OUTPUTCONTROLLER_H
 
 #include "BiquadFilter.h"
+#include "OscAddress.h"
+#include "OscWidgetMapper.h"
 #include "WavePlayOutputInterface.h"
 #include <QWidget>
 
@@ -16,13 +18,13 @@ class BalanceController;
 class QwtThermo;
 class LevelMeterWidget;
 
-class OutputController : public QWidget {
+class OutputController : public QWidget, public OscContainer {
 	Q_OBJECT
 public:
-	explicit OutputController(MainWindow* parent, int numEq);
+	explicit OutputController(MainWindow* parent, int index, int numEq);
 	~OutputController();
 
-	void setInterface(int index, WavePlayInterface* interface);
+	void setInterface(WavePlayInterface* interface);
 	WavePlayOutputInterface* getOutputInterface() { return &interface; };
 
 	void updateHiddenState();
@@ -82,6 +84,7 @@ private:
 	Ui::OutputController* ui;
 	MainWindow* mainWindow;
 	WavePlayOutputInterface interface;
+	int index;
 	int numEq;
 	int numChannels;
 	EqualizersController* equalizersController;
@@ -89,6 +92,14 @@ private:
 	CompressorController* expanderController;
 	BalanceController* balanceController;
 	std::vector<LevelMeterWidget*> levelWidgets;
+
+	OscContainer oscFilterChain;
+
+	OscEndpoint oscMeterPerChannel;
+	OscWidgetMapper<QAbstractButton> oscEnable;
+	OscWidgetMapper<QDoubleSpinBox> oscDelay;
+	OscWidgetMapper<QDoubleSpinBox> oscClockDrift;
+	OscWidgetMapper<QAbstractSlider> oscVolume;
 };
 
 #endif  // OUTPUTCONTROLLER_H

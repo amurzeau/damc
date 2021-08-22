@@ -5,6 +5,7 @@
 #include "OutputController.h"
 #include "WavePlayInterface.h"
 #include "WavePlayOutputInterface.h"
+#include <OscAddress.h>
 #include <QJsonObject>
 #include <QWidget>
 #include <unordered_map>
@@ -13,7 +14,7 @@ namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QWidget {
+class MainWindow : public QWidget, public OscContainer {
 	Q_OBJECT
 
 public:

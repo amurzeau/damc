@@ -3,8 +3,11 @@
 #include <QInputDialog>
 #include <QJsonDocument>
 
-MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow), addDialog(&mainControlInterface) {
+MainWindow::MainWindow(QWidget* parent)
+    : QWidget(parent), OscContainer(nullptr, "strip"), ui(new Ui::MainWindow), addDialog(&mainControlInterface) {
 	ui->setupUi(this);
+
+	setOscParent(&wavePlayInterface);
 
 	mainControlInterface.setInterface(-1, &wavePlayInterface);
 
@@ -50,8 +53,8 @@ void MainWindow::onMessage(const QJsonObject& message) {
 			qDebug("Adding instance %d\n", index);
 
 			if(index >= 0) {
-				OutputController* output = new OutputController(this, numEq);
-				output->setInterface(index, &wavePlayInterface);
+				OutputController* output = new OutputController(this, index, numEq);
+				output->setInterface(&wavePlayInterface);
 				ui->horizontalLayout->addWidget(output);
 
 				outputs.emplace(index, output);
