@@ -73,7 +73,7 @@ void OscServer::onReadData(
 		if(nread != UV_EOF)
 			fprintf(stderr, "Error on reading client stream: %s.\n", uv_strerror(nread));
 	} else if(nread > 0) {
-		thisInstance->onPacketReceived(buf->base, nread);
+		thisInstance->onOscPacketReceived((const uint8_t*) buf->base, nread);
 	}
 
 	/* free the remaining memory */

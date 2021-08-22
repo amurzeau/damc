@@ -19,6 +19,7 @@ public:
 	~OscRoot();
 
 	void onMessageSent();
+	void onOscPacketReceived(const uint8_t* data, size_t size);
 
 	void printAllNodes();
 
@@ -26,7 +27,6 @@ public:
 
 protected:
 	void processNextMessage();
-	void onPacketReceived(const char* data, size_t size);
 	void executeMessage(tosc_message_const* osc);
 	void sendMessage(const std::string& address, const OscArgument* argument, size_t number) override;
 

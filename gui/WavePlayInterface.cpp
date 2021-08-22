@@ -2,6 +2,7 @@
 #include "WavePlayOutputInterface.h"
 #include <QJsonDocument>
 #include <QMessageBox>
+#include <QNetworkDatagram>
 
 static constexpr uint8_t SLIP_END = 0xC0;
 static constexpr uint8_t SLIP_ESC = 0xDB;
@@ -14,8 +15,8 @@ WavePlayInterface::WavePlayInterface() : oscIsEscaping(false) {
 
 	onReconnect();
 
-	connect(&oscSocket, &QTcpSocket::readyRead, this, &WavePlayInterface::onOscDataReceived);
-	connect(&oscSocket, &QTcpSocket::stateChanged, this, &WavePlayInterface::onOscConnectionStateChanged);
+	connect(&oscSocket, &QIODevice::readyRead, this, &WavePlayInterface::onOscDataReceived);
+	connect(&oscSocket, &QAbstractSocket::stateChanged, this, &WavePlayInterface::onOscConnectionStateChanged);
 
 	onOscReconnect();
 }
@@ -34,32 +35,40 @@ void WavePlayInterface::sendMessage(const QJsonObject& message) {
 
 void WavePlayInterface::onOscDataReceived() {
 	do {
-		QByteArray receivedData = oscSocket.readAll();
+		// QByteArray receivedData = oscSocket.readAll();
+		QByteArray receivedData;
 
-		// Decode SLIP frame
-		for(uint8_t c : receivedData) {
-			if(!oscIsEscaping) {
-				if(c == SLIP_ESC) {
-					oscIsEscaping = true;
-					continue;
-				} else if(c == SLIP_END) {
-					if(!oscNetworkBuffer.empty()) {
-						onPacketReceived(oscNetworkBuffer.data(), oscNetworkBuffer.size());
-						oscNetworkBuffer.clear();
+		if constexpr(std::is_same_v<decltype(oscSocket), QTcpSocket>) {
+			receivedData = oscSocket.readAll();
+
+			// Decode SLIP frame
+			for(uint8_t c : qAsConst(receivedData)) {
+				if(!oscIsEscaping) {
+					if(c == SLIP_ESC) {
+						oscIsEscaping = true;
+						continue;
+					} else if(c == SLIP_END) {
+						if(!oscNetworkBuffer.empty()) {
+							onOscPacketReceived(oscNetworkBuffer.data(), oscNetworkBuffer.size());
+							oscNetworkBuffer.clear();
+						}
+						continue;
 					}
-					continue;
+					// else this is a regular character
+				} else {
+					if(c == SLIP_ESC_END) {
+						c = SLIP_END;
+					} else if(c == SLIP_ESC_ESC) {
+						c = SLIP_ESC;
+					}
+					// else this is an error, escaped character doesn't need to be escaped
 				}
-				// else this is a regular character
-			} else {
-				if(c == SLIP_ESC_END) {
-					c = SLIP_END;
-				} else if(c == SLIP_ESC_ESC) {
-					c = SLIP_ESC;
-				}
-				// else this is an error, escaped character doesn't need to be escaped
+				oscIsEscaping = false;
+				oscNetworkBuffer.push_back(c);
 			}
-			oscIsEscaping = false;
-			oscNetworkBuffer.push_back(c);
+		} else {
+			receivedData = oscSocket.receiveDatagram().data();
+			onOscPacketReceived((const uint8_t*) receivedData.data(), receivedData.size());
 		}
 	} while(oscSocket.bytesAvailable());
 }
@@ -72,37 +81,45 @@ void WavePlayInterface::onOscConnectionStateChanged(QAbstractSocket::SocketState
 
 void WavePlayInterface::onOscReconnect() {
 	oscIsEscaping = false;
-	oscSocket.connectToHost("127.0.0.1", 2308);
+	if constexpr(std::is_same_v<decltype(oscSocket), QTcpSocket>) {
+		oscSocket.connectToHost("127.0.0.1", 2308);
+	} else {
+		oscSocket.bind(10000, QAbstractSocket::ReuseAddressHint);
+	}
 }
 
 void WavePlayInterface::sendNextMessage(const uint8_t* data, size_t size) {
-	if(oscSocket.state() != QTcpSocket::ConnectedState) {
-		onOscReconnect();
-		return;
-	}
-
-	oscOutputNetworkBuffer.clear();
-
-	// Encode SLIP frame with double-END variant (one at the start, one at the end)
-	oscOutputNetworkBuffer.push_back(SLIP_END);
-
-	for(size_t i = 0; i < size; i++) {
-		const uint8_t c = data[i];
-
-		if(c == SLIP_END) {
-			oscOutputNetworkBuffer.push_back(SLIP_ESC);
-			oscOutputNetworkBuffer.push_back(SLIP_ESC_END);
-		} else if(c == SLIP_ESC) {
-			oscOutputNetworkBuffer.push_back(SLIP_ESC);
-			oscOutputNetworkBuffer.push_back(SLIP_ESC_ESC);
-		} else {
-			oscOutputNetworkBuffer.push_back(c);
+	if constexpr(std::is_same_v<decltype(oscSocket), QTcpSocket>) {
+		if(oscSocket.state() != QTcpSocket::ConnectedState) {
+			onOscReconnect();
+			return;
 		}
+
+		oscOutputNetworkBuffer.clear();
+
+		// Encode SLIP frame with double-END variant (one at the start, one at the end)
+		oscOutputNetworkBuffer.push_back(SLIP_END);
+
+		for(size_t i = 0; i < size; i++) {
+			const uint8_t c = data[i];
+
+			if(c == SLIP_END) {
+				oscOutputNetworkBuffer.push_back(SLIP_ESC);
+				oscOutputNetworkBuffer.push_back(SLIP_ESC_END);
+			} else if(c == SLIP_ESC) {
+				oscOutputNetworkBuffer.push_back(SLIP_ESC);
+				oscOutputNetworkBuffer.push_back(SLIP_ESC_ESC);
+			} else {
+				oscOutputNetworkBuffer.push_back(c);
+			}
+		}
+
+		oscOutputNetworkBuffer.push_back(SLIP_END);
+
+		oscSocket.write(oscOutputNetworkBuffer);
+	} else {
+		oscSocket.writeDatagram((const char*) data, size, QHostAddress::LocalHost, 2307);
 	}
-
-	oscOutputNetworkBuffer.push_back(SLIP_END);
-
-	oscSocket.write(oscOutputNetworkBuffer);
 
 	onMessageSent();
 }

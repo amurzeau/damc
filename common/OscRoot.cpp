@@ -112,10 +112,10 @@ void OscRoot::onMessageSent() {
 	processNextMessage();
 }
 
-void OscRoot::onPacketReceived(const char* data, size_t size) {
-	if(tosc_isBundle(data)) {
+void OscRoot::onOscPacketReceived(const uint8_t* data, size_t size) {
+	if(tosc_isBundle((const char*) data)) {
 		tosc_bundle_const bundle;
-		tosc_parseBundle(&bundle, data, size);
+		tosc_parseBundle(&bundle, (const char*) data, size);
 
 		tosc_message_const osc;
 		while(tosc_getNextMessage(&bundle, &osc)) {
@@ -123,10 +123,10 @@ void OscRoot::onPacketReceived(const char* data, size_t size) {
 			executeMessage(&osc);
 		}
 	} else {
-		tosc_printOscBuffer(data, size);
+		tosc_printOscBuffer((const char*) data, size);
 
 		tosc_message_const osc;
-		int result = tosc_parseMessage(&osc, data, size);
+		int result = tosc_parseMessage(&osc, (const char*) data, size);
 		if(result == 0) {
 			executeMessage(&osc);
 		}
@@ -162,34 +162,34 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 
 				// Unsupported formats
 			case 'N':
-				printf(" Unsupported format: '%c'", osc->format[i]);
+				printf(" Unsupported format: '%c'\n", osc->format[i]);
 				break;
 			case 'b': {
 				const char* b = nullptr;  // will point to binary data
 				int n = 0;                // takes the length of the blob
 				tosc_getNextBlob(osc, &b, &n);
-				printf(" Unsupported format: '%c'", osc->format[i]);
+				printf(" Unsupported format: '%c'\n", osc->format[i]);
 				break;
 			}
 			case 'm':
 				tosc_getNextMidi(osc);
-				printf(" Unsupported format: '%c'", osc->format[i]);
+				printf(" Unsupported format: '%c'\n", osc->format[i]);
 				break;
 			case 'd':
 				tosc_getNextDouble(osc);
-				printf(" Unsupported format: '%c'", osc->format[i]);
+				printf(" Unsupported format: '%c'\n", osc->format[i]);
 				break;
 			case 'h':
 				tosc_getNextInt64(osc);
-				printf(" Unsupported format: '%c'", osc->format[i]);
+				printf(" Unsupported format: '%c'\n", osc->format[i]);
 				break;
 			case 't':
 				tosc_getNextTimetag(osc);
-				printf(" Unsupported format: '%c'", osc->format[i]);
+				printf(" Unsupported format: '%c'\n", osc->format[i]);
 				break;
 
 			default:
-				printf(" Unsupported format: '%c'", osc->format[i]);
+				printf(" Unsupported format: '%c'\n", osc->format[i]);
 				break;
 		}
 

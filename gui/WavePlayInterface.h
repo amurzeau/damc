@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QUdpSocket>
 #include <stdint.h>
 #include <unordered_map>
 #include <vector>
@@ -37,7 +38,7 @@ protected:
 	void onPacketReceived(const void* data, size_t size);
 
 private:
-	QTcpSocket oscSocket;
+	QUdpSocket oscSocket;
 	QTimer oscReconnectTimer;
 	std::vector<uint8_t> oscNetworkBuffer;
 	QByteArray oscOutputNetworkBuffer;
