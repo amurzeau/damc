@@ -110,14 +110,14 @@ private:
 class OscEndpoint : public OscNode {
 public:
 	using OscNode::OscNode;
-	void setCallback(std::function<void(std::vector<OscArgument>)> onExecute);
+	void setCallback(std::function<void(const std::vector<OscArgument>&)> onExecute);
 
 	void execute(const std::vector<OscArgument>& arguments) override;
 
 	std::string getAsString() override { return std::string{}; }
 
 private:
-	std::function<void(std::vector<OscArgument>)> onExecute;
+	std::function<void(const std::vector<OscArgument>&)> onExecute;
 };
 
 template<typename T> class OscReadOnlyVariable : protected OscContainer {

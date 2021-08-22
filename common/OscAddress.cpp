@@ -10,13 +10,13 @@ float ConverterLogScale::toOsc(float value) {
 	return 20.0 * log10(value);
 }
 
-void OscEndpoint::setCallback(std::function<void(std::vector<OscArgument>)> onExecute) {
+void OscEndpoint::setCallback(std::function<void(const std::vector<OscArgument>&)> onExecute) {
 	this->onExecute = std::move(onExecute);
 }
 
 void OscEndpoint::execute(const std::vector<OscArgument>& arguments) {
 	if(onExecute)
-		onExecute(std::move(arguments));
+		onExecute(arguments);
 }
 
 OscNode::OscNode(OscContainer* parent, std::string name) noexcept : name(name), parent(nullptr) {
