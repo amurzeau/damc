@@ -25,8 +25,7 @@ OutputController::OutputController(MainWindow* parent, int numEq)
 	numChannels = 0;
 
 	equalizersController = new EqualizersController(this, numEq);
-	equalizersController->connectEqualizers(this,
-	                                        SLOT(onChangeEq(int, bool, EqFilter::FilterType, double, double, double)));
+	equalizersController->connectEqualizers(this, SLOT(onChangeEq(int, bool, FilterType, double, double, double)));
 
 	balanceController = new BalanceController(this);
 	connect(balanceController, SIGNAL(parameterChanged(size_t, float)), this, SLOT(onChangeBalance(size_t, float)));
