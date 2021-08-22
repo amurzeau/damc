@@ -9,8 +9,18 @@
 static const int RedrawInterval = 100;          // ms
 static const int PeakHoldLevelDuration = 2000;  // ms
 
+static constexpr float MAX_VALUE = 6;
+static constexpr float MIN_VALUE = -80;
+
 LevelMeterWidget::LevelMeterWidget(QWidget* parent)
-    : QWidget(parent), m_decayedPeakLevel(-80.0), m_peakHoldLevel(-80.0), m_redrawTimer(new QTimer(this)) {
+    : QWidget(parent),
+      m_decayedPeakLevel(MIN_VALUE),
+      m_peakHoldLevel(MIN_VALUE),
+      m_redrawTimer(new QTimer(this)),
+      backgroundBrush(palette().brush(QPalette::Normal, QPalette::Base)),
+      levelBrush(palette().brush(QPalette::Normal, QPalette::ButtonText)),
+      peakBrush(palette().brush(QPalette::Normal, QPalette::Highlight)),
+      overLevelBrush(Qt::red) {
 	setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
 	setMinimumWidth(2);
 
@@ -60,18 +70,17 @@ void LevelMeterWidget::paintEvent(QPaintEvent* event) {
 	QPainter painter(this);
 
 	painter.setRenderHint(QPainter::Antialiasing, false);
-	painter.setRenderHint(QPainter::HighQualityAntialiasing, false);
 
 	QRect frame = rect();
 	QRect background(frame.left(), frame.top(), frame.width(), (1 - peakLevel) * frame.height());
 	QRect bar(frame.left(), background.bottom(), frame.width(), frame.height() - background.bottom());
 	QRect hold(frame.left(), frame.height() * (1 - holdLevel) - 2, frame.width(), 2);
 
-	painter.fillRect(background, palette().brush(QPalette::Base));
-	painter.fillRect(bar, palette().brush(QPalette::ButtonText));
+	painter.fillRect(background, backgroundBrush);
+	painter.fillRect(bar, levelBrush);
 
 	if(m_peakHoldLevel < 1)
-		painter.fillRect(hold, palette().brush(QPalette::Highlight));
+		painter.fillRect(hold, peakBrush);
 	else
-		painter.fillRect(hold, Qt::red);
+		painter.fillRect(hold, overLevelBrush);
 }

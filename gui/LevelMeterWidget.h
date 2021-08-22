@@ -43,6 +43,11 @@ private:
 	QElapsedTimer m_peakHoldLevelChanged;
 
 	QTimer* m_redrawTimer;
+
+	const QBrush backgroundBrush;
+	const QBrush levelBrush;
+	const QBrush peakBrush;
+	const QBrush overLevelBrush;
 };
 
 #endif  // LEVELMETERWIDGET_H
