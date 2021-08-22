@@ -123,7 +123,7 @@ jobs:
           
           $env:CC="gcc.exe"
           $env:CXX="g++.exe"
-          $env:PATH="C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw${{ matrix.config.arch }}\bin;$env:PATH"
+          $env:PATH="${{ steps.dependencies.outputs.MINGW_PATH }}\bin;$env:PATH"
           git submodule -q update --init --recursive
           mkdir build
           
