@@ -73,39 +73,44 @@ target_link_libraries(${TARGET_NAME} PRIVATE common)
 
 install(TARGETS ${TARGET_NAME} DESTINATION ./)
 
+if(WIN32)
+	# Install Qt DLLs using windeployqt tool
+	get_target_property(_qt5_qmake_location Qt5::qmake IMPORTED_LOCATION)
+	get_filename_component(_qt_bin_dir "${_qt5_qmake_location}" DIRECTORY)
+	set(QT5_WINDEPLOYQT "${_qt_bin_dir}/windeployqt.exe")
 
+	if(EXISTS ${QT5_WINDEPLOYQT})
+		if (QT_VERSION_MAJOR MATCHES "5")
+			# These options are not available with Qt6
+			set (WINDEPLOYQT_EXTRA_OPTIONS --no-webkit2 --no-angle)
+		endif ()
 
-get_target_property(_qt5_qmake_location Qt5::qmake IMPORTED_LOCATION)
-get_filename_component(_qt_bin_dir "${_qt5_qmake_location}" DIRECTORY)
-set(QT5_WINDEPLOYQT "${_qt_bin_dir}/windeployqt.exe")
+		# execute windeployqt in a tmp directory after build
+		add_custom_command(TARGET ${TARGET_NAME}
+			POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
+			COMMAND set PATH=${_qt_bin_dir}$<SEMICOLON>%PATH%
+			COMMAND "${QT5_WINDEPLOYQT}"
+				--dir "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
+				--no-quick-import
+				--no-translations
+				--no-compiler-runtime
+				--no-opengl-sw
+				--no-virtualkeyboard
+				--no-svg
+				${WINDEPLOYQT_EXTRA_OPTIONS}
+				"$<TARGET_FILE:${TARGET_NAME}>"
+			USES_TERMINAL
+		)
 
-if(EXISTS ${QT5_WINDEPLOYQT})
-	# execute windeployqt in a tmp directory after build
-	add_custom_command(TARGET ${TARGET_NAME}
-		POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
-		COMMAND set PATH=${_qt_bin_dir}$<SEMICOLON>%PATH%
-		COMMAND "${QT5_WINDEPLOYQT}"
-			--dir "${CMAKE_CURRENT_BINARY_DIR}/windeployqt"
-			--no-quick-import
-			--no-translations
-			--no-compiler-runtime
-			--no-opengl-sw
-			--no-virtualkeyboard
-			--no-webkit2
-			--no-angle
-			--no-svg
-			"$<TARGET_FILE:${TARGET_NAME}>"
-		USES_TERMINAL
-	)
-
-	# copy deployment directory during installation
-	install(
-		DIRECTORY
-		"${CMAKE_CURRENT_BINARY_DIR}/windeployqt/"
-		DESTINATION ./
-		COMPONENT bin-deps
-	)
+		# copy deployment directory during installation
+		install(
+			DIRECTORY
+			"${CMAKE_CURRENT_BINARY_DIR}/windeployqt/"
+			DESTINATION .
+			COMPONENT bin-deps
+		)
+	endif()
 endif()
 
 
