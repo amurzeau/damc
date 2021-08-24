@@ -1,6 +1,7 @@
 #ifndef EQUALIZERSCONTROLLER_H
 #define EQUALIZERSCONTROLLER_H
 
+#include "OscWidgetArray.h"
 #include <QDialog>
 
 namespace Ui {
@@ -8,16 +9,14 @@ class EqualizersController;
 }
 
 class Equalizer;
+class OutputController;
 
 class EqualizersController : public QDialog {
 	Q_OBJECT
 
 public:
-	explicit EqualizersController(QWidget* parent, int numEq);
+	explicit EqualizersController(OutputController* parent, OscContainer* oscParent, int numEq);
 	~EqualizersController();
-
-	void connectEqualizers(QObject* obj, const char* slot);
-	void setEqualizerParameters(int index, bool enabled, int type, double f0, double q, double gain);
 
 	void show();
 
@@ -26,8 +25,8 @@ protected:
 
 private:
 	Ui::EqualizersController* ui;
-	std::vector<Equalizer*> equalizers;
 	QRect savedGeometry;
+	OscWidgetArray oscEqualizers;
 };
 
 #endif  // EQUALIZERSCONTROLLER_H

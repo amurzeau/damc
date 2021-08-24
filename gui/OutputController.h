@@ -28,6 +28,7 @@ public:
 	WavePlayOutputInterface* getOutputInterface() { return &interface; };
 
 	void updateHiddenState();
+	int32_t getSampleRate() { return sampleRate.get(); }
 
 protected slots:
 	void onChangeVolume(int volume);
@@ -94,10 +95,12 @@ private:
 
 	OscEndpoint oscMeterPerChannel;
 	OscWidgetMapper<QAbstractButton> oscEnable;
+	OscWidgetMapper<QAbstractButton> oscMute;
 	OscWidgetMapper<QDoubleSpinBox> oscDelay;
 	OscWidgetMapper<QDoubleSpinBox> oscClockDrift;
 	OscWidgetMapper<QAbstractSlider> oscVolume;
 	OscVariable<std::string> oscDisplayName;
+	OscVariable<int32_t> sampleRate;
 };
 
 #endif  // OUTPUTCONTROLLER_H

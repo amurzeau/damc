@@ -4,18 +4,20 @@
 #include "BiquadFilter.h"
 #include "BodePlotWidget.h"
 #include <complex>
+#include <set>
+
+class Equalizer;
 
 class BodePlot : public BodePlotWidget {
 	Q_OBJECT
 public:
 	BodePlot(QWidget* parent);
 
-	void setNumEq(int numEq);
+	void addEqualizer(Equalizer* eq);
+	void removeEqualizer(Equalizer* eq);
+	void updatePlot();
 
 	QSize sizeHint() const override { return minimumSizeHint(); }
-
-public Q_SLOTS:
-	void setParameters(int index, bool enabled, FilterType filterType, double f0, double Q, double gain);
 
 private:
 	void showData(const double* frequency, const double* amplitude, const double* phase, int count);
@@ -23,7 +25,7 @@ private:
 	PlotCurve d_curve1;
 	PlotCurve d_curve2;
 
-	std::vector<BiquadFilter> eqFilters;
+	std::set<Equalizer*> eqFilters;
 };
 
 #endif  // BODEPLOT_H

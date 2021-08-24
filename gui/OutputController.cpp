@@ -26,21 +26,24 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
       oscFilterChain(this, "filterChain"),
       oscMeterPerChannel(this, "meter_per_channel"),
       oscEnable(this, "enable"),
+      oscMute(&oscFilterChain, "mute"),
       oscDelay(&oscFilterChain, "delay"),
       oscClockDrift(&oscFilterChain, "clockDrift"),
       oscVolume(&oscFilterChain, "volume"),
-      oscDisplayName(this, "display_name") {
+      oscDisplayName(this, "display_name"),
+      sampleRate(this, "sample_rate") {
 	ui->setupUi(this);
 
 	numChannels = 0;
 
 	oscEnable.setWidget(ui->enableCheckBox);
+	oscMute.setWidget(ui->muteButton);
 	oscDelay.setWidget(ui->delaySpinBox);
 	oscClockDrift.setWidget(ui->clockDriftSpinBox);
 	oscVolume.setWidget(ui->volumeSlider);
 	oscVolume.setChangeCallback([this](float value) { ui->volumeLevelLabel->setText(QString::number((int) value)); });
 
-	equalizersController = new EqualizersController(this, 6);
+	equalizersController = new EqualizersController(this, &oscFilterChain, 6);
 
 	balanceController = new BalanceController(this, &oscFilterChain);
 
@@ -334,25 +337,6 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			ui->clockDriftSpinBox->setValue((drift - roundf(drift)) * 1000000.0);
 			ui->clockDriftSpinBox->blockSignals(false);
 			ui->sampleRateSpinBox->blockSignals(false);
-		}
-
-		QJsonValue eqFiltersValue = message.value("eqFilters");
-		if(eqFiltersValue.type() == QJsonValue::Array) {
-			QJsonArray eqFilters = eqFiltersValue.toArray();
-
-			bool atLeastOneEnabled = false;
-			for(int i = 0; i < eqFilters.size(); i++) {
-				QJsonObject eqFilter = eqFilters[i].toObject();
-
-				equalizersController->setEqualizerParameters(eqFilter["index"].toInt(),
-				                                             eqFilter["enabled"].toBool(),
-				                                             eqFilter["type"].toInt(),
-				                                             eqFilter["f0"].toDouble(),
-				                                             eqFilter["Q"].toDouble(),
-				                                             eqFilter["gain"].toDouble());
-				atLeastOneEnabled = atLeastOneEnabled || eqFilter["enabled"].toBool();
-			}
-			ui->eqButton->setChecked(atLeastOneEnabled);
 		}
 
 		QJsonValue displayNameValue = message.value("displayName");

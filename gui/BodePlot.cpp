@@ -1,4 +1,5 @@
 #include "BodePlot.h"
+#include "Equalizer.h"
 #include <complex>
 #include <math.h>
 
@@ -35,8 +36,12 @@ BodePlot::BodePlot(QWidget* parent) : BodePlotWidget(parent) {
 	addCurve(&d_curve2);
 }
 
-void BodePlot::setNumEq(int numEq) {
-	eqFilters.resize(numEq);
+void BodePlot::addEqualizer(Equalizer* eq) {
+	eqFilters.insert(eq);
+}
+
+void BodePlot::removeEqualizer(Equalizer* eq) {
+	eqFilters.erase(eq);
 }
 
 void BodePlot::showData(const double* frequency, const double* amplitude, const double* phase, int count) {
@@ -48,15 +53,12 @@ void BodePlot::showData(const double* frequency, const double* amplitude, const 
 //
 // re-calculate frequency response
 //
-void BodePlot::setParameters(int index, bool enabled, FilterType filterType, double f0, double Q, double gain) {
+void BodePlot::updatePlot() {
 	static constexpr int ArraySize = 2000;
-	static constexpr float SAMPLE_RATE = 48000;
 
 	double frequency[ArraySize] = {0};
 	double amplitude[ArraySize];
 	double phase[ArraySize];
-
-	eqFilters[index].computeFilter(enabled, filterType, f0, SAMPLE_RATE, gain, Q);
 
 	// build frequency vector with logarithmic division
 	logSpace(frequency, ArraySize, 20, 24000);
@@ -65,8 +67,8 @@ void BodePlot::setParameters(int index, bool enabled, FilterType filterType, dou
 		const double f = frequency[i];
 		std::complex<double> g(1, 0);
 
-		for(BiquadFilter& eqFilter : eqFilters)
-			g *= eqFilter.getResponse(f, SAMPLE_RATE);
+		for(Equalizer* eqFilter : eqFilters)
+			g *= eqFilter->getResponse(f);
 
 		amplitude[i] = 20.0 * log10(sqrt(g.real() * g.real() + g.imag() * g.imag()));
 		phase[i] = atan2(g.imag(), g.real()) * (180.0 / M_PI);

@@ -15,6 +15,7 @@ OutputInstance::OutputInstance(OscContainer* parent, size_t index, IAudioEndpoin
       clientName(this, "name"),
       clientDisplayName(this, "display_name"),
       numChannel(this, "channels", 0),
+      sampleRate(this, "sample_rate"),
       filters(this),
       controlSettings(nlohmann::json::object()),
       updateLevelTimer(nullptr),

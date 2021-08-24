@@ -70,7 +70,7 @@ private:
 	OscVariable<std::string> clientName;
 	OscVariable<std::string> clientDisplayName;
 	OscReadOnlyVariable<int32_t> numChannel;
-	size_t sampleRate;
+	OscReadOnlyVariable<int32_t> sampleRate;
 	FilterChain filters;
 	std::vector<jack_port_t*> inputPorts;
 	std::vector<jack_port_t*> outputPorts;

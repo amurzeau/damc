@@ -32,7 +32,7 @@
    <item row="0" column="0">
     <widget class="QGroupBox" name="parametricEqGroupBox">
      <property name="title">
-      <string>EQ</string>
+      <string>Enable</string>
      </property>
      <property name="checkable">
       <bool>true</bool>

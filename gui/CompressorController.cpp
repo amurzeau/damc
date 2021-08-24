@@ -26,6 +26,9 @@ CompressorController::CompressorController(QWidget* parent, OscContainer* oscPar
 	oscRatio.setWidget(ui->ratioSpinBox);
 	oscKneeWidth.setWidget(ui->kneeWidthSpinBox);
 	oscMovingMax.setWidget(ui->useMovingMaxCheckBox);
+
+	oscReleaseTime.setScale(1000);
+	oscAttackTime.setScale(1000);
 }
 
 CompressorController::~CompressorController() {

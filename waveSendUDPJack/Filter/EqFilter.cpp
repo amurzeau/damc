@@ -5,7 +5,7 @@
 
 EqFilter::EqFilter(OscContainer* parent, const std::string& name)
     : OscContainer(parent, name),
-      enabled(this, "enabled", false),
+      enabled(this, "enable", false),
       filterType(this, "type", (int32_t) FilterType::None),
       f0(this, "f0", 1000),
       gain(this, "gain", 0),

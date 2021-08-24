@@ -1,48 +1,59 @@
 #include "Equalizer.h"
+#include "BodePlot.h"
+#include "OutputController.h"
 #include "ui_Equalizer.h"
 
-Equalizer::Equalizer(QWidget* parent, int index) : QWidget(parent), ui(new Ui::Equalizer), index(index) {
+Equalizer::Equalizer(QWidget* parent,
+                     OscContainer* oscParent,
+                     const std::string& name,
+                     OutputController* outputController,
+                     BodePlot* bodePlot)
+    : QWidget(parent),
+      OscWidgetArray(oscParent, name),
+      ui(new Ui::Equalizer),
+      outputController(outputController),
+      bodePlot(bodePlot),
+      oscEnable(this, "enable"),
+      oscType(this, "type"),
+      oscF0(this, "f0"),
+      oscQ(this, "Q"),
+      oscGain(this, "gain") {
 	ui->setupUi(this);
 
-	connect(ui->parametricEqGroupBox, &QGroupBox::clicked, this, &Equalizer::onParameterChanged);
-	connect(ui->typeComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &Equalizer::onParameterChanged);
-	connect(ui->f0SpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &Equalizer::onParameterChanged);
-	connect(ui->qSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &Equalizer::onParameterChanged);
-	connect(ui->gainSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &Equalizer::onParameterChanged);
+	bodePlot->addEqualizer(this);
 
-	ui->parametricEqGroupBox->setTitle("EQ " + QString::number(index + 1));
+	oscEnable.setWidget(ui->parametricEqGroupBox);
+	oscType.setWidget(ui->typeComboBox);
+	oscF0.setWidget(ui->f0SpinBox);
+	oscQ.setWidget(ui->qSpinBox);
+	oscGain.setWidget(ui->gainSpinBox);
+
+	oscEnable.setChangeCallback([this](float) { updateResponse(); });
+	oscType.setChangeCallback([this](float) { updateResponse(); });
+	oscF0.setChangeCallback([this](float) { updateResponse(); });
+	oscQ.setChangeCallback([this](float) { updateResponse(); });
+	oscGain.setChangeCallback([this](float) { updateResponse(); });
 }
 
 Equalizer::~Equalizer() {
+	bodePlot->removeEqualizer(this);
 	delete ui;
 }
 
-void Equalizer::setParameters(bool enabled, int type, double f0, double q, double gain) {
-	ui->typeComboBox->blockSignals(true);
-	ui->f0SpinBox->blockSignals(true);
-	ui->qSpinBox->blockSignals(true);
-	ui->gainSpinBox->blockSignals(true);
-	ui->parametricEqGroupBox->blockSignals(true);
-
-	ui->parametricEqGroupBox->setChecked(true);
-	ui->typeComboBox->setCurrentIndex(type);
-	ui->f0SpinBox->setValue(f0);
-	ui->qSpinBox->setValue(q);
-	ui->gainSpinBox->setValue(gain);
-	ui->parametricEqGroupBox->setChecked(enabled);
-
-	ui->typeComboBox->blockSignals(false);
-	ui->f0SpinBox->blockSignals(false);
-	ui->qSpinBox->blockSignals(false);
-	ui->gainSpinBox->blockSignals(false);
-	ui->parametricEqGroupBox->blockSignals(false);
+std::complex<double> Equalizer::getResponse(double f0) {
+	if(fs)
+		return biquadFilter.getResponse(f0, fs);
+	else
+		return std::complex<double>(1, 0);
 }
 
-void Equalizer::onParameterChanged() {
-	emit changeParameters(index,
-	                      ui->parametricEqGroupBox->isChecked(),
-	                      FilterType(ui->typeComboBox->currentIndex()),
-	                      ui->f0SpinBox->value(),
-	                      ui->qSpinBox->value(),
-	                      ui->gainSpinBox->value());
+void Equalizer::updateResponse() {
+	this->fs = outputController->getSampleRate();
+	biquadFilter.computeFilter(ui->parametricEqGroupBox->isChecked(),
+	                           (FilterType) ui->typeComboBox->currentIndex(),
+	                           ui->f0SpinBox->value(),
+	                           this->fs,
+	                           ui->gainSpinBox->value(),
+	                           ui->qSpinBox->value());
+	bodePlot->updatePlot();
 }

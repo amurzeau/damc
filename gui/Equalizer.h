@@ -1,7 +1,9 @@
 #ifndef EQUALIZER_H
 #define EQUALIZER_H
 
-#include "../waveSendUDPJack/Filter/EqFilter.h"
+#include "OscWidgetArray.h"
+#include "OscWidgetMapper.h"
+#include <BiquadFilter.h>
 #include <QWidget>
 
 namespace Ui {
@@ -9,24 +11,37 @@ class Equalizer;
 }
 
 class EqualizersController;
+class OutputController;
+class BodePlot;
 
-class Equalizer : public QWidget {
-	Q_OBJECT
-
+class Equalizer : public QWidget, public OscWidgetArray {
 public:
-	explicit Equalizer(QWidget* parent, int index);
+	explicit Equalizer(QWidget* parent,
+	                   OscContainer* oscParent,
+	                   const std::string& name,
+	                   OutputController* outputController,
+	                   BodePlot* bodePlot);
 	~Equalizer();
-	void setParameters(bool enabled, int type, double f0, double q, double gain);
 
-signals:
-	void changeParameters(int index, bool enabled, FilterType type, double f0, double q, double gain);
+	std::complex<double> getResponse(double f0);
 
-private slots:
-	void onParameterChanged();
+protected:
+	void updateResponse();
 
 private:
 	Ui::Equalizer* ui;
-	int index;
+
+	OutputController* outputController;
+	BiquadFilter biquadFilter;
+	BodePlot* bodePlot;
+
+	OscWidgetMapper<QGroupBox> oscEnable;
+	OscWidgetMapper<QComboBox> oscType;
+	OscWidgetMapper<QDoubleSpinBox> oscF0;
+	OscWidgetMapper<QDoubleSpinBox> oscQ;
+	OscWidgetMapper<QDoubleSpinBox> oscGain;
+
+	double fs;
 };
 
 #endif  // EQUALIZER_H
