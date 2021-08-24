@@ -163,8 +163,10 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 		arguments.push_back(std::move(argument));
 	}
 
-	if(strstr(address, "meter") == nullptr)
+	if(strstr(address, "meter") == nullptr) {
+		tosc_reset(osc);
 		tosc_printMessage(osc);
+	}
 	execute(address + 1, std::move(arguments));
 }
 
