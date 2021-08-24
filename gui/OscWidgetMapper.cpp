@@ -69,22 +69,26 @@ template<class T> void OscWidgetMapper<T>::execute(const std::vector<OscArgument
 		onChange(value);
 }
 
-template<class T> std::optional<OscArgument> OscWidgetMapper<T>::getValue() const {
+template<class T> void OscWidgetMapper<T>::dump() {
 	if(widgets.empty())
-		return {};
+		return;
+
+	OscArgument arg;
 
 	if constexpr(std::is_base_of_v<QAbstractButton, T> || std::is_base_of_v<QGroupBox, T>) {
 		T* w = widgets.front();
-		return OscArgument{w->isChecked()};
+		arg = OscArgument{w->isChecked()};
 	} else if constexpr(std::is_base_of_v<QDoubleSpinBox, T>) {
 		QDoubleSpinBox* w = widgets.front();
-		return OscArgument{(float) w->value()};
+		arg = OscArgument{(float) w->value()};
 	} else if constexpr(std::is_base_of_v<QComboBox, T>) {
 		QComboBox* w = widgets.front();
-		return OscArgument{(int32_t) w->currentIndex()};
+		arg = OscArgument{(int32_t) w->currentIndex()};
 	} else {
-		return OscArgument{(int32_t) widgets.front()->value()};
+		arg = OscArgument{(int32_t) widgets.front()->value()};
 	}
+
+	sendMessage(&arg, 1);
 }
 
 template<class T> void OscWidgetMapper<T>::setChangeCallback(std::function<void(float)> onChange) {

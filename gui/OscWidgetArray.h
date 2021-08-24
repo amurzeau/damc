@@ -20,7 +20,7 @@ public:
 
 	void execute(std::string_view address, const std::vector<OscArgument>& arguments) override;
 
-	std::string getAsString() override { return std::string{}; }
+	std::string getAsString() const override { return std::string{}; }
 
 	void addWidget(const std::string& key);
 	void removeWidget(const std::string& key);

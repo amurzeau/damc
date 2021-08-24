@@ -92,12 +92,7 @@ bool OscContainer::osc_node_comparator::operator()(const std::string& x, const s
 
 OscContainer::OscContainer(OscContainer* parent, std::string name) noexcept
     : OscNode(parent, name), oscDump(this, "dump") {
-	oscDump.setCallback([this](auto) {
-		auto value = this->getValue();
-		if(value) {
-			this->sendMessage(&value.value(), 1);
-		}
-	});
+	oscDump.setCallback([this](auto) { dump(); });
 }
 
 OscContainer::~OscContainer() {
@@ -182,7 +177,7 @@ bool OscContainer::visit(const std::function<bool(OscNode*)>* nodeVisitorFunctio
 	return true;
 }
 
-std::string OscContainer::getAsString() {
+std::string OscContainer::getAsString() const {
 	std::string result;
 	static size_t depth = 0;
 

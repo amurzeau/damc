@@ -68,13 +68,13 @@ public:
 	void setOscParent(OscContainer* parent);
 	const std::string& getFullAddress() const { return fullAddress; }
 	const std::string& getName() const { return name; }
-	virtual std::optional<OscArgument> getValue() const { return {}; }
+	virtual void dump() {}
 
 	virtual bool visit(const std::function<bool(OscNode*)>* nodeVisitorFunction);
 	virtual void execute(std::string_view address, const std::vector<OscArgument>& arguments);
 	virtual bool notifyOscAtInit();
 
-	virtual std::string getAsString() = 0;
+	virtual std::string getAsString() const = 0;
 
 	// Called from derived types when their value is changed
 	void sendMessage(const OscArgument* arguments, size_t number);
@@ -102,7 +102,7 @@ public:
 
 	void execute(const std::vector<OscArgument>& arguments) override;
 
-	std::string getAsString() override { return std::string{}; }
+	std::string getAsString() const override { return std::string{}; }
 
 private:
 	std::function<void(const std::vector<OscArgument>&)> onExecute;
@@ -129,7 +129,7 @@ public:
 	void execute(std::string_view address, const std::vector<OscArgument>& arguments) override;
 	bool visit(const std::function<bool(OscNode*)>* nodeVisitorFunction) override;
 
-	std::string getAsString() override;
+	std::string getAsString() const override;
 
 private:
 	std::map<std::string, OscNode*, osc_node_comparator> children;
@@ -168,7 +168,7 @@ public:
 	}
 
 	operator T() const { return value; }
-	std::optional<OscArgument> getValue() const override { return OscArgument{getToOsc()}; }
+	void dump() override { notifyOsc(); }
 
 	using OscContainer::operator=;
 	OscReadOnlyVariable& operator=(const T& v) {
@@ -187,7 +187,7 @@ public:
 	bool operator==(const OscReadOnlyVariable<T>& other) { return value == other.value; }
 	bool operator!=(const OscReadOnlyVariable<T>& other) { return !(*this == other); }
 
-	std::string getAsString() override {
+	std::string getAsString() const override {
 		if constexpr(std::is_same_v<T, std::string>) {
 			return "\"" + getToOsc() + "\"";
 		} else {
@@ -381,7 +381,7 @@ public:
 	const auto& back() const { return *value.back(); }
 	auto& back() { return *value.back(); }
 
-	std::string getAsString() override {
+	std::string getAsString() const override {
 		std::string result = "[";
 
 		for(const auto& item : value) {

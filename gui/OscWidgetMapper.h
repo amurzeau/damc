@@ -20,8 +20,8 @@ public:
 
 	void execute(const std::vector<OscArgument>& arguments) override;
 
-	std::optional<OscArgument> getValue() const override;
-	std::string getAsString() override { return std::string{}; }
+	void dump() override;
+	std::string getAsString() const override { return std::string{}; }
 
 	void setChangeCallback(std::function<void(float)> onChange);
 
