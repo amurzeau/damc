@@ -24,13 +24,16 @@ public:
 
 	void addWidget(const std::string& key);
 	void removeWidget(const std::string& key);
+	void swapWidgets(const std::string& sourceKey, const std::string& targetKey, bool insertBefore);
 
 protected:
 	bool isIndexAddress(std::string_view s);
 
 private:
 	QWidget* parentWidget;
-	QBoxLayout* widget;
+	QBoxLayout* layout;
 	std::unordered_map<std::string, QWidget*> childWidgets;
+	std::vector<std::string> keysOrder;
 	OscWidgetFactoryFunction widgetFactoryFunction;
+	OscEndpoint keysEndpoint;
 };

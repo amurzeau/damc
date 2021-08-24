@@ -52,7 +52,6 @@ private:
 	int nextInstanceIndex;
 	int numEq;
 	std::map<int, std::unique_ptr<OutputInstance>> outputs;
-	std::vector<int> outputsOrder;
 	ControlServer controlServer;
 	OscRoot oscRoot;
 	OscServer oscUdpServer;
@@ -62,7 +61,7 @@ private:
 	std::string saveFileName;
 	jack_client_t* monitoringJackClient;
 
-	OscReadOnlyVariable<int32_t> oscOutputNumber;
+	OscFlatArray<std::string> oscOutputInstanceKeys;
 	OscEndpoint oscAddOutputInstance;
 	OscEndpoint oscRemoveOutputInstance;
 

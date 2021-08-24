@@ -23,7 +23,7 @@ ControlInterface::ControlInterface(const char* argv0)
       oscTcpServer(&oscRoot),
       oscRootNode(&oscRoot, "strip"),
       keyBinding(&oscRoot, &oscRoot),
-      oscOutputNumber(&oscRootNode, "size"),
+      oscOutputInstanceKeys(&oscRootNode, "keys"),
       oscAddOutputInstance(&oscRootNode, "add"),
       oscRemoveOutputInstance(&oscRootNode, "remove") {
 	char basePath[260];
@@ -93,7 +93,13 @@ void ControlInterface::loadConfig() {
 	try {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 
-		outputsOrder = jsonConfig.value("outputsOrder", std::vector<int>{});
+		auto outputsOrder = jsonConfig.value("outputsOrder", std::vector<int>{});
+		oscOutputInstanceKeys.getData().clear();
+		for(int index : outputsOrder) {
+			oscOutputInstanceKeys.getData().push_back(std::to_string(index));
+		}
+		oscOutputInstanceKeys.notifyOsc();
+
 		outputPortConnections = jsonConfig.value("portConnections", std::map<std::string, std::set<std::string>>{});
 
 		for(const nlohmann::json& outputInstancesJson : jsonConfig.at("outputInstances")) {
@@ -125,7 +131,10 @@ void ControlInterface::saveConfig() {
 			outputInstancesJson.push_back(output.second->getParameters());
 		}
 
-		jsonConfigToSave["outputsOrder"] = outputsOrder;
+		auto& outputsOrder = jsonConfigToSave["outputsOrder"] = nlohmann::json::array();
+		for(const auto& key : oscOutputInstanceKeys.getData()) {
+			outputsOrder.push_back(atoi(key.c_str()));
+		}
 		jsonConfigToSave["outputInstances"] = outputInstancesJson;
 		jsonConfigToSave["portConnections"] = outputPortConnections;
 
@@ -161,6 +170,9 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 
 	OscArgument arg = std::to_string(instance);
 	oscAddOutputInstance.sendMessage(&arg, 1);
+
+	oscOutputInstanceKeys.getData().push_back(std::to_string(instance));
+	oscOutputInstanceKeys.notifyOsc();
 
 	switch(type) {
 		case OutputInstance::Loopback:
@@ -202,20 +214,19 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 	}
 	outputInstance->init(this, &controlServer, type, numChannel, outputInstancesJson);
 
-	oscOutputNumber = oscOutputNumber + 1;
-
 	return outputs.emplace(std::make_pair(instance, std::move(outputInstance))).first;
 }
 
 void ControlInterface::removeOutputInstance(std::map<int, std::unique_ptr<OutputInstance>>::iterator index) {
 	index->second->stop();
 
-	OscArgument arg = std::to_string(index->first);
+	std::string key = std::to_string(index->first);
+	OscArgument arg = key;
 	oscRemoveOutputInstance.sendMessage(&arg, 1);
 
 	outputs.erase(index);
-
-	oscOutputNumber = oscOutputNumber - 1;
+	oscOutputInstanceKeys.erase(key);
+	oscOutputInstanceKeys.notifyOsc();
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
@@ -264,7 +275,8 @@ void ControlInterface::onNewClient(ControlClient* client) {
 		outputsToSend.insert(output.first);
 	}
 
-	for(int index : outputsOrder) {
+	for(const auto& key : oscOutputInstanceKeys.getData()) {
+		int index = atoi(key.c_str());
 		auto outputIt = outputsToSend.find(index);
 		if(outputIt == outputsToSend.end())
 			continue;
@@ -354,7 +366,12 @@ void ControlInterface::messageProcessor(const void* data, size_t size) {
 				std::string jsonStr = json.dump();
 				controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
 			} else if(operation == "outputsOrder") {
-				outputsOrder = json.value("outputsOrder", std::vector<int>{});
+				auto outputsOrder = json.value("outputsOrder", std::vector<int>{});
+				oscOutputInstanceKeys.getData().clear();
+				for(int index : outputsOrder) {
+					oscOutputInstanceKeys.getData().push_back(std::to_string(index));
+				}
+				oscOutputInstanceKeys.notifyOsc();
 				saveConfig();
 			}
 		} else if(outputs.count(outputInstance) > 0) {

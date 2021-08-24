@@ -81,10 +81,10 @@ void OscNode::execute(std::string_view address, const std::vector<OscArgument>& 
 }
 
 bool OscContainer::osc_node_comparator::operator()(const std::string& x, const std::string& y) const {
-	// Always put size node first
-	if(x == SIZE_NODE && y != SIZE_NODE)
+	// Always put keys node first
+	if(x == KEYS_NODE && y != KEYS_NODE)
 		return true;
-	else if(y == SIZE_NODE)
+	else if(y == KEYS_NODE)
 		return false;
 	else
 		return x < y;

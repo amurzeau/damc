@@ -22,7 +22,7 @@ public:
 	explicit MainWindow(QWidget* parent = 0);
 	~MainWindow();
 
-	void moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore);
+	void moveOutputInstance(const std::string& sourceInstance, const std::string& targetInstance, bool insertBefore);
 	bool getShowDisabledOutputInstances();
 
 protected slots:

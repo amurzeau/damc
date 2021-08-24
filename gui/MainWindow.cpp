@@ -90,41 +90,10 @@ void MainWindow::clearOutputs() {
 	outputs.clear();
 }
 
-void MainWindow::moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore) {
-	auto itSource = outputs.find(sourceInstance);
-	auto itTarget = outputs.find(targetInstance);
-	if(itSource == outputs.end() || itTarget == outputs.end())
-		return;
-	OutputController* sourceWidget = itSource->second;
-	int originalPosition = ui->horizontalLayout->indexOf(sourceWidget);
-	ui->horizontalLayout->removeWidget(sourceWidget);
-
-	int insertPosition = ui->horizontalLayout->indexOf(itTarget->second);
-	if(insertPosition >= 0) {
-		if(!insertBefore)
-			insertPosition++;
-		qDebug("Move instance %d from pos %d to %d (over instance %d)",
-		       sourceInstance,
-		       originalPosition,
-		       insertPosition,
-		       targetInstance);
-		ui->horizontalLayout->insertWidget(insertPosition, sourceWidget);
-
-		QJsonObject json;
-		json["operation"] = "outputsOrder";
-
-		QJsonArray array;
-		for(int i = 0; i < ui->horizontalLayout->count(); i++) {
-			OutputController* outputInstance = (OutputController*) ui->horizontalLayout->itemAt(i)->widget();
-			array.append(outputInstance->getOutputInterface()->getIndex());
-		}
-		json["outputsOrder"] = array;
-
-		mainControlInterface.sendMessage(json);
-	} else {
-		qDebug("Move instance %d from pos %d to %d (original pos)", sourceInstance, originalPosition, originalPosition);
-		ui->horizontalLayout->insertWidget(originalPosition, sourceWidget);
-	}
+void MainWindow::moveOutputInstance(const std::string& sourceInstance,
+                                    const std::string& targetInstance,
+                                    bool insertBefore) {
+	outputInterfaces.swapWidgets(sourceInstance, targetInstance, insertBefore);
 }
 
 bool MainWindow::getShowDisabledOutputInstances() {

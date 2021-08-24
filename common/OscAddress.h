@@ -87,7 +87,7 @@ protected:
 	// of nodes)
 	virtual void execute(const std::vector<OscArgument>&) {}
 
-	static constexpr const char* SIZE_NODE = "size";
+	static constexpr const char* KEYS_NODE = "keys";
 
 private:
 	std::string name;
@@ -298,16 +298,76 @@ private:
 	bool fixedSize;
 };
 
+template<typename T> class OscFlatArray : protected OscContainer {
+public:
+	OscFlatArray(OscContainer* parent, std::string name, bool fixedSize = false) noexcept
+	    : OscContainer(parent, name) {}
+
+	std::vector<T>& getData() { return values; }
+	const std::vector<T>& getData() const { return values; }
+
+	void erase(T value) {
+		for(auto it = values.begin(); it != values.end();) {
+			if(*it == value) {
+				it = values.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
+
+	void notifyOsc() {
+		std::vector<OscArgument> valueToSend;
+		valueToSend.reserve(values.size());
+		for(auto& v : values) {
+			valueToSend.push_back(v);
+		}
+		sendMessage(&valueToSend[0], valueToSend.size());
+	}
+
+	void dump() override { notifyOsc(); }
+
+	std::string getAsString() const override {
+		std::string result = "[";
+
+		for(const auto& item : values) {
+			if constexpr(std::is_same_v<T, std::string>) {
+				result += " \"" + item + "\",";
+			} else {
+				result += " " + std::to_string(item) + ",";
+			}
+		}
+
+		if(result.back() == ',')
+			result.pop_back();
+
+		return result + " ]";
+	}
+
+	void execute(const std::vector<OscArgument>& arguments) override {
+		values.clear();
+		for(const auto& arg : arguments) {
+			T v;
+			if(this->template getArgumentAs<T>(arg, v)) {
+				values.push_back(v);
+			} else {
+				printf("Bad argument type: %d\n", arg.index());
+			}
+		}
+	}
+
+private:
+	std::vector<T> values;
+};
+
 template<typename T> class OscGenericArray : protected OscContainer {
 public:
 	OscGenericArray(OscContainer* parent, std::string name, bool fixedSize = false) noexcept
 	    : OscContainer(parent, name),
 	      oscAddEndpoint(this, "add"),
 	      oscRemoveEndpoint(this, "remove"),
-	      oscSize(this, SIZE_NODE, 0, fixedSize),
-	      nextKey(0) {
-		oscSize.setChangeCallback([this](int32_t newSize) { this->resize(newSize); });
-	}
+	      keys(this, "keys"),
+	      nextKey(0) {}
 
 	T& operator[](size_t index) { return *value[index]; }
 	const T& operator[](size_t index) const { return *value[index]; }
@@ -319,21 +379,23 @@ public:
 		OscArgument argument = newKey;
 		oscAddEndpoint.sendMessage(&argument, 1);
 
+		keys.getData().push_back(newKey);
+		keys.notifyOsc();
+
 		T* newValue = new T(this, newKey, args...);
 
 		initializeItem(newValue);
 		value.emplace_back(newValue);
-
-		oscSize.set(value.size());
 	}
 
 	void pop_back() {
-		OscArgument argument = value.back()->getName();
+		std::string removedKey = value.back()->getName();
+		OscArgument argument = removedKey;
 		oscRemoveEndpoint.sendMessage(&argument, 1);
 
 		value.pop_back();
-
-		oscSize.set(value.size());
+		keys.erase(removedKey);
+		keys.notifyOsc();
 	}
 
 	size_t erase(std::string key) {
@@ -354,8 +416,8 @@ public:
 				++itVector;
 			}
 		}
-
-		oscSize.set(value.size());
+		keys.erase(key);
+		keys.notifyOsc();
 	}
 
 	template<typename... Args> void resize(size_t newSize, Args... args) {
@@ -401,7 +463,7 @@ protected:
 	OscEndpoint oscRemoveEndpoint;
 
 private:
-	OscVariable<int32_t> oscSize;
+	OscFlatArray<std::string> keys;
 	std::vector<std::unique_ptr<T>> value;
 	size_t nextKey;
 };
