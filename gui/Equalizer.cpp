@@ -4,11 +4,11 @@
 Equalizer::Equalizer(QWidget* parent, int index) : QWidget(parent), ui(new Ui::Equalizer), index(index) {
 	ui->setupUi(this);
 
-	connect(ui->parametricEqGroupBox, SIGNAL(clicked(bool)), this, SLOT(onParameterChanged()));
-	connect(ui->typeComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onParameterChanged()));
-	connect(ui->f0SpinBox, SIGNAL(valueChanged(double)), this, SLOT(onParameterChanged()));
-	connect(ui->qSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onParameterChanged()));
-	connect(ui->gainSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onParameterChanged()));
+	connect(ui->parametricEqGroupBox, &QGroupBox::clicked, this, &Equalizer::onParameterChanged);
+	connect(ui->typeComboBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &Equalizer::onParameterChanged);
+	connect(ui->f0SpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &Equalizer::onParameterChanged);
+	connect(ui->qSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &Equalizer::onParameterChanged);
+	connect(ui->gainSpinBox, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &Equalizer::onParameterChanged);
 
 	ui->parametricEqGroupBox->setTitle("EQ " + QString::number(index + 1));
 }

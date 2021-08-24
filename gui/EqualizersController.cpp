@@ -11,10 +11,7 @@ EqualizersController::EqualizersController(QWidget* parent, int numEq)
 	for(int i = 0; i < numEq; i++) {
 		Equalizer* eq = new Equalizer(this, i);
 		ui->eqHorizontalLayout->addWidget(eq);
-		connect(eq,
-		        SIGNAL(changeParameters(int, bool, FilterType, double, double, double)),
-		        ui->bodePlot,
-		        SLOT(setParameters(int, bool, FilterType, double, double, double)));
+		connect(eq, &Equalizer::changeParameters, ui->bodePlot, &BodePlot::setParameters);
 		equalizers.push_back(eq);
 	}
 }

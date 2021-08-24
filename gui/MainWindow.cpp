@@ -19,9 +19,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 	mainControlInterface.setInterface(-1, &wavePlayInterface);
 
-	connect(&mainControlInterface, SIGNAL(onMessage(QJsonObject)), this, SLOT(onMessage(const QJsonObject&)));
-	connect(ui->addButton, SIGNAL(clicked(bool)), this, SLOT(onAddInstance()));
-	connect(ui->removeButton, SIGNAL(clicked(bool)), this, SLOT(onRemoveInstance()));
+	connect(ui->addButton, &QAbstractButton::clicked, this, &MainWindow::onAddInstance);
+	connect(ui->removeButton, &QAbstractButton::clicked, this, &MainWindow::onRemoveInstance);
 	connect(ui->showDisabledCheckBox, &QCheckBox::toggled, this, &MainWindow::showDisabledChanged);
 }
 

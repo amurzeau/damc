@@ -6,9 +6,9 @@ NewOutputInstanceDialog::NewOutputInstanceDialog(WavePlayOutputInterface* interf
     : QDialog(parent), ui(new Ui::NewOutputInstanceDialog), interface(interface) {
 	ui->setupUi(this);
 
-	connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(onConfirm()));
-	connect(ui->buttonBox, SIGNAL(rejected()), this, SLOT(hide()));
-	connect(ui->typeCombo, SIGNAL(activated(int)), this, SLOT(onDeviceTypeChanged()));
+	connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &NewOutputInstanceDialog::onConfirm);
+	connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &NewOutputInstanceDialog::hide);
+	connect(ui->typeCombo, qOverload<int>(&QComboBox::activated), this, &NewOutputInstanceDialog::onDeviceTypeChanged);
 }
 
 NewOutputInstanceDialog::~NewOutputInstanceDialog() {
