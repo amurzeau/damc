@@ -1,5 +1,5 @@
 #include "KeyBinding.h"
-#include "OscServer.h"
+#include "OscRoot.h"
 #include <functional>
 
 #ifdef _WIN32
@@ -17,8 +17,8 @@ struct MessageHotkeyControlData {
 	std::string targetOscAddress;
 };
 
-KeyBinding::KeyBinding(OscContainer* parent)
-    : oscAddShortcutEnpoint(parent, "add"), oscRemoveShortcutEnpoint(parent, "remove") {
+KeyBinding::KeyBinding(OscRoot* oscRoot, OscContainer* parent)
+    : oscRoot(oscRoot), oscAddShortcutEnpoint(parent, "add"), oscRemoveShortcutEnpoint(parent, "remove") {
 	uv_async_init(uv_default_loop(), &oscTriggerAsync, &KeyBinding::onOscTriggered);
 	oscTriggerAsync.data = this;
 	uv_unref((uv_handle_t*) &oscTriggerAsync);
@@ -182,6 +182,6 @@ void KeyBinding::onOscTriggered(uv_async_t* handle) {
 
 	for(const std::string& address : oscAddressesToTrigger) {
 		printf("Executing OSC address %s\n", address.c_str());
-		OscServer::triggerAddress(address);
+		instance->oscRoot->triggerAddress(address);
 	}
 }

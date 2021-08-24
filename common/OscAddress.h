@@ -66,9 +66,13 @@ public:
 	}
 
 	void setOscParent(OscContainer* parent);
-	const std::string& getFullAddress();
+	const std::string& getFullAddress() const { return fullAddress; }
+	const std::string& getName() const { return name; }
+	virtual std::optional<OscArgument> getValue() const { return {}; }
 
+	virtual bool visit(const std::function<bool(OscNode*)>* nodeVisitorFunction);
 	virtual void execute(std::string_view address, const std::vector<OscArgument>& arguments);
+	virtual bool notifyOscAtInit();
 
 	virtual std::string getAsString() = 0;
 
@@ -83,28 +87,12 @@ protected:
 	// of nodes)
 	virtual void execute(const std::vector<OscArgument>&) {}
 
+	static constexpr const char* SIZE_NODE = "size";
+
 private:
 	std::string name;
 	std::string fullAddress;
 	OscContainer* parent;
-};
-
-class OscContainer : public OscNode {
-public:
-	using OscNode::OscNode;
-
-	~OscContainer() override;
-
-	void addChild(std::string name, OscNode* child);
-	void removeChild(std::string name);
-
-	using OscNode::execute;
-	void execute(std::string_view address, const std::vector<OscArgument>& arguments) override;
-
-	std::string getAsString() override;
-
-private:
-	std::map<std::string, OscNode*> children;
 };
 
 class OscEndpoint : public OscNode {
@@ -120,13 +108,45 @@ private:
 	std::function<void(const std::vector<OscArgument>&)> onExecute;
 };
 
+class OscContainer : public OscNode {
+public:
+	struct osc_node_comparator : public std::binary_function<std::string, std::string, bool> {
+		bool operator()(const std::string& x, const std::string& y) const;
+	};
+
+public:
+	OscContainer(OscContainer* parent, std::string name) noexcept;
+	~OscContainer() override;
+
+	void addChild(std::string name, OscNode* child);
+	void removeChild(std::string name);
+
+	std::map<std::string, OscNode*, osc_node_comparator>& getChildren() { return children; }
+	const std::map<std::string, OscNode*, osc_node_comparator>& getChildren() const { return children; }
+	void splitAddress(std::string_view address, std::string_view* childAddress, std::string_view* remainingAddress);
+
+	using OscNode::execute;
+	void execute(std::string_view address, const std::vector<OscArgument>& arguments) override;
+	bool visit(const std::function<bool(OscNode*)>* nodeVisitorFunction) override;
+
+	std::string getAsString() override;
+
+private:
+	std::map<std::string, OscNode*, osc_node_comparator> children;
+	OscEndpoint oscDump;
+};
+
 template<typename T> class OscReadOnlyVariable : protected OscContainer {
 public:
 	using underlying_type = T;
 
+	using OscContainer::getFullAddress;
+	using OscContainer::getName;
+
 	OscReadOnlyVariable(OscContainer* parent, std::string name, T initialValue = {}) noexcept
 	    : OscContainer(parent, name), value(initialValue) {
-		notifyOsc();
+		if(notifyOscAtInit())
+			notifyOsc();
 	}
 	OscReadOnlyVariable(const OscReadOnlyVariable&) = delete;
 
@@ -148,6 +168,7 @@ public:
 	}
 
 	operator T() const { return value; }
+	std::optional<OscArgument> getValue() const override { return OscArgument{getToOsc()}; }
 
 	using OscContainer::operator=;
 	OscReadOnlyVariable& operator=(const T& v) {
@@ -190,7 +211,7 @@ protected:
 		sendMessage(&valueToSend, 1);
 	}
 
-	T getToOsc() {
+	T getToOsc() const {
 		if(!convertToOsc)
 			return get();
 		else
@@ -213,8 +234,11 @@ private:
 
 template<typename T> class OscVariable : public OscReadOnlyVariable<T> {
 public:
-	OscVariable(OscContainer* parent, std::string name, T initialValue = {}) noexcept
-	    : OscReadOnlyVariable<T>(parent, name, initialValue) {
+	OscVariable(OscContainer* parent, std::string name, T initialValue = {}, bool fixedSize = false) noexcept
+	    : OscReadOnlyVariable<T>(parent, name, initialValue), fixedSize(fixedSize) {
+		if(fixedSize)
+			return;
+
 		if constexpr(std::is_same_v<T, bool>) {
 			subEndpoint.emplace_back(new OscEndpoint(this, "toggle"))->setCallback([this](auto) {
 				this->setFromOsc(!this->getToOsc());
@@ -223,12 +247,26 @@ public:
 			// No toggle/increment/decrement
 		} else {
 			incrementAmount = (T) 1;
-			subEndpoint.emplace_back(new OscEndpoint(this, "increment"))->setCallback([this](auto) {
-				this->setFromOsc(this->getToOsc() + incrementAmount);
-			});
-			subEndpoint.emplace_back(new OscEndpoint(this, "decrement"))->setCallback([this](auto) {
-				this->setFromOsc(this->getToOsc() - incrementAmount);
-			});
+			subEndpoint.emplace_back(new OscEndpoint(this, "increment"))
+			    ->setCallback([this](const std::vector<OscArgument>& arguments) {
+				    T amount = incrementAmount;
+
+				    if(!arguments.empty()) {
+					    OscNode::getArgumentAs<T>(arguments[0], amount);
+				    }
+
+				    this->setFromOsc(this->getToOsc() + amount);
+			    });
+			subEndpoint.emplace_back(new OscEndpoint(this, "decrement"))
+			    ->setCallback([this](const std::vector<OscArgument>& arguments) {
+				    T amount = incrementAmount;
+
+				    if(!arguments.empty()) {
+					    OscNode::getArgumentAs<T>(arguments[0], amount);
+				    }
+
+				    this->setFromOsc(this->getToOsc() - amount);
+			    });
 		}
 	}
 
@@ -239,6 +277,9 @@ public:
 	}
 
 	void execute(const std::vector<OscArgument>& arguments) override {
+		if(fixedSize)
+			return;
+
 		if(!arguments.empty()) {
 			T v;
 			if(this->template getArgumentAs<T>(arguments[0], v)) {
@@ -254,23 +295,31 @@ public:
 private:
 	T incrementAmount;
 	std::vector<std::unique_ptr<OscEndpoint>> subEndpoint;
+	bool fixedSize;
 };
 
 template<typename T> class OscGenericArray : protected OscContainer {
 public:
-	OscGenericArray(OscContainer* parent, std::string name) noexcept
+	OscGenericArray(OscContainer* parent, std::string name, bool fixedSize = false) noexcept
 	    : OscContainer(parent, name),
 	      oscAddEndpoint(this, "add"),
 	      oscRemoveEndpoint(this, "remove"),
-	      oscSize(this, "size") {}
+	      oscSize(this, SIZE_NODE, 0, fixedSize),
+	      nextKey(0) {
+		oscSize.setChangeCallback([this](int32_t newSize) { this->resize(newSize); });
+	}
 
 	T& operator[](size_t index) { return *value[index]; }
 	const T& operator[](size_t index) const { return *value[index]; }
 
 	template<typename... Args> void push_back(Args... args) {
-		oscAddEndpoint.sendMessage(nullptr, 0);
+		std::string newKey = std::to_string(nextKey);
+		nextKey++;
 
-		T* newValue = new T(this, std::to_string(value.size()), args...);
+		OscArgument argument = newKey;
+		oscAddEndpoint.sendMessage(&argument, 1);
+
+		T* newValue = new T(this, newKey, args...);
 
 		initializeItem(newValue);
 		value.emplace_back(newValue);
@@ -279,9 +328,32 @@ public:
 	}
 
 	void pop_back() {
-		oscRemoveEndpoint.sendMessage(nullptr, 0);
+		OscArgument argument = value.back()->getName();
+		oscRemoveEndpoint.sendMessage(&argument, 1);
 
 		value.pop_back();
+
+		oscSize.set(value.size());
+	}
+
+	size_t erase(std::string key) {
+		const auto& children = this->getChildren();
+
+		auto it = children.find(key);
+		if(it == children.end())
+			return 0;
+
+		OscArgument argument = key;
+		oscRemoveEndpoint.sendMessage(&argument, 1);
+
+		for(auto itVector = value.being(); itVector != value.end();) {
+			if(itVector->get() == it->second) {
+				value.erase(itVector);
+				break;
+			} else {
+				++itVector;
+			}
+		}
 
 		oscSize.set(value.size());
 	}
@@ -329,8 +401,9 @@ protected:
 	OscEndpoint oscRemoveEndpoint;
 
 private:
-	OscReadOnlyVariable<int32_t> oscSize;
+	OscVariable<int32_t> oscSize;
 	std::vector<std::unique_ptr<T>> value;
+	size_t nextKey;
 };
 
 template<typename T> class OscArray : public OscGenericArray<OscVariable<T>> {

@@ -7,19 +7,24 @@
 #include <QAbstractSlider>
 #include <QDoubleSpinBox>
 #include <QSpinBox>
+#include <vector>
 
-template<class T> class OscWidgetMapper : public QObject, public OscNode {
+template<class T> class OscWidgetMapper : public QObject, public OscContainer {
 public:
 	OscWidgetMapper(OscContainer* parent, std::string name) noexcept;
 
-	void setWidget(T* widget);
+	void setWidget(T* widget, bool updateOnChange = true);
 
 	void execute(const std::vector<OscArgument>& arguments) override;
 
+	std::optional<OscArgument> getValue() const override;
 	std::string getAsString() override { return std::string{}; }
 
+	void setChangeCallback(std::function<void(float)> onChange);
+
 private:
-	T* widget;
+	std::vector<T*> widgets;
+	std::function<void(float)> onChange;
 };
 
 extern template class OscWidgetMapper<QAbstractSlider>;

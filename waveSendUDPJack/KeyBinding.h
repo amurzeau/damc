@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <uv.h>
 
+class OscRoot;
+
 class KeyBinding {
 public:
 	struct Hotkey {
@@ -23,7 +25,7 @@ public:
 		const uint32_t modifiers;
 	};
 
-	KeyBinding(OscContainer* parent);
+	KeyBinding(OscRoot* oscRoot, OscContainer* parent);
 	~KeyBinding();
 
 protected:
@@ -45,6 +47,7 @@ private:
 		uint16_t id;
 	};
 
+	OscRoot* oscRoot;
 	OscEndpoint oscAddShortcutEnpoint;
 	OscEndpoint oscRemoveShortcutEnpoint;
 

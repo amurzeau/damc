@@ -5,15 +5,9 @@
 #include <math.h>
 #include <string.h>
 
-OscServer* OscServer::instance;
+OscServer::OscServer(OscRoot* oscRoot) : OscConnector(oscRoot, false), started(false) {}
 
-OscServer::OscServer() {
-	instance = this;
-}
-
-OscServer::~OscServer() {
-	instance = nullptr;
-}
+OscServer::~OscServer() {}
 
 void OscServer::init(const char* ip, uint16_t port) {
 	int ret;
@@ -34,16 +28,27 @@ void OscServer::init(const char* ip, uint16_t port) {
 
 	server.data = this;
 	uv_udp_recv_start(&server, &onAllocData, &onReadData);
+
+	started = true;
 }
 
 void OscServer::stop() {
 	uv_close((uv_handle_t*) &server, nullptr);
 }
 
-void OscServer::sendNextMessage(const uint8_t* data, size_t size) {
-	uv_buf_t buf = uv_buf_init((char*) data, size);
-	sendReq.data = this;
-	uv_udp_send(&sendReq, &server, &buf, 1, (const struct sockaddr*) &targetAddress, &onWrittenData);
+void OscServer::sendOscData(const uint8_t* data, size_t size) {
+	if(!started) {
+		return;
+	}
+
+	uv_udp_send_t* req = new uv_udp_send_t;
+	uv_buf_t buf = uv_buf_init((char*) malloc(size), size);
+
+	memcpy(buf.base, data, size);
+
+	req->data = buf.base;
+
+	uv_udp_send(req, &server, &buf, 1, (const struct sockaddr*) &targetAddress, &onWriteDone);
 }
 
 /**
@@ -73,21 +78,14 @@ void OscServer::onReadData(
 		if(nread != UV_EOF)
 			fprintf(stderr, "Error on reading client stream: %s.\n", uv_strerror(nread));
 	} else if(nread > 0) {
-		thisInstance->onOscPacketReceived((const uint8_t*) buf->base, nread);
+		thisInstance->onOscDataReceived((const uint8_t*) buf->base, nread);
 	}
 
 	/* free the remaining memory */
 	thisInstance->availableBuffersForRecv.emplace_back(buf->base);
 }
 
-void OscServer::onWrittenData(uv_udp_send_t* req, int status) {
-	OscServer* thisInstance = (OscServer*) req->data;
-	thisInstance->onMessageSent();
-}
-
-void OscServer::triggerAddress(const std::string& address) {
-	if(!instance)
-		return;
-
-	instance->OscRoot::triggerAddress(address);
+void OscServer::onWriteDone(uv_udp_send_t* req, int status) {
+	free(req->data);
+	delete req;
 }

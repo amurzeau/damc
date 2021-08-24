@@ -1,6 +1,7 @@
 #ifndef BALANCECONTROLLER_H
 #define BALANCECONTROLLER_H
 
+#include "OscWidgetArray.h"
 #include <QDialog>
 
 namespace Ui {
@@ -14,16 +15,11 @@ class BalanceController : public QDialog {
 	Q_OBJECT
 
 public:
-	explicit BalanceController(QWidget* parent);
+	explicit BalanceController(QWidget* parent, OscContainer* oscParent);
 	~BalanceController();
 
-	void setChannelNumber(int numChannel);
-	void setParameters(size_t channel, float balance);
-
+public slots:
 	void show();
-
-signals:
-	void parameterChanged(size_t channel, float balance);
 
 protected:
 	virtual void hideEvent(QHideEvent* event) override;
@@ -31,6 +27,7 @@ protected:
 private:
 	Ui::BalanceController* ui;
 	std::vector<Balance*> balances;
+	OscWidgetArray oscBalances;
 	QRect savedGeometry;
 };
 

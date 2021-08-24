@@ -4,7 +4,9 @@
 #include "ControlClient.h"
 #include "ControlServer.h"
 #include "KeyBinding.h"
+#include "OscRoot.h"
 #include "OscServer.h"
+#include "OscTcpServer.h"
 #include "OutputInstance/OutputInstance.h"
 #include "json.h"
 #include <jack/jack.h>
@@ -52,11 +54,17 @@ private:
 	std::map<int, std::unique_ptr<OutputInstance>> outputs;
 	std::vector<int> outputsOrder;
 	ControlServer controlServer;
-	OscServer oscServer;
+	OscRoot oscRoot;
+	OscServer oscUdpServer;
+	OscTcpServer oscTcpServer;
 	OscContainer oscRootNode;
 	KeyBinding keyBinding;
 	std::string saveFileName;
 	jack_client_t* monitoringJackClient;
+
+	OscReadOnlyVariable<int32_t> oscOutputNumber;
+	OscEndpoint oscAddOutputInstance;
+	OscEndpoint oscRemoveOutputInstance;
 
 	struct PortConnectionStateChange {
 		jack_port_id_t a;

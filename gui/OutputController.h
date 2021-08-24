@@ -21,7 +21,7 @@ class LevelMeterWidget;
 class OutputController : public QWidget, public OscContainer {
 	Q_OBJECT
 public:
-	explicit OutputController(MainWindow* parent, int index, int numEq);
+	explicit OutputController(MainWindow* parent, OscContainer* oscParent, const std::string& name);
 	~OutputController();
 
 	void setInterface(WavePlayInterface* interface);
@@ -84,8 +84,6 @@ private:
 	Ui::OutputController* ui;
 	MainWindow* mainWindow;
 	WavePlayOutputInterface interface;
-	int index;
-	int numEq;
 	int numChannels;
 	EqualizersController* equalizersController;
 	CompressorController* compressorController;
@@ -100,6 +98,7 @@ private:
 	OscWidgetMapper<QDoubleSpinBox> oscDelay;
 	OscWidgetMapper<QDoubleSpinBox> oscClockDrift;
 	OscWidgetMapper<QAbstractSlider> oscVolume;
+	OscVariable<std::string> oscDisplayName;
 };
 
 #endif  // OUTPUTCONTROLLER_H

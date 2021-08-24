@@ -18,21 +18,55 @@
 
 #define DRAG_FORMAT "application/x-dndwaveoutputinstancewidget"
 
-OutputController::OutputController(MainWindow* parent, int index, int numEq)
+OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, const std::string& name)
     : QWidget(parent),
-      OscContainer(parent, std::to_string(index)),
+      OscContainer(oscParent, name),
       ui(new Ui::OutputController),
       mainWindow(parent),
-      index(index),
       oscFilterChain(this, "filterChain"),
       oscMeterPerChannel(this, "meter_per_channel"),
       oscEnable(this, "enable"),
       oscDelay(&oscFilterChain, "delay"),
       oscClockDrift(&oscFilterChain, "clockDrift"),
-      oscVolume(&oscFilterChain, "volume") {
+      oscVolume(&oscFilterChain, "volume"),
+      oscDisplayName(this, "display_name") {
 	ui->setupUi(this);
 
 	numChannels = 0;
+
+	oscEnable.setWidget(ui->enableCheckBox);
+	oscDelay.setWidget(ui->delaySpinBox);
+	oscClockDrift.setWidget(ui->clockDriftSpinBox);
+	oscVolume.setWidget(ui->volumeSlider);
+	oscVolume.setChangeCallback([this](float value) { ui->volumeLevelLabel->setText(QString::number((int) value)); });
+
+	equalizersController = new EqualizersController(this, 6);
+
+	balanceController = new BalanceController(this, &oscFilterChain);
+
+	connect(ui->eqButton, &QAbstractButton::clicked, this, &OutputController::onShowEq);
+	connect(ui->compressorButton, &QAbstractButton::clicked, this, &OutputController::onShowCompressor);
+	connect(ui->expanderButton, &QAbstractButton::clicked, this, &OutputController::onShowExpander);
+	connect(ui->balanceButton, &QAbstractButton::clicked, this, &OutputController::onShowBalance);
+
+	compressorController = new CompressorController(this, &oscFilterChain, "compressorFilter");
+	compressorController->getEnableMapper().setWidget(ui->compressorButton, false);
+
+	expanderController = new CompressorController(this, &oscFilterChain, "expanderFilter");
+	expanderController->getEnableMapper().setWidget(ui->expanderButton, false);
+
+	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
+	ui->volumeLevelLabel->setTextSize(4, Qt::AlignRight | Qt::AlignVCenter);
+
+	oscDisplayName.setChangeCallback([this](const std::string& value) {
+		QString title = QString::fromStdString(value).replace("waveSendUDP-", "");
+		ui->groupBox->setTitle(title);
+		equalizersController->setWindowTitle(tr("Equalizer - %1").arg(title));
+		compressorController->setWindowTitle(tr("Compressor - %1").arg(title));
+		expanderController->setWindowTitle(tr("Expander - %1").arg(title));
+		balanceController->setWindowTitle(tr("Balance - %1").arg(title));
+	});
+
 	oscMeterPerChannel.setCallback([this](const std::vector<OscArgument>& arguments) {
 		float maxLevel = -INFINITY;
 
@@ -57,46 +91,6 @@ OutputController::OutputController(MainWindow* parent, int index, int numEq)
 		else
 			ui->levelLabel->setText(QString::number((int) maxLevel));
 	});
-
-	oscEnable.setWidget(ui->enableCheckBox);
-	oscDelay.setWidget(ui->delaySpinBox);
-	oscClockDrift.setWidget(ui->clockDriftSpinBox);
-	oscVolume.setWidget(ui->volumeSlider);
-
-	equalizersController = new EqualizersController(this, numEq);
-	equalizersController->connectEqualizers(this, SLOT(onChangeEq(int, bool, FilterType, double, double, double)));
-
-	balanceController = new BalanceController(this);
-	connect(balanceController, SIGNAL(parameterChanged(size_t, float)), this, SLOT(onChangeBalance(size_t, float)));
-
-	connect(ui->volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(onChangeVolume(int)));
-	connect(ui->delaySpinBox, SIGNAL(valueChanged(double)), this, SLOT(onChangeDelay(double)));
-	connect(ui->sampleRateSpinBox, SIGNAL(valueChanged(int)), this, SLOT(onChangeClockDrift()));
-	connect(ui->clockDriftSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onChangeClockDrift()));
-	connect(ui->enableCheckBox, SIGNAL(stateChanged(int)), this, SLOT(onEnable(int)));
-	connect(ui->muteButton, SIGNAL(toggled(bool)), this, SLOT(onMute(bool)));
-
-	connect(ui->eqButton, SIGNAL(clicked(bool)), this, SLOT(onShowEq()));
-	connect(ui->compressorButton, SIGNAL(clicked(bool)), this, SLOT(onShowCompressor()));
-	connect(ui->expanderButton, SIGNAL(clicked(bool)), this, SLOT(onShowExpander()));
-	connect(ui->balanceButton, SIGNAL(clicked(bool)), this, SLOT(onShowBalance()));
-
-	connect(&interface, SIGNAL(onMessage(QJsonObject)), this, SLOT(onMessageReceived(const QJsonObject&)));
-
-	compressorController = new CompressorController(this);
-	connect(compressorController,
-	        SIGNAL(parameterChanged(bool, float, float, float, float, float, float, bool)),
-	        this,
-	        SLOT(onChangeCompressor(bool, float, float, float, float, float, float, bool)));
-
-	expanderController = new CompressorController(this);
-	connect(expanderController,
-	        SIGNAL(parameterChanged(bool, float, float, float, float, float, float, bool)),
-	        this,
-	        SLOT(onChangeExpander(bool, float, float, float, float, float, float, bool)));
-
-	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
-	ui->volumeLevelLabel->setTextSize(4, Qt::AlignRight | Qt::AlignVCenter);
 }
 
 OutputController::~OutputController() {
@@ -104,7 +98,7 @@ OutputController::~OutputController() {
 }
 
 void OutputController::setInterface(WavePlayInterface* interface) {
-	this->interface.setInterface(index, interface);
+	this->interface.setInterface(0, interface);
 }
 
 void OutputController::updateHiddenState() {
@@ -286,6 +280,7 @@ void OutputController::onChangeBalance(size_t channel, float balance) {
 
 void OutputController::onMessageReceived(const QJsonObject& message) {
 	QJsonValue levelValue = message.value("levels");
+	return;
 	if(levelValue.type() == QJsonValue::Array) {
 		if(ui->groupBox->isEnabled()) {
 			QJsonArray levels = levelValue.toArray();
@@ -339,16 +334,6 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			setDisplayedVolume(integerVolume);
 		}
 
-		QJsonValue balanceValue = message.value("balance");
-		if(balanceValue.type() == QJsonValue::Array) {
-			QJsonArray balanceArray = balanceValue.toArray();
-			for(int i = 0; i < balanceArray.size(); i++) {
-				QJsonObject balanceInfo = balanceArray[i].toObject();
-
-				balanceController->setParameters(balanceInfo["channel"].toInt(), balanceInfo["volume"].toDouble());
-			}
-		}
-
 		QJsonValue delayValue = message.value("delayFilter");
 		if(delayValue.type() != QJsonValue::Undefined) {
 			ui->delaySpinBox->blockSignals(true);
@@ -386,46 +371,8 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			ui->eqButton->setChecked(atLeastOneEnabled);
 		}
 
-		QJsonValue compressorValue = message.value("compressorFilter");
-		if(compressorValue.type() == QJsonValue::Object) {
-			QJsonObject filterData = compressorValue.toObject();
-			compressorController->blockSignals(true);
-			compressorController->setParameters(filterData["enabled"].toBool(),
-			                                    filterData["releaseTime"].toDouble(),
-			                                    filterData["attackTime"].toDouble(),
-			                                    filterData["threshold"].toDouble(),
-			                                    filterData["makeUpGain"].toDouble(),
-			                                    filterData["ratio"].toDouble(),
-			                                    filterData["kneeWidth"].toDouble(),
-			                                    filterData["useMovingMax"].toBool());
-			ui->compressorButton->setChecked(filterData["enabled"].toBool());
-			compressorController->blockSignals(false);
-		}
-
-		QJsonValue expanderValue = message.value("expanderFilter");
-		if(expanderValue.type() == QJsonValue::Object) {
-			QJsonObject filterData = expanderValue.toObject();
-			expanderController->blockSignals(true);
-			expanderController->setParameters(filterData["enabled"].toBool(),
-			                                  filterData["releaseTime"].toDouble(),
-			                                  filterData["attackTime"].toDouble(),
-			                                  filterData["threshold"].toDouble(),
-			                                  filterData["makeUpGain"].toDouble(),
-			                                  filterData["ratio"].toDouble(),
-			                                  filterData["kneeWidth"].toDouble(),
-			                                  false);
-			ui->expanderButton->setChecked(filterData["enabled"].toBool());
-			expanderController->blockSignals(false);
-		}
-
 		QJsonValue displayNameValue = message.value("displayName");
 		if(displayNameValue.type() == QJsonValue::String) {
-			QString title = displayNameValue.toString().replace("waveSendUDP-", "");
-			ui->groupBox->setTitle(title);
-			equalizersController->setWindowTitle(tr("Equalizer - %1").arg(title));
-			compressorController->setWindowTitle(tr("Compressor - %1").arg(title));
-			expanderController->setWindowTitle(tr("Expander - %1").arg(title));
-			balanceController->setWindowTitle(tr("Balance - %1").arg(title));
 		}
 
 		if(ui->groupBox->toolTip().isEmpty()) {
@@ -447,9 +394,7 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 	}
 }
 
-void OutputController::setDisplayedVolume(int volume) {
-	ui->volumeLevelLabel->setText(QString::number(volume));
-}
+void OutputController::setDisplayedVolume(int volume) {}
 
 void OutputController::setNumChannel(int numChannels) {
 	if(numChannels == this->numChannels) {
@@ -457,8 +402,6 @@ void OutputController::setNumChannel(int numChannels) {
 	}
 
 	this->numChannels = numChannels;
-
-	balanceController->setChannelNumber(numChannels);
 
 	for(auto* w : levelWidgets) {
 		ui->levelContainerLayout->removeWidget(w);

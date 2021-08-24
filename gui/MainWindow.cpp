@@ -4,10 +4,18 @@
 #include <QJsonDocument>
 
 MainWindow::MainWindow(QWidget* parent)
-    : QWidget(parent), OscContainer(nullptr, "strip"), ui(new Ui::MainWindow), addDialog(&mainControlInterface) {
+    : QWidget(parent),
+      ui(new Ui::MainWindow),
+      oscRoot(false),
+      wavePlayInterface(&oscRoot),
+      outputInterfaces(&oscRoot, "strip"),
+      addDialog(&mainControlInterface) {
 	ui->setupUi(this);
 
-	setOscParent(&wavePlayInterface);
+	outputInterfaces.setWidget(
+	    this, ui->horizontalLayout, [this](QWidget*, OscContainer* oscParent, const std::string& name) -> QWidget* {
+		    return new OutputController(this, oscParent, name);
+	    });
 
 	mainControlInterface.setInterface(-1, &wavePlayInterface);
 
@@ -48,28 +56,7 @@ void MainWindow::onMessage(const QJsonObject& message) {
 #endif
 			addDialog.show();
 		} else if(message["operation"] == "add") {
-			int index = message["target"].toInt(-1);
-
-			qDebug("Adding instance %d\n", index);
-
-			if(index >= 0) {
-				OutputController* output = new OutputController(this, index, numEq);
-				output->setInterface(&wavePlayInterface);
-				ui->horizontalLayout->addWidget(output);
-
-				outputs.emplace(index, output);
-			}
 		} else if(message["operation"] == "remove") {
-			int index = message["target"].toInt(-1);
-
-			if(index >= 0) {
-				auto it = outputs.find(index);
-				if(it != outputs.end()) {
-					ui->horizontalLayout->removeWidget(it->second);
-					delete it->second;
-					outputs.erase(it);
-				}
-			}
 		}
 	}
 }

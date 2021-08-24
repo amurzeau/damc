@@ -4,12 +4,7 @@
 #include <QMessageBox>
 #include <QNetworkDatagram>
 
-static constexpr uint8_t SLIP_END = 0xC0;
-static constexpr uint8_t SLIP_ESC = 0xDB;
-static constexpr uint8_t SLIP_ESC_END = 0xDC;
-static constexpr uint8_t SLIP_ESC_ESC = 0xDD;
-
-WavePlayInterface::WavePlayInterface() : oscIsEscaping(false) {
+WavePlayInterface::WavePlayInterface(OscRoot* oscRoot) : OscConnector(oscRoot, true) {
 	connect(&controlSocket, &QTcpSocket::readyRead, this, &WavePlayInterface::onDataReceived);
 	connect(&controlSocket, &QTcpSocket::stateChanged, this, &WavePlayInterface::onConnectionStateChanged);
 
@@ -21,7 +16,16 @@ WavePlayInterface::WavePlayInterface() : oscIsEscaping(false) {
 	onOscReconnect();
 }
 
+void WavePlayInterface::updateOscVariables() {
+	getOscRoot()->sendMessage("/**/dump", nullptr, 0);
+
+	OscArgument arg = true;
+	getOscRoot()->sendMessage("/strip/*/enable_peak", &arg, 1);
+}
+
 void WavePlayInterface::sendMessage(const QJsonObject& message) {
+	return;
+
 	QByteArray data = QJsonDocument(message).toJson(QJsonDocument::Compact);
 	int sizeData = data.size();
 
@@ -38,90 +42,44 @@ void WavePlayInterface::onOscDataReceived() {
 		// QByteArray receivedData = oscSocket.readAll();
 		QByteArray receivedData;
 
-		if constexpr(std::is_same_v<decltype(oscSocket), QTcpSocket>) {
-			receivedData = oscSocket.readAll();
-
-			// Decode SLIP frame
-			for(uint8_t c : qAsConst(receivedData)) {
-				if(!oscIsEscaping) {
-					if(c == SLIP_ESC) {
-						oscIsEscaping = true;
-						continue;
-					} else if(c == SLIP_END) {
-						if(!oscNetworkBuffer.empty()) {
-							onOscPacketReceived(oscNetworkBuffer.data(), oscNetworkBuffer.size());
-							oscNetworkBuffer.clear();
-						}
-						continue;
-					}
-					// else this is a regular character
-				} else {
-					if(c == SLIP_ESC_END) {
-						c = SLIP_END;
-					} else if(c == SLIP_ESC_ESC) {
-						c = SLIP_ESC;
-					}
-					// else this is an error, escaped character doesn't need to be escaped
-				}
-				oscIsEscaping = false;
-				oscNetworkBuffer.push_back(c);
-			}
-		} else {
-			receivedData = oscSocket.receiveDatagram().data();
-			onOscPacketReceived((const uint8_t*) receivedData.data(), receivedData.size());
-		}
+#if 1
+		receivedData = oscSocket.readAll();
+#else
+		receivedData = oscSocket.receiveDatagram().data();
+		oscSocket.writeDatagram(receivedData.data(), receivedData.size(), QHostAddress::LocalHost, 10001);
+#endif
+		OscConnector::onOscDataReceived((const uint8_t*) receivedData.data(), receivedData.size());
 	} while(oscSocket.bytesAvailable());
 }
 
 void WavePlayInterface::onOscConnectionStateChanged(QAbstractSocket::SocketState state) {
 	if(state == QAbstractSocket::UnconnectedState) {
 		oscReconnectTimer.singleShot(1000, this, &WavePlayInterface::onOscReconnect);
+	} else if(state == QAbstractSocket::ConnectedState) {
+		updateOscVariables();
 	}
 }
 
 void WavePlayInterface::onOscReconnect() {
-	oscIsEscaping = false;
-	if constexpr(std::is_same_v<decltype(oscSocket), QTcpSocket>) {
-		oscSocket.connectToHost("127.0.0.1", 2308);
-	} else {
-		oscSocket.bind(10000, QAbstractSocket::ReuseAddressHint);
-	}
+#if 1
+	oscSocket.connectToHost("127.0.0.1", 2308);
+#else
+	oscSocket.bind(10000, QAbstractSocket::ReuseAddressHint);
+#endif
 }
 
-void WavePlayInterface::sendNextMessage(const uint8_t* data, size_t size) {
-	if constexpr(std::is_same_v<decltype(oscSocket), QTcpSocket>) {
-		if(oscSocket.state() != QTcpSocket::ConnectedState) {
-			onOscReconnect();
-			return;
-		}
-
-		oscOutputNetworkBuffer.clear();
-
-		// Encode SLIP frame with double-END variant (one at the start, one at the end)
-		oscOutputNetworkBuffer.push_back(SLIP_END);
-
-		for(size_t i = 0; i < size; i++) {
-			const uint8_t c = data[i];
-
-			if(c == SLIP_END) {
-				oscOutputNetworkBuffer.push_back(SLIP_ESC);
-				oscOutputNetworkBuffer.push_back(SLIP_ESC_END);
-			} else if(c == SLIP_ESC) {
-				oscOutputNetworkBuffer.push_back(SLIP_ESC);
-				oscOutputNetworkBuffer.push_back(SLIP_ESC_ESC);
-			} else {
-				oscOutputNetworkBuffer.push_back(c);
-			}
-		}
-
-		oscOutputNetworkBuffer.push_back(SLIP_END);
-
-		oscSocket.write(oscOutputNetworkBuffer);
-	} else {
-		oscSocket.writeDatagram((const char*) data, size, QHostAddress::LocalHost, 2307);
+void WavePlayInterface::sendOscData(const uint8_t* data, size_t size) {
+#if 1
+	if(oscSocket.state() != QTcpSocket::ConnectedState) {
+		onOscReconnect();
+		return;
 	}
 
-	onMessageSent();
+	oscSocket.write((const char*) data, size);
+#else
+	oscSocket.writeDatagram((const char*) data, size, QHostAddress::LocalHost, 2307);
+	oscSocket.writeDatagram((const char*) data, size, QHostAddress::LocalHost, 10001);
+#endif
 }
 
 void WavePlayInterface::onDataReceived() {
@@ -164,6 +122,7 @@ void WavePlayInterface::onReconnect() {
 }
 
 void WavePlayInterface::onPacketReceived(const void* data, size_t size) {
+	return;
 	QJsonParseError error;
 	QJsonDocument jsonDocument = QJsonDocument::fromJson(QByteArray::fromRawData((const char*) data, size), &error);
 	if(jsonDocument.isNull()) {

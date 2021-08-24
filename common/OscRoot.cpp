@@ -4,8 +4,9 @@
 #include <math.h>
 #include <string.h>
 
-OscRoot::OscRoot() : OscContainer(nullptr, "") {
-	sending = false;
+OscRoot::OscRoot(bool notifyAtInit) : OscContainer(nullptr, ""), doNotifyOscAtInit(notifyAtInit) {
+	oscOutputMaxSize = 65536;
+	oscOutputMessage.reset(new uint8_t[oscOutputMaxSize]);
 }
 
 OscRoot::~OscRoot() {}
@@ -14,35 +15,14 @@ void OscRoot::printAllNodes() {
 	printf("Nodes:\n%s\n", getAsString().c_str());
 }
 
-void OscRoot::processNextMessage() {
-	if(sending || pendingBuffersToSend.empty()) {
-		return;
-	}
-
-	const auto& buffer = pendingBuffersToSend.front();
-
-	sending = true;
-	sendNextMessage(&buffer.buffer[0], buffer.sizeToSend);
-}
-
 void OscRoot::sendMessage(const std::string& address, const OscArgument* arguments, size_t number) {
 	tosc_message osc;
-	MessageView sendBuffer;
 	char format[128] = ",";
 	char* formatPtr = format + 1;
 
 	if(number > sizeof(format) - 2) {
 		printf("ERROR: Too many arguments: %d\n", number);
 		return;
-	}
-
-	// reuse allocated memory
-	if(!availableBuffersToSend.empty()) {
-		sendBuffer.buffer.swap(availableBuffersToSend.front().buffer);
-		availableBuffersToSend.pop_front();
-	}
-	if(sendBuffer.buffer.size() == 0) {
-		sendBuffer.buffer.resize(1024);
 	}
 
 	for(size_t i = 0; i < number; i++) {
@@ -66,8 +46,7 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 	}
 	*formatPtr++ = '\0';
 
-	if(tosc_writeMessageHeader(
-	       &osc, address.c_str(), format, (char*) &sendBuffer.buffer[0], sendBuffer.buffer.size()) != 0) {
+	if(tosc_writeMessageHeader(&osc, address.c_str(), format, (char*) oscOutputMessage.get(), oscOutputMaxSize) != 0) {
 		printf("failed to write message\n");
 		return;
 	}
@@ -98,18 +77,9 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 		}
 	}
 
-	sendBuffer.sizeToSend = tosc_getMessageLength(&osc);
-	pendingBuffersToSend.push_back(std::move(sendBuffer));
-
-	processNextMessage();
-}
-
-void OscRoot::onMessageSent() {
-	availableBuffersToSend.push_back(std::move(pendingBuffersToSend.front()));
-	pendingBuffersToSend.pop_front();
-
-	sending = false;
-	processNextMessage();
+	for(OscConnector* connector : connectors) {
+		connector->sendOscMessage(oscOutputMessage.get(), tosc_getMessageLength(&osc));
+	}
 }
 
 void OscRoot::onOscPacketReceived(const uint8_t* data, size_t size) {
@@ -199,6 +169,96 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 	execute(address + 1, std::move(arguments));
 }
 
+bool OscRoot::notifyOscAtInit() {
+	return doNotifyOscAtInit;
+}
+
 void OscRoot::triggerAddress(const std::string& address) {
 	execute(address.c_str() + 1, std::vector<OscArgument>{});
+}
+
+void OscRoot::addConnector(OscConnector* connector) {
+	connectors.insert(connector);
+}
+
+void OscRoot::removeConnector(OscConnector* connector) {
+	connectors.erase(connector);
+}
+
+static constexpr uint8_t SLIP_END = 0xC0;
+static constexpr uint8_t SLIP_ESC = 0xDB;
+static constexpr uint8_t SLIP_ESC_END = 0xDC;
+static constexpr uint8_t SLIP_ESC_ESC = 0xDD;
+
+OscConnector::OscConnector(OscRoot* oscRoot, bool useSlipProtocol)
+    : oscRoot(oscRoot), useSlipProtocol(useSlipProtocol), oscIsEscaping(false) {
+	oscRoot->addConnector(this);
+}
+
+OscConnector::~OscConnector() {
+	oscRoot->removeConnector(this);
+}
+
+void OscConnector::sendOscMessage(const uint8_t* data, size_t size) {
+	if(useSlipProtocol) {
+		oscOutputBuffer.clear();
+		oscOutputBuffer.reserve(size + 2 + 10);
+
+		// Encode SLIP frame with double-END variant (one at the start, one at the end)
+		oscOutputBuffer.push_back(SLIP_END);
+
+		for(size_t i = 0; i < size; i++) {
+			const uint8_t c = data[i];
+
+			if(c == SLIP_END) {
+				oscOutputBuffer.push_back(SLIP_ESC);
+				oscOutputBuffer.push_back(SLIP_ESC_END);
+			} else if(c == SLIP_ESC) {
+				oscOutputBuffer.push_back(SLIP_ESC);
+				oscOutputBuffer.push_back(SLIP_ESC_ESC);
+			} else {
+				oscOutputBuffer.push_back(c);
+			}
+		}
+
+		oscOutputBuffer.push_back(SLIP_END);
+
+		sendOscData(oscOutputBuffer.data(), oscOutputBuffer.size());
+	} else {
+		sendOscData(data, size);
+	}
+}
+
+void OscConnector::onOscDataReceived(const uint8_t* data, size_t size) {
+	if(useSlipProtocol) {
+		// Decode SLIP frame
+		for(size_t i = 0; i < size; i++) {
+			uint8_t c = data[i];
+
+			if(!oscIsEscaping) {
+				if(c == SLIP_ESC) {
+					oscIsEscaping = true;
+					continue;
+				} else if(c == SLIP_END) {
+					if(!oscInputBuffer.empty()) {
+						oscRoot->onOscPacketReceived(oscInputBuffer.data(), oscInputBuffer.size());
+						oscInputBuffer.clear();
+					}
+					continue;
+				}
+				// else this is a regular character
+			} else {
+				if(c == SLIP_ESC_END) {
+					c = SLIP_END;
+				} else if(c == SLIP_ESC_ESC) {
+					c = SLIP_ESC;
+				}
+				// else this is an error, escaped character doesn't need to be escaped
+			}
+			oscIsEscaping = false;
+			oscInputBuffer.push_back(c);
+		}
+	} else {
+		oscRoot->onOscPacketReceived(data, size);
+	}
 }

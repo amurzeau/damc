@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "NewOutputInstanceDialog.h"
+#include "OscWidgetArray.h"
 #include "OutputController.h"
 #include "WavePlayInterface.h"
 #include "WavePlayOutputInterface.h"
@@ -14,7 +15,7 @@ namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QWidget, public OscContainer {
+class MainWindow : public QWidget {
 	Q_OBJECT
 
 public:
@@ -36,7 +37,9 @@ protected:
 private:
 	Ui::MainWindow* ui;
 
+	OscRoot oscRoot;
 	WavePlayInterface wavePlayInterface;
+	OscWidgetArray outputInterfaces;
 	WavePlayOutputInterface mainControlInterface;
 	std::unordered_map<int, OutputController*> outputs;
 	int numEq;

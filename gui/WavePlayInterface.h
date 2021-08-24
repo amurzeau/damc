@@ -13,10 +13,12 @@
 
 class WavePlayOutputInterface;
 
-class WavePlayInterface : public QObject, public OscRoot {
+class WavePlayInterface : public QObject, public OscConnector {
 	Q_OBJECT
 public:
-	WavePlayInterface();
+	WavePlayInterface(OscRoot* oscRoot);
+
+	void updateOscVariables();
 
 	void sendMessage(const QJsonObject& message);
 	void addOutputInterface(int index, WavePlayOutputInterface* outputInterface) {
@@ -34,15 +36,12 @@ protected slots:
 	void onOscReconnect();
 
 protected:
-	void sendNextMessage(const uint8_t* data, size_t size) override;
+	void sendOscData(const uint8_t* data, size_t size) override;
 	void onPacketReceived(const void* data, size_t size);
 
 private:
-	QUdpSocket oscSocket;
+	QTcpSocket oscSocket;
 	QTimer oscReconnectTimer;
-	std::vector<uint8_t> oscNetworkBuffer;
-	QByteArray oscOutputNetworkBuffer;
-	bool oscIsEscaping;
 
 	QTcpSocket controlSocket;
 	QTimer reconnectTimer;

@@ -48,8 +48,14 @@ void OscNode::setOscParent(OscContainer* parent) {
 	this->parent = parent;
 }
 
-const std::string& OscNode::getFullAddress() {
-	return fullAddress;
+bool OscNode::visit(const std::function<bool(OscNode*)>* nodeVisitorFunction) {
+	if(nodeVisitorFunction) {
+		printf("Executing address %s\n", getFullAddress().c_str());
+		if(!(*nodeVisitorFunction)(this))
+			return false;
+	}
+
+	return true;
 }
 
 void OscNode::sendMessage(const OscArgument* arguments, size_t number) {
@@ -61,8 +67,37 @@ void OscNode::sendMessage(const std::string& address, const OscArgument* argumen
 		parent->sendMessage(address, arguments, number);
 }
 
+bool OscNode::notifyOscAtInit() {
+	if(parent)
+		return parent->notifyOscAtInit();
+
+	return false;
+}
+
 void OscNode::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
-	execute(arguments);
+	if(address.empty() || address == "/") {
+		execute(arguments);
+	}
+}
+
+bool OscContainer::osc_node_comparator::operator()(const std::string& x, const std::string& y) const {
+	// Always put size node first
+	if(x == SIZE_NODE && y != SIZE_NODE)
+		return true;
+	else if(y == SIZE_NODE)
+		return false;
+	else
+		return x < y;
+}
+
+OscContainer::OscContainer(OscContainer* parent, std::string name) noexcept
+    : OscNode(parent, name), oscDump(this, "dump") {
+	oscDump.setCallback([this](auto) {
+		auto value = this->getValue();
+		if(value) {
+			this->sendMessage(&value.value(), 1);
+		}
+	});
 }
 
 OscContainer::~OscContainer() {
@@ -73,39 +108,78 @@ OscContainer::~OscContainer() {
 	}
 }
 
+void OscContainer::splitAddress(std::string_view address,
+                                std::string_view* childAddress,
+                                std::string_view* remainingAddress) {
+	size_t nextSlash = address.find('/');
+	if(childAddress)
+		*childAddress = address.substr(0, nextSlash);
+
+	if(remainingAddress && nextSlash != std::string::npos && nextSlash + 1 < address.size()) {
+		*remainingAddress = address.substr(nextSlash + 1);
+	}
+}
+
 void OscContainer::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
-	printf("Executing %s from %s\n", std::string(address).c_str(), getFullAddress().c_str());
+	// printf("Executing %s from %s\n", std::string(address).c_str(), getFullAddress().c_str());
 
 	if(address.empty() || address == "/") {
 		printf("Executing address %s\n", getFullAddress().c_str());
 		execute(arguments);
 	} else {
-		size_t nextSlash = address.find('/');
-		std::string childAddress = std::string(address.substr(0, nextSlash));
-
+		std::string_view childAddress;
 		std::string_view remainingAddress;
-		if(nextSlash != std::string::npos && nextSlash + 1 < address.size()) {
-			remainingAddress = address.substr(nextSlash + 1);
-		}
+		std::string childAddressStr;
 
-		if(childAddress != "*") {
-			auto it = children.find(childAddress);
+		splitAddress(address, &childAddress, &remainingAddress);
+
+		childAddressStr = std::string(childAddress);
+
+		if(childAddressStr == "*") {
+			// Wildcard
+			for(auto& child : children) {
+				// printf("Child address: %s remaining: %s\n", childAddressStr.c_str(),
+				// std::string(remainingAddress).c_str());
+				child.second->execute(remainingAddress, arguments);
+			}
+		} else if(childAddressStr == "**") {
+			// Double Wildcard: for each child, pass the remaining + the current address for recursive wildcard
+
+			// Skip duplicate **
+			while(remainingAddress.size() >= 3 && remainingAddress.substr(0, 3) == "**/")
+				splitAddress(remainingAddress, nullptr, &remainingAddress);
+
+			execute(remainingAddress, arguments);
+
+			for(auto& child : children) {
+				// printf("Child address: %s remaining: %s\n", childAddressStr.c_str(),
+				// std::string(remainingAddress).c_str());
+
+				child.second->execute(address, arguments);
+			}
+		} else {
+			auto it = children.find(childAddressStr);
 			if(it == children.end()) {
-				printf("Address %s not found from %s\n", childAddress.c_str(), getFullAddress().c_str());
+				// printf("Address %s not found from %s\n", childAddressStr.c_str(), getFullAddress().c_str());
 				return;
 			}
 
-			printf("Child address: %s remaining: %s\n", childAddress.c_str(), std::string(remainingAddress).c_str());
+			// printf("Child address: %s remaining: %s\n", childAddressStr.c_str(),
+			// std::string(remainingAddress).c_str());
 			it->second->execute(remainingAddress, arguments);
-		} else {
-			// Wildcard
-			for(auto& child : children) {
-				printf(
-				    "Child address: %s remaining: %s\n", childAddress.c_str(), std::string(remainingAddress).c_str());
-				child.second->execute(remainingAddress, arguments);
-			}
 		}
 	}
+}
+
+bool OscContainer::visit(const std::function<bool(OscNode*)>* nodeVisitorFunction) {
+	if(!OscNode::visit(nodeVisitorFunction))
+		return false;
+
+	for(auto& child : children) {
+		child.second->visit(nodeVisitorFunction);
+	}
+
+	return true;
 }
 
 std::string OscContainer::getAsString() {

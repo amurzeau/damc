@@ -57,6 +57,10 @@ add_executable(waveSendUDPJack
 	json.h
 	KeyBinding.h
 	KeyBinding.cpp
+	OscTcpClient.h
+	OscTcpClient.cpp
+	OscTcpServer.h
+	OscTcpServer.cpp
 	OscServer.h
 	OscServer.cpp
 	waveSendUDPJack.cpp

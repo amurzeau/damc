@@ -16,7 +16,16 @@
 #endif
 
 ControlInterface::ControlInterface(const char* argv0)
-    : nextInstanceIndex(0), numEq(6), oscRootNode(&oscServer, "strip"), keyBinding(&oscServer) {
+    : nextInstanceIndex(0),
+      numEq(6),
+      oscRoot(true),
+      oscUdpServer(&oscRoot),
+      oscTcpServer(&oscRoot),
+      oscRootNode(&oscRoot, "strip"),
+      keyBinding(&oscRoot, &oscRoot),
+      oscOutputNumber(&oscRootNode, "size"),
+      oscAddOutputInstance(&oscRootNode, "add"),
+      oscRemoveOutputInstance(&oscRootNode, "remove") {
 	char basePath[260];
 
 	size_t n = sizeof(basePath);
@@ -150,6 +159,9 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 
 	nextInstanceIndex++;
 
+	OscArgument arg = std::to_string(instance);
+	oscAddOutputInstance.sendMessage(&arg, 1);
+
 	switch(type) {
 		case OutputInstance::Loopback:
 			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new LoopbackOutputInstance));
@@ -190,17 +202,26 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 	}
 	outputInstance->init(this, &controlServer, type, numChannel, outputInstancesJson);
 
+	oscOutputNumber = oscOutputNumber + 1;
+
 	return outputs.emplace(std::make_pair(instance, std::move(outputInstance))).first;
 }
 
 void ControlInterface::removeOutputInstance(std::map<int, std::unique_ptr<OutputInstance>>::iterator index) {
 	index->second->stop();
+
+	OscArgument arg = std::to_string(index->first);
+	oscRemoveOutputInstance.sendMessage(&arg, 1);
+
 	outputs.erase(index);
+
+	oscOutputNumber = oscOutputNumber - 1;
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
 	controlServer.init(controlIp, controlPort, &messageProcessorStatic, &onNewClientStatic, this);
-	oscServer.init(controlIp, controlPort + 1);
+	oscUdpServer.init(controlIp, controlPort + 1);
+	oscTcpServer.init(controlIp, controlPort + 2);
 
 	return 0;
 }
@@ -216,7 +237,8 @@ void ControlInterface::stop() {
 		jack_client_close(monitoringJackClient);
 	}
 
-	oscServer.stop();
+	oscTcpServer.stop();
+	oscUdpServer.stop();
 	controlServer.stop();
 
 	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {

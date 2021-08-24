@@ -1,8 +1,11 @@
 #include "Balance.h"
 #include "ui_Balance.h"
 
-Balance::Balance(QWidget* parent, size_t index) : QWidget(parent), ui(new Ui::Balance), index(index) {
+Balance::Balance(QWidget* parent, OscContainer* oscParent, const std::string& name)
+    : QWidget(parent), OscWidgetMapper<QDoubleSpinBox>(oscParent, name), ui(new Ui::Balance) {
 	ui->setupUi(this);
+
+	size_t index = atoi(name.c_str());
 
 	const char* channelNames[] = {"Front Left",
 	                              "Front Right",
@@ -19,19 +22,9 @@ Balance::Balance(QWidget* parent, size_t index) : QWidget(parent), ui(new Ui::Ba
 		ui->balanceNameLabel->setText(QString("Channel #%1").arg(index + 1));
 	}
 
-	connect(ui->balanceValueSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onBalanceChanged()));
+	this->setWidget(ui->balanceValueSpinBox);
 }
 
 Balance::~Balance() {
 	delete ui;
-}
-
-void Balance::setBalance(float volume) {
-	ui->balanceValueSpinBox->blockSignals(true);
-	ui->balanceValueSpinBox->setValue(volume);
-	ui->balanceValueSpinBox->blockSignals(false);
-}
-
-void Balance::onBalanceChanged() {
-	emit balanceChanged(index, ui->balanceValueSpinBox->value());
 }

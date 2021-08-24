@@ -3,52 +3,54 @@ cmake_minimum_required(VERSION 3.1)
 set(TARGET_NAME waveSendUDPJackGui)
 
 set(FORMS
-	MainWindow.ui
-	OutputController.ui
-	EqualizerFilters.ui
-	Equalizer.ui
-	EqualizersController.ui
-	NewOutputInstanceDialog.ui
-	CompressorController.ui
-	BalanceController.ui
 	Balance.ui
+	BalanceController.ui
+	CompressorController.ui
+	Equalizer.ui
+	EqualizerFilters.ui
+	EqualizersController.ui
+	MainWindow.ui
+	NewOutputInstanceDialog.ui
+	OutputController.ui
 )
 
 set(HEADERS
-	MainWindow.h
+	Balance.h
+	BalanceController.h
 	BodePlot.h
+	BodePlotWidget.h
+	CompressorController.h
+	Equalizer.h
+	EqualizersController.h
+	FastLabelWidget.h
+	LevelMeterWidget.h
+	MainWindow.h
+	NewOutputInstanceDialog.h
+	OscWidgetArray.h
+	OscWidgetMapper.h
 	OutputController.h
 	WavePlayInterface.h
 	WavePlayOutputInterface.h
-	EqualizersController.h
-	Equalizer.h
-	NewOutputInstanceDialog.h
-	CompressorController.h
-	BalanceController.h
-	Balance.h
-	LevelMeterWidget.h
-	FastLabelWidget.h
-	BodePlotWidget.h
-	OscWidgetMapper.h
 )
 
 set(SOURCES
-	main.cpp
-	MainWindow.cpp
+	Balance.cpp
+	BalanceController.cpp
 	BodePlot.cpp
+	BodePlotWidget.cpp
+	CompressorController.cpp
+	Equalizer.cpp
+	EqualizersController.cpp
+	FastLabelWidget.cpp
+	LevelMeterWidget.cpp
+	MainWindow.cpp
+	NewOutputInstanceDialog.cpp
+	OscWidgetArray.cpp
+	OscWidgetMapper.cpp
 	OutputController.cpp
 	WavePlayInterface.cpp
 	WavePlayOutputInterface.cpp
-	EqualizersController.cpp
-	Equalizer.cpp
-	NewOutputInstanceDialog.cpp
-	CompressorController.cpp
-	BalanceController.cpp
-	Balance.cpp
-	LevelMeterWidget.cpp
-	FastLabelWidget.cpp
-	BodePlotWidget.cpp
-	OscWidgetMapper.cpp
+	main.cpp
 )
 
 find_package(Qt5 COMPONENTS Core Gui Widgets Network)
