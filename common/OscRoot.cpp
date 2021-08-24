@@ -89,12 +89,9 @@ void OscRoot::onOscPacketReceived(const uint8_t* data, size_t size) {
 
 		tosc_message_const osc;
 		while(tosc_getNextMessage(&bundle, &osc)) {
-			tosc_printMessage(&osc);
 			executeMessage(&osc);
 		}
 	} else {
-		tosc_printOscBuffer((const char*) data, size);
-
 		tosc_message_const osc;
 		int result = tosc_parseMessage(&osc, (const char*) data, size);
 		if(result == 0) {
@@ -166,6 +163,8 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 		arguments.push_back(std::move(argument));
 	}
 
+	if(strstr(address, "meter") == nullptr)
+		tosc_printMessage(osc);
 	execute(address + 1, std::move(arguments));
 }
 
