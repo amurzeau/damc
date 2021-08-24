@@ -44,6 +44,10 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 	balanceController = new BalanceController(this, &oscFilterChain);
 
+	connect(parent, &MainWindow::showDisabledChanged, this, &OutputController::updateHiddenState);
+	connect(ui->enableCheckBox, &QCheckBox::toggled, this, &OutputController::updateHiddenState);
+	oscEnable.setChangeCallback([this](float) { updateHiddenState(); });
+
 	connect(ui->eqButton, &QAbstractButton::clicked, this, &OutputController::onShowEq);
 	connect(ui->compressorButton, &QAbstractButton::clicked, this, &OutputController::onShowCompressor);
 	connect(ui->expanderButton, &QAbstractButton::clicked, this, &OutputController::onShowExpander);
@@ -125,26 +129,6 @@ void OutputController::onChangeDelay(double delay) {
 void OutputController::onChangeClockDrift() {
 	QJsonObject json;
 	json["clockDrift"] = ui->clockDriftSpinBox->value() / 1000000 + ui->sampleRateSpinBox->value();
-	interface.sendMessage(json);
-}
-
-void OutputController::onEnable(int state) {
-	qDebug("Enabling / Disabling");
-	QJsonObject json;
-	if(state == Qt::Unchecked) {
-		json["enabled"] = false;
-		ui->groupBox->setDisabled(true);
-		updateHiddenState();
-
-		for(LevelMeterWidget* level : levelWidgets) {
-			level->setValue(-INFINITY);
-		}
-		ui->levelLabel->setText("--");
-	} else {
-		json["enabled"] = true;
-		ui->groupBox->setDisabled(false);
-		updateHiddenState();
-	}
 	interface.sendMessage(json);
 }
 

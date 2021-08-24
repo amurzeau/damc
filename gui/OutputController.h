@@ -33,7 +33,6 @@ protected slots:
 	void onChangeVolume(int volume);
 	void onChangeDelay(double delay);
 	void onChangeClockDrift();
-	void onEnable(int state);
 	void onMute(bool muted);
 	void onChangeEq(int index, bool enabled, FilterType type, double f0, double q, double gain);
 	void onChangeCompressor(bool enabled,

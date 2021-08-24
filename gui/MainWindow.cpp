@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(&mainControlInterface, SIGNAL(onMessage(QJsonObject)), this, SLOT(onMessage(const QJsonObject&)));
 	connect(ui->addButton, SIGNAL(clicked(bool)), this, SLOT(onAddInstance()));
 	connect(ui->removeButton, SIGNAL(clicked(bool)), this, SLOT(onRemoveInstance()));
-	connect(ui->showDisabledCheckBox, SIGNAL(toggled(bool)), this, SLOT(onShowDisabled(bool)));
+	connect(ui->showDisabledCheckBox, &QCheckBox::toggled, this, &MainWindow::showDisabledChanged);
 }
 
 MainWindow::~MainWindow() {
@@ -83,13 +83,6 @@ void MainWindow::onRemoveInstance() {
 	}
 }
 
-void MainWindow::onShowDisabled(bool showDisabled) {
-	showDisabledOutputInstances = showDisabled;
-	for(auto& output : outputs) {
-		output.second->updateHiddenState();
-	}
-}
-
 void MainWindow::clearOutputs() {
 	for(auto& output : outputs) {
 		ui->horizontalLayout->removeWidget(output.second);
@@ -133,4 +126,8 @@ void MainWindow::moveOutputInstance(int sourceInstance, int targetInstance, bool
 		qDebug("Move instance %d from pos %d to %d (original pos)", sourceInstance, originalPosition, originalPosition);
 		ui->horizontalLayout->insertWidget(originalPosition, sourceWidget);
 	}
+}
+
+bool MainWindow::getShowDisabledOutputInstances() {
+	return ui->showDisabledCheckBox->isChecked();
 }
