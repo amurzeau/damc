@@ -383,11 +383,13 @@ public:
 		this->oscAddEndpoint.setCallback([this](auto&&) {
 			printf("Adding item to %s\n", this->getFullAddress().c_str());
 			this->push_back();
-			this->onAdd();
+			if(this->onAdd)
+				this->onAdd();
 		});
 		this->oscRemoveEndpoint.setCallback([this](auto&&) {
 			printf("Removing last item from %s\n", this->getFullAddress().c_str());
-			this->onRemove();
+			if(this->onRemove)
+				this->onRemove();
 			this->pop_back();
 		});
 	}
