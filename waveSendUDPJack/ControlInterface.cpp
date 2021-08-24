@@ -188,7 +188,7 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 		printf("Missing numChannel configuration, using 2\n");
 		numChannel = 2;
 	}
-	outputInstance->init(this, &controlServer, &oscServer, type, numChannel, outputInstancesJson);
+	outputInstance->init(this, &controlServer, type, numChannel, outputInstancesJson);
 
 	return outputs.emplace(std::make_pair(instance, std::move(outputInstance))).first;
 }

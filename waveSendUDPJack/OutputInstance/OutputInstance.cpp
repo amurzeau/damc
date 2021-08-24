@@ -42,7 +42,6 @@ OutputInstance::~OutputInstance() {
 
 int OutputInstance::init(ControlInterface* controlInterface,
                          ControlServer* controlServer,
-                         OscServer* oscServer,
                          int type,
                          size_t numChannel,
                          const nlohmann::json& json) {
@@ -50,7 +49,6 @@ int OutputInstance::init(ControlInterface* controlInterface,
 
 	this->controlInterface = controlInterface;
 	this->controlServer = controlServer;
-	this->oscServer = oscServer;
 	this->type = type;
 
 	if(numChannel > 32) {

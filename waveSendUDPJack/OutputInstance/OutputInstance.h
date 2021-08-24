@@ -2,10 +2,10 @@
 #define OUTPUTJACKINSTANCE_H
 
 #include "../Filter/FilteringChain.h"
-#include "OscAddress.h"
 #include "../OscServer.h"
 #include "../json.h"
 #include "IAudioEndpoint.h"
+#include "OscAddress.h"
 #include <stdint.h>
 #include <uv.h>
 // Need to be after else stdint might conflict
@@ -35,7 +35,6 @@ public:
 
 	int init(ControlInterface* controlInterface,
 	         ControlServer* controlServer,
-	         OscServer* oscServer,
 	         int type,
 	         size_t numChannel,
 	         const nlohmann::json& json);
@@ -62,7 +61,6 @@ protected:
 private:
 	ControlInterface* controlInterface;
 	ControlServer* controlServer;
-	OscServer* oscServer;
 	IAudioEndpoint* endpoint;
 	OscVariable<bool> enabled;
 	OscReadOnlyVariable<int32_t> outputInstance;
