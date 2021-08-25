@@ -98,7 +98,7 @@ void RemoteUdpInput::onPacketReceived(
 	const size_t sampleSize = sizeof(float) * 2;
 
 	if(nread <= 0) {
-		printf("Bad udp read %d\n", nread);
+		printf("Bad udp read %d\n", (int) nread);
 		return;
 	}
 

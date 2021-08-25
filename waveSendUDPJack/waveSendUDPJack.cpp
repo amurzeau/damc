@@ -13,7 +13,7 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 	ControlInterface* controlInterface = (ControlInterface*) stream->data;
 	delete[] static_cast<char*>(buf->base);
 
-	printf("Stopping, nread: %d\n", nread);
+	printf("Stopping, nread: %d\n", (int) nread);
 
 	controlInterface->stop();
 

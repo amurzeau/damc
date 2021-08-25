@@ -21,7 +21,7 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 	char* formatPtr = format + 1;
 
 	if(number > sizeof(format) - 2) {
-		printf("ERROR: Too many arguments: %d\n", number);
+		printf("ERROR: Too many arguments: %d\n", (int) number);
 		return;
 	}
 

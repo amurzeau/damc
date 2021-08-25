@@ -11,7 +11,7 @@
 int openJackPort(jack_client_t* client, jack_port_t** ports, size_t number, JackPortFlags type) {
 	char name[64];
 
-	printf("Registering %d %s ports\n", number, (type & JackPortIsInput) ? "input" : "output");
+	printf("Registering %d %s ports\n", (int) number, (type & JackPortIsInput) ? "input" : "output");
 
 	for(size_t i = 0; i < number; i++) {
 		if(type & JackPortIsInput)
@@ -152,17 +152,18 @@ void BinauralSpacializer::fillTransforms(struct MYSOFA_EASY* mysofaHandle,
 	auto it = speakerConfigurations.find(speakerPlacement);
 	if(it != speakerConfigurations.end()) {
 		speakerConfiguration = &it->second;
-		printf("Using speaker configuration %s with %d channels\n", it->first.c_str(), it->second.size());
+		printf("Using speaker configuration %s with %d channels\n", it->first.c_str(), (int) it->second.size());
 	}
 
 	if(speakerConfiguration == nullptr) {
 		printf("No speaker placement defined, available:\n");
-		for(const std::pair<std::string, std::vector<std::pair<float, float>>>& item : speakerConfigurations) {
+		for(const auto& item : speakerConfigurations) {
 			printf(" - %s: %d channels\n", item.first.c_str(), (int) item.second.size());
 		}
 		auto firstIt = speakerConfigurations.begin();
 		speakerConfiguration = &firstIt->second;
-		printf("Using speaker configuration %s with %d channels\n", firstIt->first.c_str(), firstIt->second.size());
+		printf(
+		    "Using speaker configuration %s with %d channels\n", firstIt->first.c_str(), (int) firstIt->second.size());
 	}
 
 	*numChannels = speakerConfiguration->size();

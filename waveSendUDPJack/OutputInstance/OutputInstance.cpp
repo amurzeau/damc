@@ -53,7 +53,7 @@ int OutputInstance::init(ControlInterface* controlInterface,
 	this->type = type;
 
 	if(numChannel > 32) {
-		printf("Too many channels %d, max supported %d\n", numChannel, 32);
+		printf("Too many channels %d, max supported %d\n", (int) numChannel, 32);
 		return -2;
 	}
 
@@ -116,7 +116,7 @@ int OutputInstance::start() {
 	for(int32_t i = 0; i < numChannel; i++) {
 		char name[64];
 
-		sprintf(name, "input_%zd", i + 1);
+		sprintf(name, "input_%d", (int) (i + 1));
 
 		inputPorts[i] =
 		    jack_port_register(client, name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput | additionnalPortFlags, 0);
@@ -127,7 +127,7 @@ int OutputInstance::start() {
 			return -4;
 		}
 
-		sprintf(name, "output_%zd", i + 1);
+		sprintf(name, "output_%d", (int) (i + 1));
 		outputPorts[i] =
 		    jack_port_register(client, name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput | additionnalPortFlags, 0);
 		if(outputPorts[i] == 0) {

@@ -9,13 +9,13 @@
 int openJackPort(jack_client_t* client, jack_port_t** ports, size_t number, JackPortFlags type) {
 	char name[64];
 
-	printf("Registering %d %s ports\n", number, (type & JackPortIsInput) ? "input" : "output");
+	printf("Registering %d %s ports\n", (int) number, (type & JackPortIsInput) ? "input" : "output");
 
 	for(size_t i = 0; i < number; i++) {
 		if(type & JackPortIsInput)
-			sprintf(name, "input_%zd", i + 1);
+			sprintf(name, "input_%d", (int) (i + 1));
 		else
-			sprintf(name, "output_%zd", i + 1);
+			sprintf(name, "output_%d", (int) (i + 1));
 
 		ports[i] = jack_port_register(client, name, JACK_DEFAULT_AUDIO_TYPE, type, 0);
 		if(ports[i] == 0) {

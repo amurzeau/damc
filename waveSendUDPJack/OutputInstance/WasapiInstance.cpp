@@ -60,7 +60,7 @@
 
 #define EXIT_ON_ERROR(hres) \
 	if(FAILED(hres)) { \
-		printf("Failed to execute COM function at line %d: 0x%lx\n", __LINE__, hres); \
+		printf("Failed to execute COM function at line %d: 0x%lx\n", __LINE__, (long unsigned int) hres); \
 		goto exit; \
 	}
 #define SAFE_RELEASE(punk) \
@@ -811,11 +811,11 @@ void WasapiInstance::onTimer() {
 		return;
 
 	if(overflowOccured) {
-		printf("%s: Overflow: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, overflowSize);
+		printf("%s: Overflow: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, (int) overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, underflowSize);
+		printf("%s: underrun: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, (int) underflowSize);
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {

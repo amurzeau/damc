@@ -55,13 +55,15 @@ int PulseData::open(const std::string& pulseFilename, jack_nframes_t bufferSize,
 
 	printf("Load pulse %s, %d samples at %d hz, resampled to %.3f hz with %d samples\n",
 	       pulseFilename.c_str(),
-	       pulseRaw.size(),
+	       (int) pulseRaw.size(),
 	       wavSampleRate,
 	       sampleRate,
 	       (int) pulseWave.size());
 
 	if(bufferSize + pulseWave.size() + 1 > history.size()) {
-		printf("Pulse or buffer size too large: %d > %d\n", bufferSize + pulseWave.size() + 1, (int) history.size());
+		printf("Pulse or buffer size too large: %d > %d\n",
+		       (int) (bufferSize + pulseWave.size() + 1),
+		       (int) history.size());
 		return -1;
 	}
 
@@ -124,7 +126,7 @@ void PulseData::doAGC(jack_default_audio_sample_t in,
                       jack_default_audio_sample_t& out3) {
 	static const int filteredHistorySize = sizeof(filteredHistory) / sizeof(filteredHistory[0]);
 	static std::vector<float> resampledBuffer;
-	static float previousMaxElt = 0;
+	// static float previousMaxElt = 0;
 
 	float maxElt;
 
@@ -195,7 +197,7 @@ void PulseData::doAGC(jack_default_audio_sample_t in,
 	out2 = threshold * 100;                           // threshold * 100;
 	out3 = resampledBuffer[0] * 100;
 
-	previousMaxElt = maxElt;
+	// previousMaxElt = maxElt;
 }
 
 void PulseData::doCrossCorrelation(jack_default_audio_sample_t* in,

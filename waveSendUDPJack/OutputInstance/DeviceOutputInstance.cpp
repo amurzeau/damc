@@ -256,11 +256,11 @@ void DeviceOutputInstance::onTimer() {
 	//	counter++;
 
 	if(overflowOccured) {
-		printf("%s: Overflow: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, overflowSize);
+		printf("%s: Overflow: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, (int) overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, underflowSize);
+		printf("%s: underrun: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, (int) underflowSize);
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {

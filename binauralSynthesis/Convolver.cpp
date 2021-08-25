@@ -13,8 +13,9 @@ int Convolver::setConvolver(float* samples, size_t bufferSize) {
 	std::fill_n(history.begin(), history.size(), 0);
 
 	if(bufferSize + convolverSignal.size() + 1 > history.size()) {
-		printf(
-		    "Pulse or buffer size too large: %d > %d\n", bufferSize + convolverSignal.size() + 1, (int) history.size());
+		printf("Pulse or buffer size too large: %d > %d\n",
+		       (int) (bufferSize + convolverSignal.size() + 1),
+		       (int) history.size());
 		return -1;
 	}
 

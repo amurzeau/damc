@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
 	}*/
 
 	do_filter_fir(data);
-	uint64_t step2 = getCurrentTimestamp();
+	// uint64_t step2 = getCurrentTimestamp();
 	// do_filter_iir(data2);
 	// uint64_t step3 = getCurrentTimestamp();
 

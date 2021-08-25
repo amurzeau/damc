@@ -231,11 +231,11 @@ int DeviceInputInstance::postProcessSamples(float** samples, size_t numChannel, 
 
 void DeviceInputInstance::onTimer() {
 	if(overflowOccured) {
-		printf("%s: Overflow: %d, %d\n", inputDevice.c_str(), bufferLatencyNr, overflowSize);
+		printf("%s: Overflow: %d, %d\n", inputDevice.c_str(), bufferLatencyNr, (int) overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun: %d, %d\n", inputDevice.c_str(), bufferLatencyNr, underflowSize);
+		printf("%s: underrun: %d, %d\n", inputDevice.c_str(), bufferLatencyNr, (int) underflowSize);
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
