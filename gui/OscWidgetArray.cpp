@@ -1,4 +1,5 @@
 #include "OscWidgetArray.h"
+#include "Utils.h"
 #include <QWidget>
 #include <algorithm>
 #include <set>
@@ -41,7 +42,10 @@ void OscWidgetArray::removeWidget(const std::string& key) {
 	childWidgets.erase(it);
 }
 
-void OscWidgetArray::swapWidgets(const std::string& sourceKey, const std::string& targetKey, bool insertBefore) {
+void OscWidgetArray::swapWidgets(const std::string& sourceKey,
+                                 const std::string& targetKey,
+                                 bool insertBefore,
+                                 bool notifyOsc) {
 	auto itSource = childWidgets.find(sourceKey);
 	auto itTarget = childWidgets.find(targetKey);
 
@@ -62,11 +66,13 @@ void OscWidgetArray::swapWidgets(const std::string& sourceKey, const std::string
 		layout->insertWidget(insertPosition, itSource->second);
 		keysOrder.insert(keysOrder.begin() + insertPosition, itSource->first);
 
-		std::vector<OscArgument> keys;
-		for(const auto& key : keysOrder) {
-			keys.push_back(key);
+		if(notifyOsc) {
+			std::vector<OscArgument> keys;
+			for(const auto& key : keysOrder) {
+				keys.push_back(key);
+			}
+			keysEndpoint.sendMessage(&keys[0], keys.size());
 		}
-		keysEndpoint.sendMessage(&keys[0], keys.size());
 	} else {
 		layout->insertWidget(originalPosition, itSource->second);
 		keysOrder.insert(keysOrder.begin() + originalPosition, itSource->first);
@@ -84,8 +90,8 @@ bool OscWidgetArray::isIndexAddress(std::string_view s) {
 
 void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
 	if(address == "keys") {
-		std::set<std::string> keys;
-		std::vector<std::string> keyToRemove;
+		std::vector<std::string> newKeys;
+		std::set<std::string> keysToKeep;
 
 		printf("%s: recv keys: ", getFullAddress().c_str());
 		for(const auto& arg : arguments) {
@@ -96,17 +102,50 @@ void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgu
 
 			printf("%s ", key.c_str());
 
-			keys.insert(key);
-			addWidget(key);
+			newKeys.push_back(key);
 		}
 		printf("\n");
 
-		printf("%s: own keys: ", getFullAddress().c_str());
-		for(const auto& childWidget : childWidgets) {
-			if(keys.count(childWidget.first) == 0) {
-				keyToRemove.push_back(childWidget.first);
+		for(size_t i = 0; i < newKeys.size(); i++) {
+			const auto& key = newKeys[i];
+
+			keysToKeep.insert(key);
+
+			size_t existingPosition = std::find(keysOrder.begin(), keysOrder.end(), key) - keysOrder.begin();
+			if(existingPosition >= keysOrder.size()) {
+				// The item wasn't existing, add it and move it
+				addWidget(key);
+				if(existingPosition >= keysOrder.size()) {
+					// keysOrder size should have increased by 1
+					printf("New item couldn't be added\n");
+					continue;
+				}
+
+				// addWidget insert at last position
+				existingPosition = keysOrder.size() - 1;
+			}
+			if(existingPosition != i) {
+				// Need to move it
+				if(i < keysOrder.size())
+					swapWidgets(key, keysOrder[i], true, false);
+				else if(i == keysOrder.size())
+					swapWidgets(key, keysOrder[keysOrder.size() - 1], false, false);
+				else {
+					printf("Unhandled index\n");
+					abort();
+				}
 			} else {
-				printf("%s ", childWidget.first.c_str());
+				// Position is the same, nothing to do
+			}
+		}
+
+		std::vector<std::string> keyToRemove;
+		printf("%s: own keys: ", getFullAddress().c_str());
+		for(const auto& key : keysOrder) {
+			if(keysToKeep.count(key) == 0) {
+				keyToRemove.push_back(key);
+			} else {
+				printf("%s ", key.c_str());
 			}
 		}
 		printf("\n");
@@ -114,6 +153,8 @@ void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgu
 		for(const auto& key : keyToRemove) {
 			removeWidget(key);
 		}
+	} else if(address == "add" || address == "remove") {
+		// nothing to do, already handled by keys updates
 	} else {
 		std::string_view childAddress;
 

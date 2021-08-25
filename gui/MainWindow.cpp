@@ -93,7 +93,7 @@ void MainWindow::clearOutputs() {
 void MainWindow::moveOutputInstance(const std::string& sourceInstance,
                                     const std::string& targetInstance,
                                     bool insertBefore) {
-	outputInterfaces.swapWidgets(sourceInstance, targetInstance, insertBefore);
+	outputInterfaces.swapWidgets(sourceInstance, targetInstance, insertBefore, true);
 }
 
 bool MainWindow::getShowDisabledOutputInstances() {

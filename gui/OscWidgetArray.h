@@ -24,7 +24,7 @@ public:
 
 	void addWidget(const std::string& key);
 	void removeWidget(const std::string& key);
-	void swapWidgets(const std::string& sourceKey, const std::string& targetKey, bool insertBefore);
+	void swapWidgets(const std::string& sourceKey, const std::string& targetKey, bool insertBefore, bool notifyOsc);
 
 protected:
 	bool isIndexAddress(std::string_view s);
