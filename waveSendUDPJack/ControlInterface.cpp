@@ -93,12 +93,8 @@ void ControlInterface::loadConfig() {
 	try {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 
-		auto outputsOrder = jsonConfig.value("outputsOrder", std::vector<int>{});
-		oscOutputInstanceKeys.getData().clear();
-		for(int index : outputsOrder) {
-			oscOutputInstanceKeys.getData().push_back(std::to_string(index));
-		}
-		oscOutputInstanceKeys.notifyOsc();
+		auto outputsOrder = jsonConfig.value("outputsOrder", std::vector<std::string>{});
+		oscOutputInstanceKeys.setData(outputsOrder);
 
 		outputPortConnections = jsonConfig.value("portConnections", std::map<std::string, std::set<std::string>>{});
 
@@ -171,8 +167,9 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 	OscArgument arg = std::to_string(instance);
 	oscAddOutputInstance.sendMessage(&arg, 1);
 
-	oscOutputInstanceKeys.getData().push_back(std::to_string(instance));
-	oscOutputInstanceKeys.notifyOsc();
+	auto outputOrder = oscOutputInstanceKeys.clearToModify();
+	outputOrder.push_back(std::to_string(instance));
+	oscOutputInstanceKeys.setData(std::move(outputOrder));
 
 	switch(type) {
 		case OutputInstance::Loopback:
@@ -225,8 +222,10 @@ void ControlInterface::removeOutputInstance(std::map<int, std::unique_ptr<Output
 	oscRemoveOutputInstance.sendMessage(&arg, 1);
 
 	outputs.erase(index);
-	oscOutputInstanceKeys.erase(key);
-	oscOutputInstanceKeys.notifyOsc();
+
+	auto outputOrder = oscOutputInstanceKeys.clearToModify();
+	oscOutputInstanceKeys.erase(outputOrder, key);
+	oscOutputInstanceKeys.setData(std::move(outputOrder));
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
@@ -366,12 +365,8 @@ void ControlInterface::messageProcessor(const void* data, size_t size) {
 				std::string jsonStr = json.dump();
 				controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
 			} else if(operation == "outputsOrder") {
-				auto outputsOrder = json.value("outputsOrder", std::vector<int>{});
-				oscOutputInstanceKeys.getData().clear();
-				for(int index : outputsOrder) {
-					oscOutputInstanceKeys.getData().push_back(std::to_string(index));
-				}
-				oscOutputInstanceKeys.notifyOsc();
+				auto outputsOrder = json.value("outputsOrder", std::vector<std::string>{});
+				oscOutputInstanceKeys.setData(outputsOrder);
 				saveConfig();
 			}
 		} else if(outputs.count(outputInstance) > 0) {

@@ -206,6 +206,8 @@ public:
 	}
 
 protected:
+	template<class U> friend class OscGenericArray;
+
 	void notifyOsc() {
 		OscArgument valueToSend = getToOsc();
 		sendMessage(&valueToSend, 1);
@@ -303,26 +305,33 @@ public:
 	OscFlatArray(OscContainer* parent, std::string name, bool fixedSize = false) noexcept
 	    : OscContainer(parent, name) {}
 
-	std::vector<T>& getData() { return values; }
+	template<class U> void updateData(const U& lambda) {
+		lambda(values);
+		notifyOsc();
+	}
 	const std::vector<T>& getData() const { return values; }
+	void setData(const std::vector<T>& newData) {
+		values = newData;
+		notifyOsc();
+	}
+	void setData(std::vector<T>&& newData) {
+		values = std::move(newData);
+		notifyOsc();
+	}
+	std::vector<T> clearToModify() {
+		std::vector<T> ret = std::move(values);
+		values.clear();
+		return ret;
+	}
 
-	void erase(T value) {
-		for(auto it = values.begin(); it != values.end();) {
+	static void erase(std::vector<T>& v, T value) {
+		for(auto it = v.begin(); it != v.end();) {
 			if(*it == value) {
-				it = values.erase(it);
+				it = v.erase(it);
 			} else {
 				++it;
 			}
 		}
-	}
-
-	void notifyOsc() {
-		std::vector<OscArgument> valueToSend;
-		valueToSend.reserve(values.size());
-		for(auto& v : values) {
-			valueToSend.push_back(v);
-		}
-		sendMessage(&valueToSend[0], valueToSend.size());
 	}
 
 	void dump() override { notifyOsc(); }
@@ -345,6 +354,7 @@ public:
 	}
 
 	void execute(const std::vector<OscArgument>& arguments) override {
+		auto oldData = std::move(values);
 		values.clear();
 		for(const auto& arg : arguments) {
 			T v;
@@ -354,10 +364,26 @@ public:
 				printf("Bad argument type: %d\n", arg.index());
 			}
 		}
+		onChange(oldData, values);
+	}
+
+	void setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange) {
+		this->onChange = onChange;
+	}
+
+protected:
+	void notifyOsc() {
+		std::vector<OscArgument> valueToSend;
+		valueToSend.reserve(values.size());
+		for(auto& v : values) {
+			valueToSend.push_back(v);
+		}
+		sendMessage(&valueToSend[0], valueToSend.size());
 	}
 
 private:
 	std::vector<T> values;
+	std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange;
 };
 
 template<typename T> class OscGenericArray : protected OscContainer {
@@ -367,10 +393,35 @@ public:
 	      oscAddEndpoint(this, "add"),
 	      oscRemoveEndpoint(this, "remove"),
 	      keys(this, "keys"),
-	      nextKey(0) {}
+	      nextKey(0) {
+		keys.setChangeCallback([this](const std::vector<std::string>&, const std::vector<std::string>& newValue) {
+			for(const auto& oldKey : getChildren()) {
+				if(!containsKey(newValue, oldKey.first)) {
+					erase(oldKey.first);
+				}
+			}
+			for(const auto& newKey : newValue) {
+				if(getChildren().count(newKey) == 0) {
+					T* newValue = new T(this, newKey);
+
+					initializeItem(newValue);
+					value.emplace_back(newValue);
+				}
+			}
+		});
+	}
 
 	T& operator[](size_t index) { return *value[index]; }
 	const T& operator[](size_t index) const { return *value[index]; }
+
+	static bool containsKey(const std::vector<std::string>& keys, const std::string& key) {
+		for(const auto& existingKey : keys) {
+			if(existingKey == key) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	template<typename... Args> void push_back(Args... args) {
 		std::string newKey = std::to_string(nextKey);
@@ -379,8 +430,7 @@ public:
 		OscArgument argument = newKey;
 		oscAddEndpoint.sendMessage(&argument, 1);
 
-		keys.getData().push_back(newKey);
-		keys.notifyOsc();
+		keys.updateData([&newKey](std::vector<std::string>& keys) { keys.push_back(newKey); });
 
 		T* newValue = new T(this, newKey, args...);
 
@@ -394,8 +444,8 @@ public:
 		oscRemoveEndpoint.sendMessage(&argument, 1);
 
 		value.pop_back();
-		keys.erase(removedKey);
-		keys.notifyOsc();
+
+		keys.updateData([this, &removedKey](std::vector<std::string>& data) { keys.erase(data, removedKey); });
 	}
 
 	size_t erase(std::string key) {
@@ -408,16 +458,18 @@ public:
 		OscArgument argument = key;
 		oscRemoveEndpoint.sendMessage(&argument, 1);
 
-		for(auto itVector = value.being(); itVector != value.end();) {
-			if(itVector->get() == it->second) {
+		for(auto itVector = value.begin(); itVector != value.end();) {
+			OscNode* node = it->second;
+			OscNode* checkedNode = itVector->get();
+			if(checkedNode == node) {
 				value.erase(itVector);
 				break;
 			} else {
 				++itVector;
 			}
 		}
-		keys.erase(key);
-		keys.notifyOsc();
+
+		keys.updateData([this, &key](std::vector<std::string>& data) { keys.erase(data, key); });
 	}
 
 	template<typename... Args> void resize(size_t newSize, Args... args) {

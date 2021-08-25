@@ -63,6 +63,8 @@ add_executable(waveSendUDPJack
 	OscTcpServer.cpp
 	OscServer.h
 	OscServer.cpp
+	OscStatePersist.h
+	OscStatePersist.cpp
 	waveSendUDPJack.cpp
 )
 target_link_libraries(waveSendUDPJack PUBLIC uv::uv PortAudio JACK::jack common)

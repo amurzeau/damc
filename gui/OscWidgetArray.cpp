@@ -83,27 +83,7 @@ bool OscWidgetArray::isIndexAddress(std::string_view s) {
 }
 
 void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
-	if(address == "add") {
-		if(arguments.size() != 1)
-			return;
-
-		std::string newKey;
-
-		if(!getArgumentAs<std::string>(arguments[0], newKey))
-			return;
-
-		addWidget(newKey);
-	} else if(address == "remove") {
-		if(arguments.size() != 1)
-			return;
-
-		std::string removedKey;
-
-		if(!getArgumentAs<std::string>(arguments[0], removedKey))
-			return;
-
-		removeWidget(removedKey);
-	} else if(address == "keys") {
+	if(address == "keys") {
 		std::set<std::string> keys;
 		std::vector<std::string> keyToRemove;
 
