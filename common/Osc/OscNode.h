@@ -47,23 +47,7 @@ public:
 	OscNode& operator=(OscNode const&) = delete;
 	virtual ~OscNode();
 
-	template<typename T> static bool getArgumentAs(const OscArgument& argument, T& v) {
-		bool ret = false;
-		std::visit(
-		    [&v, &ret](auto&& arg) -> void {
-			    using U = std::decay_t<decltype(arg)>;
-			    if constexpr(std::is_same_v<U, T>) {
-				    v = arg;
-				    ret = true;
-			    } else if constexpr(!std::is_same_v<U, std::string> && !std::is_same_v<T, std::string>) {
-				    v = (T) arg;
-				    ret = true;
-			    }
-		    },
-		    argument);
-
-		return ret;
-	}
+	template<typename T> static bool getArgumentAs(const OscArgument& argument, T& v);
 
 	void setOscParent(OscContainer* parent);
 	const std::string& getFullAddress() const { return fullAddress; }
@@ -94,3 +78,21 @@ private:
 	std::string fullAddress;
 	OscContainer* parent;
 };
+
+template<typename T> bool OscNode::getArgumentAs(const OscArgument& argument, T& v) {
+	bool ret = false;
+	std::visit(
+	    [&v, &ret](auto&& arg) -> void {
+		    using U = std::decay_t<decltype(arg)>;
+		    if constexpr(std::is_same_v<U, T>) {
+			    v = arg;
+			    ret = true;
+		    } else if constexpr(!std::is_same_v<U, std::string> && !std::is_same_v<T, std::string>) {
+			    v = (T) arg;
+			    ret = true;
+		    }
+	    },
+	    argument);
+
+	return ret;
+}
