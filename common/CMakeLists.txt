@@ -9,6 +9,16 @@ add_library(common STATIC
 	OscRoot.h
 	tinyosc.c
 	tinyosc.h
+
+	Osc/OscArray.h
+	Osc/OscContainer.h
+	Osc/OscContainerArray.h
+	Osc/OscEndpoint.h
+	Osc/OscFlatArray.h
+	Osc/OscGenericArray.h
+	Osc/OscNode.h
+	Osc/OscReadOnlyVariable.h
+	Osc/OscVariable.h
 )
 
 target_include_directories(common PUBLIC ${CMAKE_CURRENT_LIST_DIR})

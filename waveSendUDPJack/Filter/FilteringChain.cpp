@@ -2,6 +2,14 @@
 #include <math.h>
 #include <string.h>
 
+float LogScaleFromOsc(float value) {
+	return powf(10, value / 20.0f);
+}
+
+float LogScaleToOsc(float value) {
+	return 20.0 * log10(value);
+}
+
 FilterChain::FilterChain(OscContainer* parent)
     : OscContainer(parent, "filterChain"),
       reverbFilters(this, "reverbFilter"),
@@ -17,8 +25,8 @@ FilterChain::FilterChain(OscContainer* parent)
 			filter.setParameters(newValue);
 		}
 	});
-	volume.setOscConverters(&ConverterLogScale::toOsc, &ConverterLogScale::fromOsc);
-	masterVolume.setOscConverters(&ConverterLogScale::toOsc, &ConverterLogScale::fromOsc);
+	volume.setOscConverters(&LogScaleToOsc, &LogScaleFromOsc);
+	masterVolume.setOscConverters(&LogScaleToOsc, &LogScaleFromOsc);
 }
 
 void FilterChain::init(size_t numChannel) {

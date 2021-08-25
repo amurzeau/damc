@@ -2,14 +2,6 @@
 #include "OscRoot.h"
 #include <math.h>
 
-float ConverterLogScale::fromOsc(float value) {
-	return powf(10, value / 20.0f);
-}
-
-float ConverterLogScale::toOsc(float value) {
-	return 20.0 * log10(value);
-}
-
 void OscEndpoint::setCallback(std::function<void(const std::vector<OscArgument>&)> onExecute) {
 	this->onExecute = std::move(onExecute);
 }
