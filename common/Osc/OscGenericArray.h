@@ -2,6 +2,7 @@
 
 #include "OscContainer.h"
 #include "OscFlatArray.h"
+#include "Utils.h"
 
 template<typename T> class OscGenericArray : protected OscContainer {
 public:
@@ -97,7 +98,7 @@ template<typename T> void OscGenericArray<T>::pop_back() {
 
 	value.pop_back();
 
-	keys.updateData([this, &removedKey](std::vector<std::string>& data) { keys.erase(data, removedKey); });
+	keys.updateData([&removedKey](std::vector<std::string>& data) { vector_erase(data, removedKey); });
 }
 
 template<typename T> void OscGenericArray<T>::erase(std::string key) {
@@ -121,7 +122,7 @@ template<typename T> void OscGenericArray<T>::erase(std::string key) {
 		}
 	}
 
-	keys.updateData([this, &key](std::vector<std::string>& data) { keys.erase(data, key); });
+	keys.updateData([&key](std::vector<std::string>& data) { vector_erase(data, key); });
 }
 
 template<typename T> template<typename... Args> void OscGenericArray<T>::resize(size_t newSize, Args... args) {
