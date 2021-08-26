@@ -32,9 +32,9 @@ private:
 template<class T> template<class U> bool OscFlatArray<T>::updateData(const U& lambda) {
 	std::vector<T> savedValues = values;
 	lambda(values);
-	for(const auto& key : values) {
+	for(auto key : values) {
 		if(std::count(values.begin(), values.end(), key) != 1) {
-			printf("Duplicate data inserted: %s\n", key.c_str());
+			printf("Duplicate data inserted: %d\n", (int) key);
 			abort();
 		}
 	}
@@ -54,7 +54,7 @@ template<typename T> bool OscFlatArray<T>::setData(const std::vector<T>& newData
 }
 
 template<typename T> bool OscFlatArray<T>::setData(std::vector<T>&& newData) {
-	return updateData([newData = std::move(newData)](std::vector<std::string>& data) { data = std::move(newData); });
+	return updateData([newData = std::move(newData)](std::vector<T>& data) { data = std::move(newData); });
 }
 
 template<typename T> std::string OscFlatArray<T>::getAsString() const {
@@ -77,7 +77,7 @@ template<typename T> std::string OscFlatArray<T>::getAsString() const {
 template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument>& arguments) {
 	auto oldData = values;
 
-	bool dataChanged = updateData([this, &arguments](std::vector<std::string>& data) {
+	bool dataChanged = updateData([this, &arguments](std::vector<T>& data) {
 		data.clear();
 		for(const auto& arg : arguments) {
 			T v;

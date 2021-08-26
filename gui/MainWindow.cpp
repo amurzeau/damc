@@ -13,8 +13,8 @@ MainWindow::MainWindow(QWidget* parent)
 	ui->setupUi(this);
 
 	outputInterfaces.setWidget(
-	    this, ui->horizontalLayout, [this](QWidget*, OscContainer* oscParent, const std::string& name) -> QWidget* {
-		    return new OutputController(this, oscParent, name);
+	    this, ui->horizontalLayout, [this](QWidget*, OscContainer* oscParent, int name) -> QWidget* {
+		    return new OutputController(this, oscParent, std::to_string(name));
 	    });
 
 	mainControlInterface.setInterface(-1, &wavePlayInterface);
@@ -90,9 +90,7 @@ void MainWindow::clearOutputs() {
 	outputs.clear();
 }
 
-void MainWindow::moveOutputInstance(const std::string& sourceInstance,
-                                    const std::string& targetInstance,
-                                    bool insertBefore) {
+void MainWindow::moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore) {
 	outputInterfaces.swapWidgets(sourceInstance, targetInstance, insertBefore, true);
 }
 

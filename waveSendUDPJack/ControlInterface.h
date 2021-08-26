@@ -63,7 +63,7 @@ private:
 	std::string saveFileName;
 	jack_client_t* monitoringJackClient;
 
-	OscFlatArray<std::string> oscOutputInstanceKeys;
+	OscFlatArray<int> oscOutputInstanceKeys;
 	OscEndpoint oscAddOutputInstance;
 	OscEndpoint oscRemoveOutputInstance;
 

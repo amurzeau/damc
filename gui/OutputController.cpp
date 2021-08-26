@@ -254,10 +254,10 @@ void OutputController::dragMoveEvent(QDragMoveEvent* event) {
 
 			QByteArray itemData = event->mimeData()->data(DRAG_FORMAT);
 			QDataStream dataStream(&itemData, QIODevice::ReadOnly);
-			QString sourceInstance;
+			int sourceInstance;
 			dataStream >> sourceInstance;
 
-			mainWindow->moveOutputInstance(sourceInstance.toStdString(), getName(), event->pos().x() < width() / 2);
+			mainWindow->moveOutputInstance(sourceInstance, atoi(getName().c_str()), event->pos().x() < width() / 2);
 		}
 	} else {
 		event->ignore();
@@ -285,7 +285,7 @@ void OutputController::dropEvent(QDropEvent* event) {
 void OutputController::mousePressEvent(QMouseEvent* event) {
 	QByteArray itemData;
 	QDataStream dataStream(&itemData, QIODevice::WriteOnly);
-	dataStream << QString::fromStdString(getName());
+	dataStream << atoi(getName().c_str());
 
 	QMimeData* mimeData = new QMimeData;
 	mimeData->setData(DRAG_FORMAT, itemData);

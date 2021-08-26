@@ -7,12 +7,11 @@
 EqualizersController::EqualizersController(OutputController* parent, OscContainer* oscParent)
     : QDialog(parent), ui(new Ui::EqualizersController), oscEqualizers(oscParent, "eqFilters") {
 	ui->setupUi(this);
-	oscEqualizers.setWidget(
-	    this,
-	    ui->eqHorizontalLayout,
-	    [this, parent](QWidget* widgetParent, OscContainer* oscParent, const std::string& name) -> QWidget* {
-		    return new Equalizer(this, oscParent, name, parent, ui->bodePlot);
-	    });
+	oscEqualizers.setWidget(this,
+	                        ui->eqHorizontalLayout,
+	                        [this, parent](QWidget* widgetParent, OscContainer* oscParent, int name) -> QWidget* {
+		                        return new Equalizer(this, oscParent, std::to_string(name), parent, ui->bodePlot);
+	                        });
 }
 
 EqualizersController::~EqualizersController() {

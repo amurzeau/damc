@@ -6,10 +6,9 @@
 BalanceController::BalanceController(QWidget* parent, OscContainer* oscParent)
     : QDialog(parent), ui(new Ui::BalanceController), oscBalances(oscParent, "balance") {
 	ui->setupUi(this);
-	oscBalances.setWidget(
-	    this, ui->verticalLayout, [](QWidget* parent, OscContainer* oscParent, const std::string& name) -> QWidget* {
-		    return new Balance(parent, oscParent, name);
-	    });
+	oscBalances.setWidget(this, ui->verticalLayout, [](QWidget* parent, OscContainer* oscParent, int name) -> QWidget* {
+		return new Balance(parent, oscParent, std::to_string(name));
+	});
 }
 
 BalanceController::~BalanceController() {

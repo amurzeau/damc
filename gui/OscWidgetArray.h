@@ -11,7 +11,7 @@ class QWidget;
 
 class OscWidgetArray : public QObject, public OscContainer {
 public:
-	using OscWidgetFactoryFunction = std::function<QWidget*(QWidget*, OscContainer*, const std::string&)>;
+	using OscWidgetFactoryFunction = std::function<QWidget*(QWidget*, OscContainer*, int)>;
 
 public:
 	OscWidgetArray(OscContainer* parent, std::string name) noexcept;
@@ -23,15 +23,15 @@ public:
 
 	std::string getAsString() const override { return std::string{}; }
 
-	void addWidget(const std::string& key);
-	void removeWidget(const std::string& key);
-	void swapWidgets(const std::string& sourceKey, const std::string& targetKey, bool insertBefore, bool notifyOsc);
+	void addWidget(int key);
+	void removeWidget(int key);
+	void swapWidgets(int sourceKey, int targetKey, bool insertBefore, bool notifyOsc);
 
 private:
 	QWidget* parentWidget;
 	QBoxLayout* layout;
-	std::unordered_map<std::string, QWidget*> childWidgets;
-	std::vector<std::string> keysOrder;
+	std::unordered_map<int, QWidget*> childWidgets;
+	std::vector<int> keysOrder;
 	OscWidgetFactoryFunction widgetFactoryFunction;
 	OscEndpoint keysEndpoint;
 };

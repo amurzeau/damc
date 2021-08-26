@@ -19,7 +19,7 @@ void ReverbFilter::reset(int depth, unsigned int innerReverberatorCount) {
 	if(depth > 0) {
 		reverberators.resize(innerReverberatorCount);
 		for(auto& filter : reverberators)
-			filter->reset(depth - 1, innerReverberatorCount);
+			filter.second->reset(depth - 1, innerReverberatorCount);
 	}
 }
 
@@ -35,7 +35,7 @@ float ReverbFilter::processOneSample(float input) {
 	float delayedSample = delayFilter.processOneSample(input + previousDelayOutput * gain);
 
 	for(auto& reverberator : reverberators)
-		delayedSample = reverberator->processOneSample(delayedSample);
+		delayedSample = reverberator.second->processOneSample(delayedSample);
 
 	previousDelayOutput = delayedSample;
 
@@ -60,10 +60,9 @@ void ReverbFilter::setParameters(const nlohmann::json& json) {
 
 nlohmann::json ReverbFilter::getParameters() {
 	std::vector<nlohmann::json> reverberatorsJson;
-	std::transform(reverberators.begin(),
-	               reverberators.end(),
-	               std::back_inserter(reverberatorsJson),
-	               [](std::unique_ptr<ReverbFilter>& filter) { return filter->getParameters(); });
+	std::transform(reverberators.begin(), reverberators.end(), std::back_inserter(reverberatorsJson), [](auto& filter) {
+		return filter.second->getParameters();
+	});
 
 	nlohmann::json ret = nlohmann::json::object({{"enabled", enabled.get()},
 	                                             {"delay", delay.get()},

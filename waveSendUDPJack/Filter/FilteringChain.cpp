@@ -37,7 +37,7 @@ void FilterChain::init(size_t numChannel) {
 	eqFilters.resize(6);
 
 	for(auto& filter : eqFilters) {
-		filter->init(numChannel);
+		filter.second->init(numChannel);
 	}
 
 	compressorFilter.init(numChannel);
@@ -49,11 +49,11 @@ void FilterChain::reset(double fs) {
 		delayFilter.reset();
 	}
 	for(auto& reverbFilter : reverbFilters) {
-		reverbFilter->reset();
+		reverbFilter.second->reset();
 	}
 
 	for(auto& filter : eqFilters) {
-		filter->reset(fs);
+		filter.second->reset(fs);
 	}
 
 	compressorFilter.reset(fs);
@@ -69,7 +69,7 @@ void FilterChain::processSamples(
 	}
 
 	for(auto& filter : eqFilters) {
-		filter->processSamples(output, const_cast<const float**>(output), count);
+		filter.second->processSamples(output, const_cast<const float**>(output), count);
 	}
 
 	expanderFilter.processSamples(output, const_cast<const float**>(output), count);
@@ -145,7 +145,7 @@ void FilterChain::setParameters(const nlohmann::json& json) {
 			if(index >= 0) {
 				while(index >= (int) this->eqFilters.size()) {
 					this->eqFilters.push_back();
-					this->eqFilters.back().init(this->volume.size());
+					this->eqFilters.back()->init(this->volume.size());
 				}
 				this->eqFilters[index].setParameters(eqFilterJson);
 			}
@@ -199,7 +199,7 @@ nlohmann::json FilterChain::getParameters() {
 
 	json["reverbFilter"] = nlohmann::json::array();
 	for(auto& filter : reverbFilters) {
-		json["reverbFilter"].push_back(filter->getParameters());
+		json["reverbFilter"].push_back(filter.second->getParameters());
 	}
 
 	return json;

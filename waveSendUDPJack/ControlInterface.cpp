@@ -96,10 +96,10 @@ void ControlInterface::loadConfig() {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 
 		auto outputsOrder = jsonConfig.value("outputsOrder", std::vector<int>{});
-		oscOutputInstanceKeys.updateData([&outputsOrder](std::vector<std::string>& data) {
+		oscOutputInstanceKeys.updateData([&outputsOrder](std::vector<int>& data) {
 			data.clear();
 			for(const auto& item : outputsOrder) {
-				data.push_back(std::to_string(item));
+				data.push_back(item);
 			}
 		});
 
@@ -137,7 +137,7 @@ void ControlInterface::saveConfig() {
 
 		auto& outputsOrder = jsonConfigToSave["outputsOrder"] = nlohmann::json::array();
 		for(const auto& key : oscOutputInstanceKeys.getData()) {
-			outputsOrder.push_back(atoi(key.c_str()));
+			outputsOrder.push_back(key);
 		}
 		jsonConfigToSave["outputInstances"] = outputInstancesJson;
 		jsonConfigToSave["portConnections"] = outputPortConnections;
@@ -177,8 +177,8 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 	OscArgument arg = std::to_string(instance);
 	oscAddOutputInstance.sendMessage(&arg, 1);
 
-	oscOutputInstanceKeys.updateData([instance](std::vector<std::string>& data) {
-		std::string key = std::to_string(instance);
+	oscOutputInstanceKeys.updateData([instance](std::vector<int>& data) {
+		int key = instance;
 		if(std::find(data.begin(), data.end(), key) == data.end())
 			data.push_back(key);
 	});
@@ -229,13 +229,13 @@ std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOu
 void ControlInterface::removeOutputInstance(std::map<int, std::unique_ptr<OutputInstance>>::iterator index) {
 	index->second->stop();
 
-	std::string key = std::to_string(index->first);
+	int key = index->first;
 	OscArgument arg = key;
 	oscRemoveOutputInstance.sendMessage(&arg, 1);
 
 	outputs.erase(index);
 
-	oscOutputInstanceKeys.updateData([key](std::vector<std::string>& data) { Utils::vector_erase(data, key); });
+	oscOutputInstanceKeys.updateData([key](std::vector<int>& data) { Utils::vector_erase(data, key); });
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
@@ -285,7 +285,7 @@ void ControlInterface::onNewClient(ControlClient* client) {
 	}
 
 	for(const auto& key : oscOutputInstanceKeys.getData()) {
-		int index = atoi(key.c_str());
+		int index = key;
 		auto outputIt = outputsToSend.find(index);
 		if(outputIt == outputsToSend.end())
 			continue;
@@ -376,10 +376,10 @@ void ControlInterface::messageProcessor(const void* data, size_t size) {
 				controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
 			} else if(operation == "outputsOrder") {
 				auto outputsOrder = json.value("outputsOrder", std::vector<int>{});
-				oscOutputInstanceKeys.updateData([&outputsOrder](std::vector<std::string>& data) {
+				oscOutputInstanceKeys.updateData([&outputsOrder](std::vector<int>& data) {
 					data.clear();
 					for(const auto& item : outputsOrder) {
-						data.push_back(std::to_string(item));
+						data.push_back(item);
 					}
 				});
 				saveConfig();

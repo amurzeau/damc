@@ -27,8 +27,8 @@ std::vector<QWidget*> OscWidgetArray::getWidgets() {
 	return ret;
 }
 
-void OscWidgetArray::addWidget(const std::string& key) {
-	qDebug("Adding %s to %s", key.c_str(), getFullAddress().c_str());
+void OscWidgetArray::addWidget(int key) {
+	qDebug("Adding %d to %s", key, getFullAddress().c_str());
 
 	auto it = childWidgets.find(key);
 	if(it != childWidgets.end())
@@ -40,12 +40,12 @@ void OscWidgetArray::addWidget(const std::string& key) {
 	childWidgets.insert(std::make_pair(key, newWidget));
 }
 
-void OscWidgetArray::removeWidget(const std::string& key) {
+void OscWidgetArray::removeWidget(int key) {
 	auto it = childWidgets.find(key);
 	if(it == childWidgets.end())
 		return;
 
-	qDebug("Removing %s from %s", key.c_str(), getFullAddress().c_str());
+	qDebug("Removing %d from %s", key, getFullAddress().c_str());
 
 	layout->removeWidget(it->second);
 	keysOrder.erase(std::remove(keysOrder.begin(), keysOrder.end(), key), keysOrder.end());
@@ -53,15 +53,12 @@ void OscWidgetArray::removeWidget(const std::string& key) {
 	childWidgets.erase(it);
 }
 
-void OscWidgetArray::swapWidgets(const std::string& sourceKey,
-                                 const std::string& targetKey,
-                                 bool insertBefore,
-                                 bool notifyOsc) {
+void OscWidgetArray::swapWidgets(int sourceKey, int targetKey, bool insertBefore, bool notifyOsc) {
 	auto itSource = childWidgets.find(sourceKey);
 	auto itTarget = childWidgets.find(targetKey);
 
 	if(itSource == childWidgets.end() || itTarget == childWidgets.end()) {
-		qDebug("Can't find either %s or %s", sourceKey.c_str(), targetKey.c_str());
+		qDebug("Can't find either %d or %d", sourceKey, targetKey);
 		return;
 	}
 
@@ -92,24 +89,24 @@ void OscWidgetArray::swapWidgets(const std::string& sourceKey,
 
 void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
 	if(address == "keys") {
-		std::vector<std::string> newKeys;
-		std::set<std::string> keysToKeep;
+		std::vector<int> newKeys;
+		std::set<int> keysToKeep;
 
 		printf("%s: recv keys: ", getFullAddress().c_str());
 		for(const auto& arg : arguments) {
-			std::string key;
+			int key;
 
-			if(!getArgumentAs<std::string>(arg, key))
+			if(!getArgumentAs<int>(arg, key))
 				return;
 
-			printf("%s ", key.c_str());
+			printf("%d ", key);
 
 			newKeys.push_back(key);
 		}
 		printf("\n");
 
 		for(size_t i = 0; i < newKeys.size(); i++) {
-			const auto& key = newKeys[i];
+			int key = newKeys[i];
 
 			keysToKeep.insert(key);
 
@@ -141,13 +138,13 @@ void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgu
 			}
 		}
 
-		std::vector<std::string> keyToRemove;
+		std::vector<int> keyToRemove;
 		printf("%s: own keys: ", getFullAddress().c_str());
-		for(const auto& key : keysOrder) {
+		for(int key : keysOrder) {
 			if(keysToKeep.count(key) == 0) {
 				keyToRemove.push_back(key);
 			} else {
-				printf("%s ", key.c_str());
+				printf("%d ", key);
 			}
 		}
 		printf("\n");
@@ -163,7 +160,7 @@ void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgu
 		splitAddress(address, &childAddress, nullptr);
 
 		if(!childAddress.empty() && Utils::isNumber(childAddress)) {
-			std::string key = std::string(childAddress);
+			int key = atoi(std::string(childAddress).c_str());
 
 			if(childWidgets.count(key) == 0) {
 				addWidget(key);
