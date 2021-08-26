@@ -30,8 +30,9 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
       oscDelay(&oscFilterChain, "delay"),
       oscClockDrift(&oscFilterChain, "clockDrift"),
       oscVolume(&oscFilterChain, "volume"),
+      oscName(this, "name"),
       oscDisplayName(this, "display_name"),
-      sampleRate(this, "sample_rate") {
+      oscSampleRate(this, "sample_rate") {
 	ui->setupUi(this);
 
 	numChannels = 0;
@@ -40,6 +41,9 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	oscMute.setWidget(ui->muteButton);
 	oscDelay.setWidget(ui->delaySpinBox);
 	oscClockDrift.setWidget(ui->clockDriftSpinBox);
+
+	oscSampleRate.setChangeCallback([this](int newValue) { ui->sampleRateSpinBox->setValue(newValue); });
+
 	oscVolume.setWidget(ui->volumeSlider);
 	oscVolume.setChangeCallback([this](float value) { ui->volumeLevelLabel->setText(QString::number((int) value)); });
 
@@ -64,6 +68,14 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
 	ui->volumeLevelLabel->setTextSize(4, Qt::AlignRight | Qt::AlignVCenter);
+
+	oscMute.setChangeCallback([this](float newValue) {
+		for(size_t i = 0; i < levelWidgets.size(); i++) {
+			levelWidgets[i]->setDisabled(newValue == 1);
+		}
+	});
+
+	oscName.setChangeCallback([this](const std::string&) { updateTooltip(); });
 
 	oscDisplayName.setChangeCallback([this](const std::string& value) {
 		QString title = QString::fromStdString(value).replace("waveSendUDP-", "");
@@ -104,21 +116,25 @@ OutputController::~OutputController() {
 	delete ui;
 }
 
-void OutputController::setInterface(WavePlayInterface* interface) {
-	this->interface.setInterface(0, interface);
-}
-
 void OutputController::updateHiddenState() {
 	bool hide = !mainWindow->getShowDisabledOutputInstances() && ui->enableCheckBox->isChecked() == false;
 	setHidden(hide);
 }
 
-void OutputController::onChangeVolume(int volume) {
-	qDebug("Changing volume");
-	QJsonObject json;
-	json["volume"] = volume;
-	interface.sendMessage(json);
-	setDisplayedVolume(volume);
+void OutputController::updateTooltip() {
+	//	QJsonValue nameValue = message.value("name");
+	//	QJsonValue deviceValue = message.value("device");
+	//	QJsonValue ipValue = message.value("ip");
+	//	QJsonValue portValue = message.value("port");
+
+	QString title = QString::fromStdString(oscName.get()).replace("waveSendUDP-", "");
+
+	//	if(deviceValue.type() == QJsonValue::String)
+	//		ui->groupBox->setToolTip(title + " Device: " + deviceValue.toString());
+	//	else if(ipValue.type() == QJsonValue::String)
+	//		ui->groupBox->setToolTip(title + " Endpoint: " + ipValue.toString() + ":" +
+	// QString::number(portValue.toInt())); 	else
+	ui->groupBox->setToolTip(title);
 }
 
 void OutputController::updateEqEnable() {
@@ -128,13 +144,6 @@ void OutputController::updateEqEnable() {
 void OutputController::onChangeClockDrift() {
 	QJsonObject json;
 	json["clockDrift"] = ui->clockDriftSpinBox->value() / 1000000 + ui->sampleRateSpinBox->value();
-	interface.sendMessage(json);
-}
-
-void OutputController::onMute(bool muted) {
-	qDebug("Muting");
-	QJsonObject json;
-	json["mute"] = muted;
 	interface.sendMessage(json);
 }
 
@@ -173,155 +182,16 @@ void OutputController::onShowBalance() {
 	}
 }
 
-void OutputController::onChangeEq(int index, bool enabled, FilterType type, double f0, double q, double gain) {
-	qDebug("Changing eq %d", index);
-
-	QJsonObject json;
-	QJsonArray eqFiltersArray;
-	QJsonObject eqFilter;
-
-	eqFilter["index"] = index;
-	eqFilter["enabled"] = enabled;
-	eqFilter["type"] = (int) type;
-	eqFilter["f0"] = f0;
-	eqFilter["Q"] = q;
-	eqFilter["gain"] = gain;
-
-	eqFiltersArray.append(eqFilter);
-	json["eqFilters"] = eqFiltersArray;
-
-	interface.sendMessage(json);
-}
-
-void OutputController::sendChangeCompressor(const char* filterName,
-                                            bool enabled,
-                                            float releaseTime,
-                                            float attackTime,
-                                            float threshold,
-                                            float makeUpGain,
-                                            float ratio,
-                                            float kneeWidth,
-                                            bool useMovingMax) {
-	qDebug("Changing compressor");
-
-	QJsonObject json;
-	QJsonObject filter;
-
-	filter["enabled"] = enabled;
-	filter["releaseTime"] = releaseTime;
-	filter["attackTime"] = attackTime;
-	filter["threshold"] = threshold;
-	filter["makeUpGain"] = makeUpGain;
-	filter["ratio"] = ratio;
-	filter["kneeWidth"] = kneeWidth;
-	filter["useMovingMax"] = useMovingMax;
-
-	json[filterName] = filter;
-
-	interface.sendMessage(json);
-}
-
-void OutputController::onChangeCompressor(bool enabled,
-                                          float releaseTime,
-                                          float attackTime,
-                                          float threshold,
-                                          float makeUpGain,
-                                          float ratio,
-                                          float kneeWidth,
-                                          bool useMovingMax) {
-	sendChangeCompressor(
-	    "compressorFilter", enabled, releaseTime, attackTime, threshold, makeUpGain, ratio, kneeWidth, useMovingMax);
-}
-
-void OutputController::onChangeExpander(bool enabled,
-                                        float releaseTime,
-                                        float attackTime,
-                                        float threshold,
-                                        float makeUpGain,
-                                        float ratio,
-                                        float kneeWidth,
-                                        bool useMovingMax) {
-	sendChangeCompressor(
-	    "expanderFilter", enabled, releaseTime, attackTime, threshold, makeUpGain, ratio, kneeWidth, useMovingMax);
-}
-
-void OutputController::onChangeBalance(size_t channel, float balance) {
-	qDebug("Changing balance %d", (int) channel);
-
-	QJsonObject json;
-	QJsonArray balanceArray;
-	QJsonObject balanceObject;
-
-	balanceObject["channel"] = (int) channel;
-	balanceObject["volume"] = balance;
-
-	balanceArray.append(balanceObject);
-	json["balance"] = balanceArray;
-
-	interface.sendMessage(json);
-}
-
 void OutputController::onMessageReceived(const QJsonObject& message) {
 	QJsonValue levelValue = message.value("levels");
 	return;
 	if(levelValue.type() == QJsonValue::Array) {
-		if(ui->groupBox->isEnabled()) {
-			QJsonArray levels = levelValue.toArray();
-			double maxLevel = -INFINITY;
-			int levelNumber = std::min(levels.size(), (int) levelWidgets.size());
-
-			for(int i = 0; i < levelNumber; i++) {
-				double level = levels[i].toDouble();
-				levelWidgets[i]->setValue(level);
-				if(level > maxLevel)
-					maxLevel = level;
-			}
-			if(maxLevel <= -192)
-				ui->levelLabel->setText("--");
-			else
-				ui->levelLabel->setText(QString::number((int) maxLevel));
-		}
 	} else {
 		qDebug("Received message %s", QJsonDocument(message).toJson(QJsonDocument::Indented).constData());
 
 		QJsonValue numChannelsValue = message.value("numChannels");
 		if(numChannelsValue.type() != QJsonValue::Undefined) {
 			setNumChannel(numChannelsValue.toInt());
-		}
-
-		QJsonValue enableValue = message.value("enabled");
-		if(enableValue.type() != QJsonValue::Undefined) {
-			ui->enableCheckBox->blockSignals(true);
-			ui->enableCheckBox->setChecked(enableValue.toBool());
-			ui->enableCheckBox->blockSignals(false);
-			ui->groupBox->setDisabled(!enableValue.toBool());
-			updateHiddenState();
-		}
-
-		QJsonValue muteValue = message.value("mute");
-		if(muteValue.type() != QJsonValue::Undefined) {
-			ui->muteButton->blockSignals(true);
-			ui->muteButton->setChecked(muteValue.toBool());
-			ui->muteButton->blockSignals(false);
-			for(size_t i = 0; i < levelWidgets.size(); i++) {
-				levelWidgets[i]->setDisabled(muteValue.toBool());
-			}
-		}
-
-		QJsonValue volumeValue = message.value("volume");
-		if(volumeValue.type() != QJsonValue::Undefined) {
-			int integerVolume = round(volumeValue.toDouble());
-			ui->volumeSlider->blockSignals(true);
-			ui->volumeSlider->setValue(integerVolume);
-			ui->volumeSlider->blockSignals(false);
-			setDisplayedVolume(integerVolume);
-		}
-
-		QJsonValue delayValue = message.value("delayFilter");
-		if(delayValue.type() != QJsonValue::Undefined) {
-			ui->delaySpinBox->blockSignals(true);
-			ui->delaySpinBox->setValue(delayValue.toObject()["delay"].toDouble());
-			ui->delaySpinBox->blockSignals(false);
 		}
 
 		QJsonValue clockDriftValue = message.value("clockDrift");
@@ -334,31 +204,8 @@ void OutputController::onMessageReceived(const QJsonObject& message) {
 			ui->clockDriftSpinBox->blockSignals(false);
 			ui->sampleRateSpinBox->blockSignals(false);
 		}
-
-		QJsonValue displayNameValue = message.value("displayName");
-		if(displayNameValue.type() == QJsonValue::String) {
-		}
-
-		if(ui->groupBox->toolTip().isEmpty()) {
-			QJsonValue nameValue = message.value("name");
-			QJsonValue deviceValue = message.value("device");
-			QJsonValue ipValue = message.value("ip");
-			QJsonValue portValue = message.value("port");
-
-			QString title = nameValue.toString("").replace("waveSendUDP-", "");
-
-			if(deviceValue.type() == QJsonValue::String)
-				ui->groupBox->setToolTip(title + " Device: " + deviceValue.toString());
-			else if(ipValue.type() == QJsonValue::String)
-				ui->groupBox->setToolTip(title + " Endpoint: " + ipValue.toString() + ":" +
-				                         QString::number(portValue.toInt()));
-			else
-				ui->groupBox->setToolTip(title);
-		}
 	}
 }
-
-void OutputController::setDisplayedVolume(int volume) {}
 
 void OutputController::setNumChannel(int numChannels) {
 	if(numChannels == this->numChannels) {

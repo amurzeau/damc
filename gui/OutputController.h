@@ -28,31 +28,13 @@ public:
 	WavePlayOutputInterface* getOutputInterface() { return &interface; };
 
 	void updateHiddenState();
-	int32_t getSampleRate() { return sampleRate.get(); }
+	void updateTooltip();
 	void updateEqEnable();
 
+	int32_t getSampleRate() { return oscSampleRate.get(); }
+
 protected slots:
-	void onChangeVolume(int volume);
 	void onChangeClockDrift();
-	void onMute(bool muted);
-	void onChangeEq(int index, bool enabled, FilterType type, double f0, double q, double gain);
-	void onChangeCompressor(bool enabled,
-	                        float releaseTime,
-	                        float attackTime,
-	                        float threshold,
-	                        float makeUpGain,
-	                        float compressionRatio,
-	                        float kneeWidth,
-	                        bool useMovingMax);
-	void onChangeExpander(bool enabled,
-	                      float releaseTime,
-	                      float attackTime,
-	                      float threshold,
-	                      float makeUpGain,
-	                      float compressionRatio,
-	                      float kneeWidth,
-	                      bool useMovingMax);
-	void onChangeBalance(size_t channel, float balance);
 
 	void onMessageReceived(const QJsonObject& message);
 
@@ -99,8 +81,9 @@ private:
 	OscWidgetMapper<QDoubleSpinBox> oscDelay;
 	OscWidgetMapper<QDoubleSpinBox> oscClockDrift;
 	OscWidgetMapper<QAbstractSlider> oscVolume;
+	OscVariable<std::string> oscName;
 	OscVariable<std::string> oscDisplayName;
-	OscVariable<int32_t> sampleRate;
+	OscVariable<int32_t> oscSampleRate;
 };
 
 #endif  // OUTPUTCONTROLLER_H

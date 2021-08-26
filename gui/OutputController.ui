@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>69</width>
+    <width>61</width>
     <height>391</height>
    </rect>
   </property>
@@ -162,17 +162,29 @@
       </item>
       <item row="6" column="0">
        <widget class="QSpinBox" name="sampleRateSpinBox">
+        <property name="toolTip">
+         <string>Sample rate</string>
+        </property>
         <property name="frame">
          <bool>false</bool>
         </property>
-        <property name="prefix">
-         <string>r:</string>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
+        <property name="suffix">
+         <string> Hz</string>
         </property>
         <property name="minimum">
          <number>0</number>
         </property>
         <property name="maximum">
-         <number>16</number>
+         <number>999999</number>
+        </property>
+        <property name="value">
+         <number>0</number>
         </property>
        </widget>
       </item>
@@ -285,11 +297,20 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="toolTip">
+         <string>Device's clock drift in PPM</string>
+        </property>
         <property name="frame">
          <bool>false</bool>
         </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
         <property name="prefix">
-         <string>c:</string>
+         <string>c: </string>
         </property>
         <property name="suffix">
          <string/>
@@ -332,14 +353,23 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="toolTip">
+         <string>Delay in samples</string>
+        </property>
         <property name="frame">
          <bool>false</bool>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="prefix">
          <string>d: </string>
         </property>
         <property name="suffix">
-         <string>sa</string>
+         <string> sa</string>
         </property>
         <property name="decimals">
          <number>0</number>
