@@ -1,13 +1,20 @@
 #include "OscContainer.h"
+#include "Utils.h"
 
 bool OscContainer::osc_node_comparator::operator()(const std::string& x, const std::string& y) const {
-	// Always put keys node first
-	if(x == KEYS_NODE && y != KEYS_NODE)
+	bool isXnumber = Utils::isNumber(x);
+	bool isYnumber = Utils::isNumber(y);
+
+	// Always put non number nodes first and order numbers by their numerical value
+	if(!isXnumber && isYnumber)
 		return true;
-	else if(y == KEYS_NODE)
+	else if(isXnumber && !isYnumber)
 		return false;
-	else
+	else if(isXnumber && isYnumber)
+		return atoi(x.c_str()) < atoi(y.c_str());
+	else {
 		return x < y;
+	}
 }
 
 OscContainer::OscContainer(OscContainer* parent, std::string name) noexcept

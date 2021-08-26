@@ -79,15 +79,6 @@ void OscWidgetArray::swapWidgets(const std::string& sourceKey,
 	}
 }
 
-bool OscWidgetArray::isIndexAddress(std::string_view s) {
-	for(char c : s) {
-		if(c < '0' || c > '9')
-			return false;
-	}
-	// empty string not considered as a number
-	return !s.empty();
-}
-
 void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
 	if(address == "keys") {
 		std::vector<std::string> newKeys;
@@ -160,7 +151,7 @@ void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgu
 
 		splitAddress(address, &childAddress, nullptr);
 
-		if(!childAddress.empty() && isIndexAddress(childAddress)) {
+		if(!childAddress.empty() && Utils::isNumber(childAddress)) {
 			std::string key = std::string(childAddress);
 
 			if(childWidgets.count(key) == 0) {

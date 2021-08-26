@@ -98,7 +98,7 @@ template<typename T> void OscGenericArray<T>::pop_back() {
 
 	value.pop_back();
 
-	keys.updateData([&removedKey](std::vector<std::string>& data) { vector_erase(data, removedKey); });
+	keys.updateData([&removedKey](std::vector<std::string>& data) { Utils::vector_erase(data, removedKey); });
 }
 
 template<typename T> void OscGenericArray<T>::erase(std::string key) {
@@ -122,7 +122,7 @@ template<typename T> void OscGenericArray<T>::erase(std::string key) {
 		}
 	}
 
-	keys.updateData([&key](std::vector<std::string>& data) { vector_erase(data, key); });
+	keys.updateData([&key](std::vector<std::string>& data) { Utils::vector_erase(data, key); });
 }
 
 template<typename T> template<typename... Args> void OscGenericArray<T>::resize(size_t newSize, Args... args) {

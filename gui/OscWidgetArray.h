@@ -26,9 +26,6 @@ public:
 	void removeWidget(const std::string& key);
 	void swapWidgets(const std::string& sourceKey, const std::string& targetKey, bool insertBefore, bool notifyOsc);
 
-protected:
-	bool isIndexAddress(std::string_view s);
-
 private:
 	QWidget* parentWidget;
 	QBoxLayout* layout;

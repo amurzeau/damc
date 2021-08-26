@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <uv.h>
 
+#include "Utils.h"
 #include <set>
 #include <string.h>
 
@@ -230,7 +231,7 @@ void ControlInterface::removeOutputInstance(std::map<int, std::unique_ptr<Output
 
 	outputs.erase(index);
 
-	oscOutputInstanceKeys.updateData([key](std::vector<std::string>& data) { vector_erase(data, key); });
+	oscOutputInstanceKeys.updateData([key](std::vector<std::string>& data) { Utils::vector_erase(data, key); });
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {

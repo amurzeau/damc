@@ -8,6 +8,7 @@ add_library(common STATIC
 	OscRoot.h
 	tinyosc.c
 	tinyosc.h
+	Utils.cpp
 	Utils.h
 
 	Osc/OscArray.h
