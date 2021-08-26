@@ -121,7 +121,7 @@ std::string OscContainer::getAsString() const {
 			std::string childData = child.second->getAsString();
 
 			if(childData.empty()) {
-				printf("%s has no data\n", child.first.c_str());
+				// printf("%s has no data\n", child.first.c_str());
 				continue;
 			}
 

@@ -6,6 +6,7 @@
 #include "KeyBinding.h"
 #include "OscRoot.h"
 #include "OscServer.h"
+#include "OscStatePersist.h"
 #include "OscTcpServer.h"
 #include "OutputInstance/OutputInstance.h"
 #include "json.h"
@@ -54,6 +55,7 @@ private:
 	std::map<int, std::unique_ptr<OutputInstance>> outputs;
 	ControlServer controlServer;
 	OscRoot oscRoot;
+	OscStatePersist oscStatePersister;
 	OscServer oscUdpServer;
 	OscTcpServer oscTcpServer;
 	OscContainer oscRootNode;

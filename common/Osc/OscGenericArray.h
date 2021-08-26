@@ -28,8 +28,6 @@ public:
 	const auto& back() const { return *value.back(); }
 	auto& back() { return *value.back(); }
 
-	std::string getAsString() const override;
-
 protected:
 	virtual void initializeItem(T*) {}
 
@@ -138,17 +136,4 @@ template<typename T> template<typename... Args> void OscGenericArray<T>::resize(
 			push_back(args...);
 		}
 	}
-}
-
-template<typename T> std::string OscGenericArray<T>::getAsString() const {
-	std::string result = "[";
-
-	for(const auto& item : value) {
-		result += " " + item->getAsString() + ",";
-	}
-
-	if(result.back() == ',')
-		result.pop_back();
-
-	return result + " ]";
 }

@@ -30,26 +30,46 @@ OscStatePersist::OscStatePersist(OscRoot* oscRoot, std::string fileName) : oscRo
 	}
 }
 
+void execute(OscRoot* oscRoot, std::string_view address, const std::vector<OscArgument>& arguments) {
+	printf("%s = ", std::string(address).c_str());
+	for(const auto& arg : arguments) {
+		std::visit(
+		    [](auto arg) {
+			    if constexpr(std::is_same_v<decltype(arg), bool>) {
+				    printf("%s ", arg ? "true" : "false");
+			    } else if constexpr(std::is_same_v<decltype(arg), int32_t>) {
+				    printf("%d ", (int) arg);
+			    } else if constexpr(std::is_same_v<decltype(arg), float>) {
+				    printf("%f ", arg);
+			    } else if constexpr(std::is_same_v<decltype(arg), std::string>) {
+				    printf("\"%s\" ", arg.c_str());
+			    } else {
+				    printf("unknown ");
+			    }
+		    },
+		    arg);
+	}
+	printf("\n");
+}
+
 void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::json& object) {
+	std::vector<OscArgument> values;
+
 	switch(object.type()) {
+			// OscContainer and derived
 		case nlohmann::json::value_t::object:
-			if(object.contains("keys")) {
-				// OscGenericArray, do keys beforehand
-				recurseJson(oscRoot, address + "/keys", object["keys"]);
-			}
 			for(const auto& property : object.items()) {
-				if(property.key() != "keys")
-					recurseJson(oscRoot, address + "/" + property.key(), property.value());
+				recurseJson(oscRoot, address + "/" + property.key(), property.value());
 			}
 			break;
 
+			// OscFlatArray
 		case nlohmann::json::value_t::array: {
 			bool skipExecute = false;
 			std::vector<OscArgument> values;
 			for(const auto& property : object.items()) {
 				OscArgument addArgument = property.key();
 				switch(property.value().type()) {
-					case nlohmann::json::value_t::null:
 					case nlohmann::json::value_t::string:
 						values.push_back(property.value().get<std::string>());
 						break;
@@ -67,6 +87,9 @@ void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::j
 						values.push_back(property.value().get<float>());
 						break;
 
+					case nlohmann::json::value_t::null:
+						throw std::invalid_argument("json array " + address + " contains unsupported type null");
+						break;
 					case nlohmann::json::value_t::object:
 						throw std::invalid_argument("json array " + address + " contains unsupported type object");
 						break;
@@ -82,10 +105,41 @@ void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::j
 				}
 			}
 			if(!skipExecute) {
-				oscRoot->execute(address, values);
+				execute(oscRoot, address, values);
 			}
 			break;
 		}
+
+			// OscVariable
+		case nlohmann::json::value_t::string:
+			values.push_back(object.get<std::string>());
+			break;
+
+		case nlohmann::json::value_t::boolean:
+			values.push_back(object.get<bool>());
+			break;
+
+		case nlohmann::json::value_t::number_integer:
+		case nlohmann::json::value_t::number_unsigned:
+			values.push_back(object.get<int32_t>());
+			break;
+
+		case nlohmann::json::value_t::number_float:
+			values.push_back(object.get<float>());
+			break;
+
+		case nlohmann::json::value_t::null:
+			throw std::invalid_argument("json array " + address + " contains unsupported type null");
+			break;
+		case nlohmann::json::value_t::binary:
+			throw std::invalid_argument("json array " + address + " contains unsupported type binary");
+			break;
+		case nlohmann::json::value_t::discarded:
+			throw std::invalid_argument("json array " + address + " contains unsupported type discarded");
+			break;
+	}
+	if(!values.empty()) {
+		execute(oscRoot, address, values);
 	}
 }
 

@@ -20,6 +20,7 @@ ControlInterface::ControlInterface(const char* argv0)
     : nextInstanceIndex(0),
       numEq(6),
       oscRoot(true),
+      oscStatePersister(&oscRoot, "waveSendUDPJack_osc.json"),
       oscUdpServer(&oscRoot),
       oscTcpServer(&oscRoot),
       oscRootNode(&oscRoot, "strip"),
@@ -121,6 +122,7 @@ void ControlInterface::loadConfig() {
 		printf("Exception while parsing config\n");
 	}
 
+	oscStatePersister.loadState();
 	// oscServer.printAllNodes();
 }
 
@@ -154,6 +156,8 @@ void ControlInterface::saveConfig() {
 	} catch(...) {
 		printf("Exception while saving config\n");
 	}
+
+	oscStatePersister.saveState();
 }
 
 std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOutputInstance(
