@@ -15,8 +15,10 @@ class EqualizersController : public QDialog {
 	Q_OBJECT
 
 public:
-	explicit EqualizersController(OutputController* parent, OscContainer* oscParent, int numEq);
+	explicit EqualizersController(OutputController* parent, OscContainer* oscParent);
 	~EqualizersController();
+
+	bool getEqEnabled();
 
 	void show();
 

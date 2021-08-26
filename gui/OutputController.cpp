@@ -43,7 +43,7 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	oscVolume.setWidget(ui->volumeSlider);
 	oscVolume.setChangeCallback([this](float value) { ui->volumeLevelLabel->setText(QString::number((int) value)); });
 
-	equalizersController = new EqualizersController(this, &oscFilterChain, 6);
+	equalizersController = new EqualizersController(this, &oscFilterChain);
 
 	balanceController = new BalanceController(this, &oscFilterChain);
 
@@ -121,12 +121,8 @@ void OutputController::onChangeVolume(int volume) {
 	setDisplayedVolume(volume);
 }
 
-void OutputController::onChangeDelay(double delay) {
-	QJsonObject json;
-	QJsonObject jsonDelay;
-	jsonDelay["delay"] = delay;
-	json["delayFilter"] = jsonDelay;
-	interface.sendMessage(json);
+void OutputController::updateEqEnable() {
+	ui->eqButton->setChecked(equalizersController->getEqEnabled());
 }
 
 void OutputController::onChangeClockDrift() {

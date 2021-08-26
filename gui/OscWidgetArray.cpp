@@ -16,6 +16,17 @@ void OscWidgetArray::setWidget(QWidget* parentWidget,
 	this->widgetFactoryFunction = widgetFactoryFunction;
 }
 
+std::vector<QWidget*> OscWidgetArray::getWidgets() {
+	std::vector<QWidget*> ret;
+	for(const auto& key : keysOrder) {
+		auto it = childWidgets.find(key);
+		if(it != childWidgets.end()) {
+			ret.push_back(it->second);
+		}
+	}
+	return ret;
+}
+
 void OscWidgetArray::addWidget(const std::string& key) {
 	qDebug("Adding %s to %s", key.c_str(), getFullAddress().c_str());
 

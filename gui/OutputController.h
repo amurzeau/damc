@@ -29,10 +29,10 @@ public:
 
 	void updateHiddenState();
 	int32_t getSampleRate() { return sampleRate.get(); }
+	void updateEqEnable();
 
 protected slots:
 	void onChangeVolume(int volume);
-	void onChangeDelay(double delay);
 	void onChangeClockDrift();
 	void onMute(bool muted);
 	void onChangeEq(int index, bool enabled, FilterType type, double f0, double q, double gain);

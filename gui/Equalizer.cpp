@@ -28,7 +28,10 @@ Equalizer::Equalizer(QWidget* parent,
 	oscQ.setWidget(ui->qSpinBox);
 	oscGain.setWidget(ui->gainSpinBox);
 
-	oscEnable.setChangeCallback([this](float) { updateResponse(); });
+	oscEnable.setChangeCallback([this](float) {
+		updateResponse();
+		this->outputController->updateEqEnable();
+	});
 	oscType.setChangeCallback([this](float) { updateResponse(); });
 	oscF0.setChangeCallback([this](float) { updateResponse(); });
 	oscQ.setChangeCallback([this](float) { updateResponse(); });
@@ -45,6 +48,10 @@ std::complex<double> Equalizer::getResponse(double f0) {
 		return biquadFilter.getResponse(f0, fs);
 	else
 		return std::complex<double>(1, 0);
+}
+
+bool Equalizer::getEnabled() {
+	return ui->parametricEqGroupBox->isChecked();
 }
 
 void Equalizer::updateResponse() {

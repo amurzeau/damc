@@ -24,6 +24,7 @@ public:
 	~Equalizer();
 
 	std::complex<double> getResponse(double f0);
+	bool getEnabled();
 
 protected:
 	void updateResponse();

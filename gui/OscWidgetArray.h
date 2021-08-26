@@ -17,6 +17,7 @@ public:
 	OscWidgetArray(OscContainer* parent, std::string name) noexcept;
 
 	void setWidget(QWidget* parentWidget, QBoxLayout* widget, OscWidgetFactoryFunction widgetFactoryFunction);
+	std::vector<QWidget*> getWidgets();
 
 	void execute(std::string_view address, const std::vector<OscArgument>& arguments) override;
 
