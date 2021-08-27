@@ -1,6 +1,23 @@
 #include "DeviceOutputInstance.h"
 #include <stdio.h>
 
+DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
+    : OscContainer(parent, "deviceOutput"),
+      oscClockDrift(this, "clockDrift", 1.0f),
+      oscDeviceSampleRate(this, "deviceSampleRate", 48000) {
+	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
+	oscClockDrift.setChangeCallback([this](float newValue) {
+		for(auto& resamplingFilter : resamplingFilters) {
+			resamplingFilter.setClockDrift(newValue);
+		}
+	});
+	oscDeviceSampleRate.setChangeCallback([this](float newValue) {
+		for(auto& resamplingFilter : resamplingFilters) {
+			resamplingFilter.setTargetSamplingRate(newValue);
+		}
+	});
+}
+
 std::vector<std::string> DeviceOutputInstance::getDeviceList() {
 	std::vector<std::string> result;
 	int numDevices = Pa_GetDeviceCount();
@@ -74,8 +91,8 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 		ringBuffers.emplace_back(std::move(buffer));
 
 		resamplingFilters[i].reset(sampleRate);
-		resamplingFilters[i].setTargetSamplingRate(deviceSampleRate);
-		resamplingFilters[i].setClockDrift(this->clockDrift);
+		resamplingFilters[i].setTargetSamplingRate(oscDeviceSampleRate);
+		resamplingFilters[i].setClockDrift(oscClockDrift);
 	}
 
 	outputParameters.device = outputDeviceIndex;
@@ -87,7 +104,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	int ret = Pa_OpenStream(&stream,
 	                        nullptr,
 	                        &outputParameters,
-	                        deviceSampleRate,
+	                        oscDeviceSampleRate,
 	                        paFramesPerBufferUnspecified,
 	                        paClipOff | paDitherOff,
 	                        &renderCallback,
@@ -114,34 +131,11 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	previousAverageLatency = 0;
 	clockDriftPpm = 0;
 	isPaRunning = false;
-	printf("Using buffer size %d, device sample rate: %d\n", jackBufferSize, (int) deviceSampleRate);
+	printf("Using buffer size %d, device sample rate: %d\n", jackBufferSize, (int) oscDeviceSampleRate);
 
 	Pa_StartStream(stream);
 
 	return ret;
-}
-
-void DeviceOutputInstance::setParameters(const nlohmann::json& json) {
-	outputDevice = json.value("device", outputDevice);
-	float newSampleRate = json.value("sampleRate", 0);
-	if(newSampleRate) {
-		deviceSampleRate = newSampleRate;
-	}
-
-	auto clockDrift = json.find("clockDrift");
-	if(clockDrift != json.end()) {
-		this->clockDrift = clockDrift.value().get<float>();
-	}
-
-	for(auto& resamplingFilter : resamplingFilters) {
-		resamplingFilter.setTargetSamplingRate(this->deviceSampleRate);
-		resamplingFilter.setClockDrift(this->clockDrift);
-	}
-}
-
-nlohmann::json DeviceOutputInstance::getParameters() {
-	return nlohmann::json::object(
-	    {{"device", outputDevice}, {"clockDrift", clockDrift}, {"sampleRate", deviceSampleRate}});
 }
 
 int DeviceOutputInstance::postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) {

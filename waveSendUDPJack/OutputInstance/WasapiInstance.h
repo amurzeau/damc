@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../json.h"
 #include "IAudioEndpoint.h"
 #include <stdint.h>
 // Need to be after else stdint might conflict
@@ -17,19 +16,17 @@
 #include <audioclient.h>
 #include <mmdeviceapi.h>
 
-class WasapiInstance : public IAudioEndpoint {
+class WasapiInstance : public IAudioEndpoint, public OscContainer {
 public:
 	enum Format { F_Float, F_Int32, F_Int24, F_Int16 };
 
 	static std::vector<std::string> getDeviceList();
 
-	WasapiInstance(Direction direction);
+	WasapiInstance(OscContainer* parent, Direction direction);
 
 	virtual const char* getName() override;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) override;
 	virtual void stop() override;
-	virtual void setParameters(const nlohmann::json& json) override;
-	virtual nlohmann::json getParameters() override;
 	virtual void onTimer() override;
 
 	virtual int postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) override;
@@ -50,7 +47,6 @@ private:
 	    Format format, void* input, size_t numFrameToRead, float** output, size_t numChannel, uint32_t nframes);
 
 private:
-	std::string outputDevice = "default";
 	IMMDevice* pDevice = nullptr;
 	IAudioClient* pAudioClient = nullptr;
 	IAudioRenderClient* pRenderClient = nullptr;
@@ -61,13 +57,15 @@ private:
 
 	std::vector<ResamplingFilter> resamplingFilters;
 	std::vector<std::vector<float>> resampledBuffer;
-	bool useExclusiveMode = false;
-	float deviceSampleRate = 48000.0f;
 	int jackSampleRate;
 	Format sampleFormat = F_Int32;
-	float clockDrift = 1.0f;
 	bool overflowOccured;
 	bool underflowOccured;
+
+	OscVariable<std::string> oscDeviceName;
+	OscVariable<int> oscDeviceSampleRate;
+	OscVariable<float> oscClockDrift;
+	OscVariable<bool> oscExclusiveMode;
 
 	uint32_t bufferLatencyNr;
 	std::vector<uint32_t> bufferLatencyHistory;

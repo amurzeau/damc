@@ -4,6 +4,21 @@ void RemoteInputInstance::stop() {
 	remoteUdpInput.stop();
 }
 
+RemoteInputInstance::RemoteInputInstance(OscContainer* parent)
+    : OscContainer(parent, "remoteInput"),
+      oscIp(this, "ip", "127.0.0.1"),
+      oscPort(this, "port", 2305),
+      oscClockDrift(this, "clockDrift", 1.0f) {
+	direction = D_Input;
+
+	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
+	oscClockDrift.setChangeCallback([this](float newValue) {
+		for(auto& resamplingFilter : resamplingFilters) {
+			resamplingFilter.setClockDrift(newValue);
+		}
+	});
+}
+
 const char* RemoteInputInstance::getName() {
 	return "remote-in";
 }
@@ -18,21 +33,7 @@ int RemoteInputInstance::start(int index, size_t numChannel, int sampleRate, int
 	for(ResamplingFilter& resamplingFilter : resamplingFilters) {
 		resamplingFilter.reset(sampleRate);
 	}
-	return remoteUdpInput.init(index, sampleRate, ip.c_str(), port);
-}
-
-nlohmann::json RemoteInputInstance::getParameters() {
-	return nlohmann::json::object({{"ip", ip}, {"port", port}, {"clockDrift", clockDrift}});
-}
-
-void RemoteInputInstance::setParameters(const nlohmann::json& json) {
-	ip = json.value("ip", ip);
-	port = json.value("port", port);
-
-	auto clockDrift = json.find("clockDrift");
-	if(clockDrift != json.end()) {
-		this->clockDrift = clockDrift.value().get<float>();
-	}
+	return remoteUdpInput.init(index, sampleRate, oscIp.c_str(), oscPort);
 }
 
 int RemoteInputInstance::postProcessSamples(float** samples, size_t numChannel, jack_nframes_t nframes) {
@@ -46,7 +47,7 @@ int RemoteInputInstance::postProcessSamples(float** samples, size_t numChannel, 
 			resamplingFilters[i].put(resampledBuffer[i][j]);
 			resamplingFilters[i].get(
 			    inBuffers[i],
-			    resamplingFilters[i].getOverSamplingRatio() / (this->clockDrift * this->sampleRate / inputSampleRate));
+			    resamplingFilters[i].getOverSamplingRatio() / (oscClockDrift * this->sampleRate / inputSampleRate));
 		}
 	}
 

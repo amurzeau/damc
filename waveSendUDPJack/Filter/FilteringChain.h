@@ -1,7 +1,6 @@
 #ifndef FILTERINGCHAIN_H
 #define FILTERINGCHAIN_H
 
-#include "../json.h"
 #include "CompressorFilter.h"
 #include "DelayFilter.h"
 #include "DitheringFilter.h"
@@ -21,9 +20,6 @@ public:
 	void reset(double fs);
 	void processSamples(float* peakOutput, float** output, const float** input, size_t numChannel, size_t count);
 	float processSideChannelSample(float input);
-
-	void setParameters(const nlohmann::json& json);
-	nlohmann::json getParameters();
 
 private:
 	std::vector<DelayFilter> delayFilters;

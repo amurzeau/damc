@@ -9,7 +9,8 @@
 #include "OscStatePersist.h"
 #include "OscTcpServer.h"
 #include "OutputInstance/OutputInstance.h"
-#include "json.h"
+#include <Osc/OscContainerArray.h>
+#include <Osc/OscDynamicVariable.h>
 #include <jack/jack.h>
 #include <map>
 #include <memory>
@@ -17,7 +18,7 @@
 
 class ControlInterface {
 public:
-	ControlInterface(const char* argv0);
+	ControlInterface();
 	~ControlInterface();
 
 	int init(const char* controlIp, int controlPort);
@@ -28,17 +29,7 @@ public:
 	void loadConfig();
 	void saveConfig();
 
-	std::map<int, std::unique_ptr<OutputInstance>>::iterator addOutputInstance(
-	    const nlohmann::json& outputInstancesJson);
-	void removeOutputInstance(std::map<int, std::unique_ptr<OutputInstance>>::iterator index);
-
 protected:
-	static void onNewClientStatic(void* arg, ControlClient* client);
-	void onNewClient(ControlClient* client);
-
-	static void messageProcessorStatic(void* arg, const void* data, size_t size);
-	void messageProcessor(const void* data, size_t size);
-
 	static void jackOnPortConnectStatic(jack_port_id_t a, jack_port_id_t b, int connect, void* arg);
 	static int jackOnGraphReorderedStatic(void* arg);
 	static void jackOnPortRegistrationStatic(jack_port_id_t port, int is_registered, void* arg);
@@ -49,23 +40,27 @@ protected:
 	void jackOnGraphReordered();
 	void jackOnPortRegistration(jack_port_id_t port, int is_registered);
 
+	static void onTimeoutTimerStatic(uv_timer_t* handle);
+	void onTimeoutTimer();
+	static void releaseUvTimer(uv_timer_t* handle);
+	static void onCloseTimer(uv_handle_t* handle);
+
 private:
-	int nextInstanceIndex;
-	int numEq;
-	std::map<int, std::unique_ptr<OutputInstance>> outputs;
-	ControlServer controlServer;
 	OscRoot oscRoot;
 	OscStatePersist oscStatePersister;
 	OscServer oscUdpServer;
 	OscTcpServer oscTcpServer;
-	OscContainer oscRootNode;
+	OscContainerArray<OutputInstance> outputs;
+	OscDynamicVariable<std::string> oscTypeList;
+	OscDynamicVariable<std::string> oscDeviceList;
+#ifdef _WIN32
+	OscDynamicVariable<std::string> oscDeviceListWasapi;
+#endif
 	KeyBinding keyBinding;
-	std::string saveFileName;
 	jack_client_t* monitoringJackClient;
 
-	OscFlatArray<int> oscOutputInstanceKeys;
-	OscEndpoint oscAddOutputInstance;
-	OscEndpoint oscRemoveOutputInstance;
+	std::unique_ptr<uv_timer_t, decltype(&ControlInterface::releaseUvTimer)> updateLevelTimer;
+	bool oscNeedSaveConfig;
 
 	struct PortConnectionStateChange {
 		jack_port_id_t a;

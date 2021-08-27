@@ -1,7 +1,6 @@
 #ifndef LOOPBACKOUTPUTJACKINSTANCE_H
 #define LOOPBACKOUTPUTJACKINSTANCE_H
 
-#include "../json.h"
 #include "IAudioEndpoint.h"
 #include <stdint.h>
 // Need to be after else stdint might conflict

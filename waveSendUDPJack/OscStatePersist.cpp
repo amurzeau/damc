@@ -31,25 +31,27 @@ OscStatePersist::OscStatePersist(OscRoot* oscRoot, std::string fileName) : oscRo
 }
 
 void execute(OscRoot* oscRoot, std::string_view address, const std::vector<OscArgument>& arguments) {
-	printf("%s = ", std::string(address).c_str());
+	/*printf("%s = ", std::string(address).c_str());
 	for(const auto& arg : arguments) {
-		std::visit(
-		    [](auto arg) {
-			    if constexpr(std::is_same_v<decltype(arg), bool>) {
-				    printf("%s ", arg ? "true" : "false");
-			    } else if constexpr(std::is_same_v<decltype(arg), int32_t>) {
-				    printf("%d ", (int) arg);
-			    } else if constexpr(std::is_same_v<decltype(arg), float>) {
-				    printf("%f ", arg);
-			    } else if constexpr(std::is_same_v<decltype(arg), std::string>) {
-				    printf("\"%s\" ", arg.c_str());
-			    } else {
-				    printf("unknown ");
-			    }
-		    },
-		    arg);
+	    std::visit(
+	        [](auto arg) {
+	            if constexpr(std::is_same_v<decltype(arg), bool>) {
+	                printf("%s ", arg ? "true" : "false");
+	            } else if constexpr(std::is_same_v<decltype(arg), int32_t>) {
+	                printf("%d ", (int) arg);
+	            } else if constexpr(std::is_same_v<decltype(arg), float>) {
+	                printf("%f ", arg);
+	            } else if constexpr(std::is_same_v<decltype(arg), std::string>) {
+	                printf("\"%s\" ", arg.c_str());
+	            } else {
+	                printf("unknown ");
+	            }
+	        },
+	        arg);
 	}
 	printf("\n");
+	*/
+	oscRoot->execute(address, arguments);
 }
 
 void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::json& object) {
@@ -59,7 +61,12 @@ void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::j
 			// OscContainer and derived
 		case nlohmann::json::value_t::object:
 			for(const auto& property : object.items()) {
-				recurseJson(oscRoot, address + "/" + property.key(), property.value());
+				std::string objectAddress;
+				if(address.empty())
+					objectAddress = property.key();
+				else
+					objectAddress = address + "/" + property.key();
+				recurseJson(oscRoot, objectAddress, property.value());
 			}
 			break;
 
@@ -143,7 +150,7 @@ void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::j
 	}
 }
 
-void OscStatePersist::loadState() {
+void OscStatePersist::loadState(std::map<std::string, std::set<std::string>>& outputPortConnections) {
 	std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
 	std::string jsonData;
 
@@ -165,6 +172,8 @@ void OscStatePersist::loadState() {
 	try {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 		recurseJson(oscRoot, "", jsonConfig);
+
+		outputPortConnections = jsonConfig.value("portConnections", std::map<std::string, std::set<std::string>>{});
 	} catch(const std::exception& e) {
 		printf("Exception while parsing config: %s\n", e.what());
 		printf("json: %s\n", jsonData.c_str());
@@ -173,15 +182,27 @@ void OscStatePersist::loadState() {
 	}
 }
 
-void OscStatePersist::saveState() {
+void OscStatePersist::saveState(const std::map<std::string, std::set<std::string>>& outputPortConnections) {
 	std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
 	std::string jsonData = oscRoot->getAsString();
 
-	file.reset(fopen(saveFileName.c_str(), "wb"));
-	if(!file) {
-		printf("Can't open save file %s: %s(%d)\n", saveFileName.c_str(), strerror(errno), errno);
-		return;
+	try {
+		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
+		jsonConfig["portConnections"] = outputPortConnections;
+
+		jsonData = jsonConfig.dump(4);
+
+		file.reset(fopen(saveFileName.c_str(), "wb"));
+		if(!file) {
+			printf("Can't open save file %s: %s(%d)\n", saveFileName.c_str(), strerror(errno), errno);
+			return;
+		}
+		fwrite(jsonData.c_str(), 1, jsonData.size(), file.get());
+		fclose(file.release());
+	} catch(const std::exception& e) {
+		printf("Exception while parsing config: %s\n", e.what());
+		printf("json: %s\n", jsonData.c_str());
+	} catch(...) {
+		printf("Exception while parsing config\n");
 	}
-	fwrite(jsonData.c_str(), 1, jsonData.size(), file.get());
-	fclose(file.release());
 }

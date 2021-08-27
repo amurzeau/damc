@@ -2,7 +2,6 @@
 #define EXPANDERFILTER_H
 
 #include "OscAddress.h"
-#include "../json.h"
 #include <stddef.h>
 #include <vector>
 
@@ -12,9 +11,6 @@ public:
 	void init(size_t numChannel);
 	void reset(double fs);
 	void processSamples(float** output, const float** input, size_t count);
-
-	void setParameters(const nlohmann::json& json);
-	nlohmann::json getParameters();
 
 protected:
 	float doCompression(float sample, float& y1, float& yL);

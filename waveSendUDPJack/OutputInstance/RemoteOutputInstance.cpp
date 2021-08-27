@@ -4,10 +4,20 @@ void RemoteOutputInstance::stop() {
 	remoteUdpOutput.stop();
 }
 
-RemoteOutputInstance::RemoteOutputInstance() {
+RemoteOutputInstance::RemoteOutputInstance(OscContainer* parent)
+    : OscContainer(parent, "remoteOutput"),
+      oscIp(this, "ip", "127.0.0.1"),
+      oscPort(this, "port", 2305),
+      oscClockDrift(this, "clockDrift", 1.0f),
+      oscAddVbanHeader(this, "vbanFormat") {
 	resamplingFilters.resize(2);
-	ip = "127.0.0.1";
-	port = 2305;
+
+	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
+	oscClockDrift.setChangeCallback([this](float newValue) {
+		for(auto& resamplingFilter : resamplingFilters) {
+			resamplingFilter.setClockDrift(newValue);
+		}
+	});
 }
 
 const char* RemoteOutputInstance::getName() {
@@ -20,24 +30,7 @@ int RemoteOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	for(ResamplingFilter& resamplingFilter : resamplingFilters) {
 		resamplingFilter.reset(sampleRate);
 	}
-	return remoteUdpOutput.init(index, sampleRate, ip.c_str(), port);
-}
-
-nlohmann::json RemoteOutputInstance::getParameters() {
-	return nlohmann::json::object(
-	    {{"ip", ip}, {"port", port}, {"clockDrift", resamplingFilters[0].getClockDrift()}, {"vban", addVbanHeader}});
-}
-
-void RemoteOutputInstance::setParameters(const nlohmann::json& json) {
-	ip = json.value("ip", ip);
-	port = json.value("port", port);
-	addVbanHeader = json.value("vban", addVbanHeader);
-
-	auto clockDrift = json.find("clockDrift");
-	if(clockDrift != json.end()) {
-		for(auto& resamplingFilter : resamplingFilters)
-			resamplingFilter.setClockDrift(clockDrift.value().get<float>());
-	}
+	return remoteUdpOutput.init(index, sampleRate, oscIp.c_str(), oscPort);
 }
 
 int RemoteOutputInstance::postProcessSamples(float** samples, size_t numChannel, jack_nframes_t nframes) {
@@ -74,7 +67,7 @@ int RemoteOutputInstance::postProcessSamples(float** samples, size_t numChannel,
 		resamplingFilters[i].processSamples(resampledBuffer[i], outBuffers[i].data(), nframes);
 	}
 
-	if(addVbanHeader)
+	if(oscAddVbanHeader)
 		remoteUdpOutput.sendAudio(resampledBuffer[0].data(), resampledBuffer[1].data(), resampledBuffer[0].size());
 	else
 		remoteUdpOutput.sendAudioWithoutVBAN(

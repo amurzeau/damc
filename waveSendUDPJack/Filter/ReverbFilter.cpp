@@ -10,6 +10,8 @@ ReverbFilter::ReverbFilter(OscContainer* parent, const std::string& name)
       delay(this, "delay", 1440),
       gain(this, "gain", 0.893),
       reverberators(this, "innerReverberators") {
+	reverberators.setFactory(
+	    [](OscContainer* parent, int name) { return new ReverbFilter(parent, std::to_string(name)); });
 	delay.setChangeCallback([this](int32_t oscValue) { delayFilter.setParameters(oscValue); });
 }
 
@@ -41,33 +43,4 @@ float ReverbFilter::processOneSample(float input) {
 
 	float gain = this->gain;
 	return -gain * input + (1 - (gain * gain)) * delayedSample;
-}
-
-void ReverbFilter::setParameters(const nlohmann::json& json) {
-	delay = json["delay"].get<unsigned int>();
-	gain = json["gain"].get<float>();
-
-	auto innerReverberatorsJson = json.find("innerReverberators");
-	if(innerReverberatorsJson != json.end() && innerReverberatorsJson->is_array()) {
-		size_t i = 0;
-		for(auto& reverberatorJson : innerReverberatorsJson.value()) {
-			if(i < reverberators.size())
-				reverberators[i].setParameters(reverberatorJson);
-			i++;
-		}
-	}
-}
-
-nlohmann::json ReverbFilter::getParameters() {
-	std::vector<nlohmann::json> reverberatorsJson;
-	std::transform(reverberators.begin(), reverberators.end(), std::back_inserter(reverberatorsJson), [](auto& filter) {
-		return filter.second->getParameters();
-	});
-
-	nlohmann::json ret = nlohmann::json::object({{"enabled", enabled.get()},
-	                                             {"delay", delay.get()},
-	                                             {"gain", gain.get()},
-	                                             {"innerReverberators", reverberatorsJson}});
-
-	return ret;
 }

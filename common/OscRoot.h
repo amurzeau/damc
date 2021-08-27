@@ -25,6 +25,7 @@ public:
 
 	void addConnector(OscConnector* connector);
 	void removeConnector(OscConnector* connector);
+	void setOnOscValueChanged(std::function<void()> onOscValueChanged);
 
 	void sendMessage(const std::string& address, const OscArgument* argument, size_t number) override;
 
@@ -32,11 +33,13 @@ protected:
 	void executeMessage(tosc_message_const* osc);
 
 	bool notifyOscAtInit() override;
+	void notifyValueChanged() override;
 
 private:
 	std::set<OscConnector*> connectors;
 	std::unique_ptr<uint8_t[]> oscOutputMessage;
 	size_t oscOutputMaxSize;
+	std::function<void()> onOscValueChanged;
 	bool doNotifyOscAtInit;
 };
 

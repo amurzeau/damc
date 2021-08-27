@@ -56,6 +56,11 @@ bool OscNode::notifyOscAtInit() {
 	return false;
 }
 
+void OscNode::notifyValueChanged() {
+	if(parent)
+		parent->notifyValueChanged();
+}
+
 void OscNode::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
 	if(address.empty() || address == "/") {
 		execute(arguments);

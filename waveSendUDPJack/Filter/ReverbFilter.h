@@ -1,7 +1,6 @@
 #ifndef REVERBFILTER_H
 #define REVERBFILTER_H
 
-#include "../json.h"
 #include "DelayFilter.h"
 #include "OscAddress.h"
 #include <stddef.h>
@@ -13,9 +12,6 @@ public:
 	void reset(int depth = 1, unsigned int innerReverberatorCount = 5);
 	void processSamples(float* output, const float* input, size_t count);
 	float processOneSample(float input);
-
-	void setParameters(const nlohmann::json& json);
-	nlohmann::json getParameters();
 
 private:
 	OscVariable<bool> enabled;

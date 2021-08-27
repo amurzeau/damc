@@ -1,7 +1,6 @@
 #ifndef DEVICEOUTPUTJACKINSTANCE_H
 #define DEVICEOUTPUTJACKINSTANCE_H
 
-#include "../json.h"
 #include "IAudioEndpoint.h"
 #include <stdint.h>
 // Need to be after else stdint might conflict
@@ -14,16 +13,16 @@
 
 #include "portaudio.h"
 
-class DeviceOutputInstance : public IAudioEndpoint {
+class DeviceOutputInstance : public IAudioEndpoint, public OscContainer {
 public:
+	DeviceOutputInstance(OscContainer* parent);
+
 	static std::vector<std::string> getDeviceList();
 	static int getDeviceIndex(const std::string& name);
 
 	virtual const char* getName() override;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) override;
 	virtual void stop() override;
-	virtual void setParameters(const nlohmann::json& json) override;
-	virtual nlohmann::json getParameters() override;
 	virtual void onTimer() override;
 
 	virtual int postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) override;
@@ -42,14 +41,15 @@ private:
 	std::vector<std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)>> ringBuffers;
 	std::vector<ResamplingFilter> resamplingFilters;
 	std::vector<float> resampledBuffer;
-	float deviceSampleRate = 48000.0f;
-	float clockDrift = 1.0f;
 	//	std::atomic<jack_nframes_t> nextBufferedSampleJackTime;
 	bool doDebug;
 	//	double currentJackTime;
 	//	double currentPaTime;
 	bool overflowOccured;
 	bool underflowOccured;
+
+	OscVariable<float> oscClockDrift;
+	OscVariable<int32_t> oscDeviceSampleRate;
 
 	uint32_t bufferLatencyNr;
 	std::vector<uint32_t> bufferLatencyHistory;

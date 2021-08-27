@@ -8,16 +8,13 @@ MainWindow::MainWindow(QWidget* parent)
       ui(new Ui::MainWindow),
       oscRoot(false),
       wavePlayInterface(&oscRoot),
-      outputInterfaces(&oscRoot, "strip"),
-      addDialog(&mainControlInterface) {
+      outputInterfaces(&oscRoot, "strip") {
 	ui->setupUi(this);
 
 	outputInterfaces.setWidget(
 	    this, ui->horizontalLayout, [this](QWidget*, OscContainer* oscParent, int name) -> QWidget* {
 		    return new OutputController(this, oscParent, std::to_string(name));
 	    });
-
-	mainControlInterface.setInterface(-1, &wavePlayInterface);
 
 	connect(ui->addButton, &QAbstractButton::clicked, this, &MainWindow::onAddInstance);
 	connect(ui->removeButton, &QAbstractButton::clicked, this, &MainWindow::onRemoveInstance);
@@ -65,7 +62,6 @@ void MainWindow::onAddInstance() {
 
 	QJsonObject json;
 	json["operation"] = "query";
-	mainControlInterface.sendMessage(json);
 }
 
 void MainWindow::onRemoveInstance() {
@@ -78,7 +74,6 @@ void MainWindow::onRemoveInstance() {
 		QJsonObject json;
 		json["operation"] = "remove";
 		json["target"] = value;
-		mainControlInterface.sendMessage(json);
 	}
 }
 

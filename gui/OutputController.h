@@ -4,7 +4,6 @@
 #include "BiquadFilter.h"
 #include "OscAddress.h"
 #include "OscWidgetMapper.h"
-#include "WavePlayOutputInterface.h"
 #include <QWidget>
 
 namespace Ui {
@@ -23,9 +22,6 @@ class OutputController : public QWidget, public OscContainer {
 public:
 	explicit OutputController(MainWindow* parent, OscContainer* oscParent, const std::string& name);
 	~OutputController();
-
-	void setInterface(WavePlayInterface* interface);
-	WavePlayOutputInterface* getOutputInterface() { return &interface; };
 
 	void updateHiddenState();
 	void updateTooltip();
@@ -65,7 +61,6 @@ protected:
 private:
 	Ui::OutputController* ui;
 	MainWindow* mainWindow;
-	WavePlayOutputInterface interface;
 	int numChannels;
 	EqualizersController* equalizersController;
 	CompressorController* compressorController;

@@ -5,7 +5,6 @@
 #include "OscWidgetArray.h"
 #include "OutputController.h"
 #include "WavePlayInterface.h"
-#include "WavePlayOutputInterface.h"
 #include <OscAddress.h>
 #include <QJsonObject>
 #include <QWidget>
@@ -42,7 +41,6 @@ private:
 	OscRoot oscRoot;
 	WavePlayInterface wavePlayInterface;
 	OscWidgetArray outputInterfaces;
-	WavePlayOutputInterface mainControlInterface;
 	std::unordered_map<int, OutputController*> outputs;
 	int numEq;
 

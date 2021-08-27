@@ -1,9 +1,8 @@
 #ifndef EQFILTER_H
 #define EQFILTER_H
 
-#include "OscAddress.h"
-#include "../json.h"
 #include "BiquadFilter.h"
+#include "OscAddress.h"
 #include <complex>
 #include <stddef.h>
 
@@ -16,16 +15,7 @@ public:
 	void processSamples(float** output, const float** input, size_t count);
 
 	void setParameters(bool enabled, FilterType filterType, double f0, double gain, double Q);
-	void getParameters(bool& enabled, FilterType& filterType, double& f0, double& gain, double& Q) {
-		enabled = this->enabled;
-		filterType = (FilterType) this->filterType.get();
-		f0 = this->f0;
-		gain = this->gain;
-		Q = this->Q;
-	}
-
-	void setParameters(const nlohmann::json& json);
-	nlohmann::json getParameters();
+	void getParameters(bool& enabled, FilterType& filterType, double& f0, double& gain, double& Q);
 
 	std::complex<double> getResponse(double f0);
 

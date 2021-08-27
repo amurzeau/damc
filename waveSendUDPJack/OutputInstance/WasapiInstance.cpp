@@ -226,8 +226,35 @@ exit:
 	return result;
 }
 
-WasapiInstance::WasapiInstance(Direction direction) {
+WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
+    : OscContainer(parent, "wasapiDevice"),
+      oscDeviceName(this, "deviceName", "default"),
+      oscDeviceSampleRate(this, "deviceSampleRate", 48000),
+      oscClockDrift(this, "clockDrift", 1.0f),
+      oscExclusiveMode(this, "exclusiveMode", true) {
 	this->direction = direction;
+
+	// Only allow changes when stopped
+	oscDeviceName.addCheckCallback([this](const std::string&) { return pDevice == nullptr; });
+	oscDeviceSampleRate.addCheckCallback([this](int) { return pDevice == nullptr; });
+	oscClockDrift.addCheckCallback([this](int) { return pDevice == nullptr; });
+	oscExclusiveMode.addCheckCallback([this](int) { return pDevice == nullptr; });
+
+	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
+	oscClockDrift.setChangeCallback([this](float newValue) {
+		for(auto& resamplingFilter : resamplingFilters) {
+			resamplingFilter.setClockDrift(newValue);
+		}
+	});
+	oscDeviceSampleRate.setChangeCallback([this, direction](float newValue) {
+		for(auto& resamplingFilter : resamplingFilters) {
+			if(direction == D_Output) {
+				resamplingFilter.setTargetSamplingRate(newValue);
+			} else {
+				resamplingFilter.setSourceSamplingRate(newValue);
+			}
+		}
+	});
 }
 
 const char* WasapiInstance::getName() {
@@ -260,12 +287,12 @@ int WasapiInstance::start(int index, size_t numChannel, int sampleRate, int jack
 	for(size_t i = 0; i < numChannel; i++) {
 		if(direction == D_Output) {
 			resamplingFilters[i].reset(sampleRate);
-			resamplingFilters[i].setTargetSamplingRate(deviceSampleRate);
-			resamplingFilters[i].setClockDrift(this->clockDrift);
+			resamplingFilters[i].setTargetSamplingRate(oscDeviceSampleRate);
+			resamplingFilters[i].setClockDrift(oscClockDrift);
 		} else {
-			resamplingFilters[i].reset(deviceSampleRate);
+			resamplingFilters[i].reset(oscDeviceSampleRate);
 			resamplingFilters[i].setTargetSamplingRate(sampleRate);
-			resamplingFilters[i].setClockDrift(this->clockDrift);
+			resamplingFilters[i].setClockDrift(oscClockDrift);
 		}
 	}
 
@@ -276,7 +303,7 @@ int WasapiInstance::start(int index, size_t numChannel, int sampleRate, int jack
 	previousAverageLatency = 0;
 	clockDriftPpm = 0;
 	maxBufferSize = 0;
-	printf("Using buffer size %d, device sample rate: %d\n", jackBufferSize, (int) deviceSampleRate);
+	printf("Using buffer size %d, device sample rate: %d\n", jackBufferSize, (int) oscDeviceSampleRate);
 
 	hr = pAudioClient->Start();
 	EXIT_ON_ERROR(hr);
@@ -293,7 +320,7 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 	uint64_t timePeriod = (uint64_t) jackBufferSize * REFTIMES_PER_SEC / jackSampleRate + 1;
 	REFERENCE_TIME duration;
 
-	hr = getDeviceByName(outputDevice, &pDevice);
+	hr = getDeviceByName(oscDeviceName, &pDevice);
 	EXIT_ON_ERROR(hr);
 
 	hr = pDevice->Activate(IID_IAudioClient, CLSCTX_ALL, NULL, (void**) &pAudioClient);
@@ -304,17 +331,17 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 
 	hr = pAudioClient->GetDevicePeriod(nullptr, &duration);
 
-	if(useExclusiveMode)
+	if(oscExclusiveMode)
 		printf("Using exclusive mode\n");
 
 	printf("Using format:\n");
 	printAudioConfig((WAVEFORMATEXTENSIBLE*) pFormat);
 
-	hr = pAudioClient->Initialize(useExclusiveMode ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED,
+	hr = pAudioClient->Initialize(oscExclusiveMode ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED,
 	                              // useExclusiveMode ? AUDCLNT_STREAMFLAGS_EVENTCALLBACK : 0,
 	                              0,
 	                              timePeriod,
-	                              useExclusiveMode ? timePeriod : 0,
+	                              oscExclusiveMode ? timePeriod : 0,
 	                              pFormat,
 	                              NULL);
 	CoTaskMemFree(pFormat);
@@ -368,7 +395,7 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 	    {F_Int16, WAVE_FORMAT_PCM, 16, 2},
 	};
 
-	if(useExclusiveMode) {
+	if(oscExclusiveMode) {
 		WAVEFORMATEXTENSIBLE* pWaveFormat;
 
 		pWaveFormat = (WAVEFORMATEXTENSIBLE*) CoTaskMemAlloc(sizeof(WAVEFORMATEXTENSIBLE));
@@ -412,7 +439,7 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 			INIT_WAVEFORMATEX_GUID(&pWaveFormat->SubFormat, format.formatTag);
 
 			pWaveFormat->Format.nChannels = numChannel;
-			pWaveFormat->Format.nSamplesPerSec = deviceSampleRate;
+			pWaveFormat->Format.nSamplesPerSec = oscDeviceSampleRate;
 			pWaveFormat->Format.nAvgBytesPerSec = pWaveFormat->Format.nBlockAlign * pWaveFormat->Format.nSamplesPerSec;
 
 			hr = pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, &pWaveFormat->Format, nullptr);
@@ -445,7 +472,7 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 			}
 		}
 
-		deviceSampleRate = pWaveFormat->Format.nSamplesPerSec;
+		oscDeviceSampleRate = pWaveFormat->Format.nSamplesPerSec;
 	}
 
 	if(!found) {
@@ -487,38 +514,6 @@ void WasapiInstance::printAudioConfig(const WAVEFORMATEXTENSIBLE* pFormat) {
 		       pFormat->dwChannelMask,
 		       pFormat->SubFormat.Data1);
 	}
-}
-
-void WasapiInstance::setParameters(const nlohmann::json& json) {
-	outputDevice = json.value("device", outputDevice);
-	float newSampleRate = json.value("sampleRate", 0);
-	if(newSampleRate) {
-		deviceSampleRate = newSampleRate;
-	}
-
-	useExclusiveMode = json.value("useExclusiveMode", useExclusiveMode);
-
-	auto clockDrift = json.find("clockDrift");
-	if(clockDrift != json.end()) {
-		this->clockDrift = clockDrift.value().get<float>();
-	}
-
-	for(auto& resamplingFilter : resamplingFilters) {
-		if(direction == D_Output) {
-			resamplingFilter.setTargetSamplingRate(deviceSampleRate);
-			resamplingFilter.setClockDrift(this->clockDrift);
-		} else {
-			resamplingFilter.setSourceSamplingRate(deviceSampleRate);
-			resamplingFilter.setClockDrift(this->clockDrift);
-		}
-	}
-}
-
-nlohmann::json WasapiInstance::getParameters() {
-	return nlohmann::json::object({{"device", outputDevice},
-	                               {"clockDrift", clockDrift},
-	                               {"sampleRate", deviceSampleRate},
-	                               {"useExclusiveMode", useExclusiveMode}});
 }
 
 int WasapiInstance::postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) {
@@ -811,16 +806,16 @@ void WasapiInstance::onTimer() {
 		return;
 
 	if(overflowOccured) {
-		printf("%s: Overflow: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, (int) overflowSize);
+		printf("%s: Overflow: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, (int) underflowSize);
+		printf("%s: underrun: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) underflowSize);
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
-		printf("%s: average latency: %f\n", outputDevice.c_str(), previousAverageLatency);
-		printf("%s: drift: %f\n", outputDevice.c_str(), clockDriftPpm);
+		printf("%s: average latency: %f\n", oscDeviceName.c_str(), previousAverageLatency);
+		printf("%s: drift: %f\n", oscDeviceName.c_str(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
 

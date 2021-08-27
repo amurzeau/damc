@@ -26,7 +26,7 @@ protected:
 
 private:
 	std::vector<T> values;
-	std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange;
+	std::vector<std::function<void(const std::vector<T>&, const std::vector<T>&)>> onChangeCallbacks;
 };
 
 template<class T> template<class U> bool OscFlatArray<T>::updateData(const U& lambda) {
@@ -40,6 +40,7 @@ template<class T> template<class U> bool OscFlatArray<T>::updateData(const U& la
 	}
 	if(values != savedValues) {
 		notifyOsc();
+		notifyValueChanged();
 		return true;
 	}
 	return false;
@@ -50,7 +51,7 @@ template<typename T> const std::vector<T>& OscFlatArray<T>::getData() const {
 }
 
 template<typename T> bool OscFlatArray<T>::setData(const std::vector<T>& newData) {
-	return updateData([&newData](std::vector<std::string>& data) { data = newData; });
+	return updateData([&newData](std::vector<T>& data) { data = newData; });
 }
 
 template<typename T> bool OscFlatArray<T>::setData(std::vector<T>&& newData) {
@@ -88,13 +89,16 @@ template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument
 			}
 		}
 	});
-	if(dataChanged && onChange)
-		onChange(oldData, values);
+	if(dataChanged) {
+		for(auto& callback : onChangeCallbacks) {
+			callback(oldData, values);
+		}
+	}
 }
 
 template<typename T>
 void OscFlatArray<T>::setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange) {
-	this->onChange = onChange;
+	this->onChangeCallbacks.push_back(onChange);
 }
 
 template<typename T> void OscFlatArray<T>::notifyOsc() {

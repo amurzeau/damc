@@ -12,9 +12,12 @@ add_library(common STATIC
 	Utils.h
 
 	Osc/OscArray.h
+	Osc/OscCombinedVariable.cpp
+	Osc/OscCombinedVariable.h
 	Osc/OscContainer.cpp
 	Osc/OscContainer.h
 	Osc/OscContainerArray.h
+	Osc/OscDynamicVariable.h
 	Osc/OscEndpoint.cpp
 	Osc/OscEndpoint.h
 	Osc/OscFlatArray.h

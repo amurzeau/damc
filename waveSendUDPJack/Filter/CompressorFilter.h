@@ -2,7 +2,6 @@
 #define COMPRESSORFILTER_H
 
 #include "OscAddress.h"
-#include "../json.h"
 #include <array>
 #include <deque>
 #include <stddef.h>
@@ -29,9 +28,6 @@ public:
 	void init(size_t numChannel);
 	void reset(double fs);
 	void processSamples(float** output, const float** input, size_t count);
-
-	void setParameters(const nlohmann::json& json);
-	nlohmann::json getParameters();
 
 protected:
 	float doCompression(float sample, PerChannelData& perChannelData);

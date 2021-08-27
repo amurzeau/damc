@@ -68,22 +68,10 @@ void EqFilter::setParameters(bool enabled, FilterType filterType, double f0, dou
 	computeFilter();
 }
 
-void EqFilter::setParameters(const nlohmann::json& json) {
-	if(!json.is_object())
-		return;
-
-	this->enabled = json.value("enabled", false);
-	this->filterType = json["type"].get<int>();
-	this->f0 = json.at("f0").get<double>();
-	this->gain = json.at("gain").get<double>();
-	this->Q = json.at("Q").get<double>();
-	computeFilter();
-}
-
-nlohmann::json EqFilter::getParameters() {
-	return nlohmann::json::object({{"enabled", this->enabled.get()},
-	                               {"type", this->filterType.get()},
-	                               {"f0", this->f0.get()},
-	                               {"gain", this->gain.get()},
-	                               {"Q", this->Q.get()}});
+void EqFilter::getParameters(bool& enabled, FilterType& filterType, double& f0, double& gain, double& Q) {
+	enabled = this->enabled;
+	filterType = (FilterType) this->filterType.get();
+	f0 = this->f0;
+	gain = this->gain;
+	Q = this->Q;
 }

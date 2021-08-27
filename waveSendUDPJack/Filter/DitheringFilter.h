@@ -1,7 +1,6 @@
 #ifndef DITHERINGFILTER_H
 #define DITHERINGFILTER_H
 
-#include "../json.h"
 #include <random>
 #include <stddef.h>
 #include <vector>
@@ -17,13 +16,6 @@ public:
 	void getParameters(double& scale, int& bitReduction) {
 		scale = this->scale;
 		bitReduction = this->bitReduction;
-	}
-
-	void setParameters(const nlohmann::json& json) {
-		setParameters(json["scale"].get<double>(), json["bitReduction"].get<int>());
-	}
-	nlohmann::json getParameters() {
-		return nlohmann::json::object({{"scale", scale}, {"bitReduction", bitReduction}});
 	}
 
 private:

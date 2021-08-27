@@ -13,7 +13,7 @@ class NewOutputInstanceDialog : public QDialog {
 	Q_OBJECT
 
 public:
-	explicit NewOutputInstanceDialog(WavePlayOutputInterface* interface, QWidget* parent = 0);
+	explicit NewOutputInstanceDialog(QWidget* parent = 0);
 	~NewOutputInstanceDialog();
 
 	void setTypeList(QJsonArray stringArray);
@@ -26,7 +26,6 @@ protected slots:
 
 private:
 	Ui::NewOutputInstanceDialog* ui;
-	WavePlayOutputInterface* interface;
 
 	QJsonArray portaudioDeviceArray;
 	QJsonArray wasapiDeviceArray;

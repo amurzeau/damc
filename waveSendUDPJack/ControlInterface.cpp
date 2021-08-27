@@ -7,50 +7,27 @@
 #include <set>
 #include <string.h>
 
-#include "OutputInstance/DeviceInputInstance.h"
 #include "OutputInstance/DeviceOutputInstance.h"
-#include "OutputInstance/LoopbackOutputInstance.h"
-#include "OutputInstance/RemoteInputInstance.h"
-#include "OutputInstance/RemoteOutputInstance.h"
 #ifdef _WIN32
 #include "OutputInstance/WasapiInstance.h"
 #endif
 
-ControlInterface::ControlInterface(const char* argv0)
-    : nextInstanceIndex(0),
-      numEq(6),
-      oscRoot(true),
+ControlInterface::ControlInterface()
+    : oscRoot(true),
       oscStatePersister(&oscRoot, "waveSendUDPJack_osc.json"),
       oscUdpServer(&oscRoot),
       oscTcpServer(&oscRoot),
-      oscRootNode(&oscRoot, "strip"),
+      outputs(&oscRoot, "strip"),
+      oscTypeList(&oscRoot, "type_list"),
+      oscDeviceList(&oscRoot, "device_list"),
+#ifdef _WIN32
+      oscDeviceListWasapi(&oscRoot, "device_list_wasapi"),
+#endif
       keyBinding(&oscRoot, &oscRoot),
-      oscOutputInstanceKeys(&oscRootNode, "keys"),
-      oscAddOutputInstance(&oscRootNode, "add"),
-      oscRemoveOutputInstance(&oscRootNode, "remove") {
-	char basePath[260];
+      updateLevelTimer(nullptr, &ControlInterface::releaseUvTimer),
+      oscNeedSaveConfig(false) {
 
-	size_t n = sizeof(basePath);
-	if(uv_exepath(basePath, &n) == 0)
-		basePath[n] = '\0';
-	else
-		basePath[0] = '\0';
-
-	if(basePath[0] == 0) {
-		saveFileName = "waveSendUDPJack.json";
-	} else {
-		size_t len = strlen(basePath);
-		char* p = basePath + len;
-		while(p >= basePath) {
-			if(*p == '/' || *p == '\\')
-				break;
-			p--;
-		}
-		if(p >= basePath)
-			*p = 0;
-
-		saveFileName = std::string(basePath) + "/waveSendUDPJack.json";
-	}
+	outputs.setFactory([this](OscContainer* parent, int name) { return new OutputInstance(parent, this, name); });
 
 	jack_status_t status;
 
@@ -58,7 +35,7 @@ ControlInterface::ControlInterface(const char* argv0)
 	uv_async_init(uv_default_loop(), &jackNotificationPending, &ControlInterface::onJackNotificationStatic);
 	uv_unref((uv_handle_t*) &jackNotificationPending);
 
-	monitoringJackClient = jack_client_open("wavePlayUDP-monitoringclient", JackNullOption, &status);
+	monitoringJackClient = jack_client_open("waveSendUDP-monitoringclient", JackNullOption, &status);
 	if(monitoringJackClient != nullptr) {
 		printf("Started monitoring client\n");
 		jack_set_port_connect_callback(monitoringJackClient, &ControlInterface::jackOnPortConnectStatic, this);
@@ -69,177 +46,45 @@ ControlInterface::ControlInterface(const char* argv0)
 	} else {
 		printf("Failed to start monitoring client: %d\n", status);
 	}
+
+	oscTypeList.setReadCallback([]() {
+		return std::vector<std::string>{
+		    {"Loopback", "RemoteOutput", "RemoteInput", "DeviceOutput", "DeviceInput", "WasapiOutput", "WasapiInput"}};
+	});
+	oscDeviceList.setReadCallback([]() { return DeviceOutputInstance::getDeviceList(); });
+#ifdef _WIN32
+	oscDeviceListWasapi.setReadCallback([]() { return WasapiInstance::getDeviceList(); });
+#endif
+
+	oscRoot.setOnOscValueChanged([this]() { oscNeedSaveConfig = true; });
+
+	updateLevelTimer.reset(new uv_timer_t);
+	uv_timer_init(uv_default_loop(), updateLevelTimer.get());
+	updateLevelTimer->data = this;
+	uv_timer_start(updateLevelTimer.get(), &onTimeoutTimerStatic, 66, 66);  // 15fps
 }
 
 ControlInterface::~ControlInterface() {}
 
 void ControlInterface::loadConfig() {
-	std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
-	std::string jsonData;
+	oscStatePersister.loadState(outputPortConnections);
 
-	printf("Loading config file %s\n", saveFileName.c_str());
+	// oscRoot.printAllNodes();
 
-	file.reset(fopen(saveFileName.c_str(), "rb"));
-	if(!file) {
-		printf("Can't open config file, ignoring\n");
-		return;
-	}
-
-	fseek(file.get(), 0, SEEK_END);
-	jsonData.resize(ftell(file.get()));
-	fseek(file.get(), 0, SEEK_SET);
-
-	fread(&jsonData[0], 1, jsonData.size(), file.get());
-	fclose(file.release());
-
-	try {
-		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
-
-		auto outputsOrder = jsonConfig.value("outputsOrder", std::vector<int>{});
-		oscOutputInstanceKeys.updateData([&outputsOrder](std::vector<int>& data) {
-			data.clear();
-			for(const auto& item : outputsOrder) {
-				data.push_back(item);
-			}
-		});
-
-		outputPortConnections = jsonConfig.value("portConnections", std::map<std::string, std::set<std::string>>{});
-
-		for(const nlohmann::json& outputInstancesJson : jsonConfig.at("outputInstances")) {
-			addOutputInstance(outputInstancesJson);
+	// Construct inputPortConnections from outputPortConnections
+	for(const auto& outputPort : outputPortConnections) {
+		for(const auto& inputPort : outputPort.second) {
+			inputPortConnections[inputPort].insert(outputPort.first);
 		}
-
-		// Construct inputPortConnections from outputPortConnections
-		for(const auto& outputPort : outputPortConnections) {
-			for(const auto& inputPort : outputPort.second) {
-				inputPortConnections[inputPort].insert(outputPort.first);
-			}
-		}
-	} catch(const nlohmann::json::exception& e) {
-		printf("Exception while parsing config: %s\n", e.what());
-		printf("json: %s\n", jsonData.c_str());
-	} catch(...) {
-		printf("Exception while parsing config\n");
 	}
-
-	oscStatePersister.loadState();
-	// oscServer.printAllNodes();
 }
 
 void ControlInterface::saveConfig() {
-	nlohmann::json jsonConfigToSave = nlohmann::json::object();
-	nlohmann::json outputInstancesJson = nlohmann::json::array();
-
-	try {
-		for(auto& output : outputs) {
-			outputInstancesJson.push_back(output.second->getParameters());
-		}
-
-		auto& outputsOrder = jsonConfigToSave["outputsOrder"] = nlohmann::json::array();
-		for(const auto& key : oscOutputInstanceKeys.getData()) {
-			outputsOrder.push_back(key);
-		}
-		jsonConfigToSave["outputInstances"] = outputInstancesJson;
-		jsonConfigToSave["portConnections"] = outputPortConnections;
-
-		std::string jsonData = jsonConfigToSave.dump(4);
-		std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
-
-		file.reset(fopen(saveFileName.c_str(), "wb"));
-		if(!file) {
-			printf("Can't open save file %s: %s(%d)\n", saveFileName.c_str(), strerror(errno), errno);
-		}
-		fwrite(jsonData.c_str(), 1, jsonData.size(), file.get());
-		fclose(file.release());
-	} catch(const nlohmann::json::exception& e) {
-		printf("Exception while saving config: %s\n", e.what());
-	} catch(...) {
-		printf("Exception while saving config\n");
-	}
-
-	oscStatePersister.saveState();
-}
-
-std::map<int, std::unique_ptr<OutputInstance>>::iterator ControlInterface::addOutputInstance(
-    const nlohmann::json& outputInstancesJson) {
-	int type = outputInstancesJson.value("type", -1);
-	int instance = outputInstancesJson.value("instance", -1);
-	int numChannel;
-	std::unique_ptr<OutputInstance> outputInstance;
-
-	if(instance == -1)
-		instance = nextInstanceIndex;
-	else if(nextInstanceIndex < instance)
-		nextInstanceIndex = instance;
-
-	nextInstanceIndex++;
-
-	OscArgument arg = std::to_string(instance);
-	oscAddOutputInstance.sendMessage(&arg, 1);
-
-	oscOutputInstanceKeys.updateData([instance](std::vector<int>& data) {
-		int key = instance;
-		if(std::find(data.begin(), data.end(), key) == data.end())
-			data.push_back(key);
-	});
-
-	switch(type) {
-		case OutputInstance::Loopback:
-			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new LoopbackOutputInstance));
-			break;
-		case OutputInstance::RemoteOutput:
-			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new RemoteOutputInstance));
-			break;
-		case OutputInstance::RemoteInput:
-			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new RemoteInputInstance));
-			break;
-		case OutputInstance::DeviceOutput:
-			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new DeviceOutputInstance));
-			break;
-		case OutputInstance::DeviceInput:
-			outputInstance.reset(new OutputInstance(&oscRootNode, instance, new DeviceInputInstance));
-			break;
-#ifdef _WIN32
-		case OutputInstance::WasapiDeviceOutput:
-			outputInstance.reset(
-			    new OutputInstance(&oscRootNode, instance, new WasapiInstance(WasapiInstance::D_Output)));
-			break;
-		case OutputInstance::WasapiDeviceInput:
-			outputInstance.reset(
-			    new OutputInstance(&oscRootNode, instance, new WasapiInstance(WasapiInstance::D_Input)));
-			break;
-#endif
-		default:
-			printf("Bad type %d\n", type);
-			return outputs.end();
-	}
-
-	auto numChannelElement = outputInstancesJson.find("numChannels");
-	if(numChannelElement != outputInstancesJson.end()) {
-		numChannel = numChannelElement.value().get<int>();
-	} else {
-		printf("Missing numChannel configuration, using 2\n");
-		numChannel = 2;
-	}
-	outputInstance->init(this, &controlServer, type, numChannel, outputInstancesJson);
-
-	return outputs.emplace(std::make_pair(instance, std::move(outputInstance))).first;
-}
-
-void ControlInterface::removeOutputInstance(std::map<int, std::unique_ptr<OutputInstance>>::iterator index) {
-	index->second->stop();
-
-	int key = index->first;
-	OscArgument arg = key;
-	oscRemoveOutputInstance.sendMessage(&arg, 1);
-
-	outputs.erase(index);
-
-	oscOutputInstanceKeys.updateData([key](std::vector<int>& data) { Utils::vector_erase(data, key); });
+	printf("Saving config\n");
+	oscStatePersister.saveState(outputPortConnections);
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
-	controlServer.init(controlIp, controlPort, &messageProcessorStatic, &onNewClientStatic, this);
 	oscUdpServer.init(controlIp, controlPort + 1);
 	oscTcpServer.init(controlIp, controlPort + 2);
 
@@ -247,7 +92,7 @@ int ControlInterface::init(const char* controlIp, int controlPort) {
 }
 
 void ControlInterface::run() {
-	controlServer.run();
+	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }
 
 void ControlInterface::stop() {
@@ -259,145 +104,9 @@ void ControlInterface::stop() {
 
 	oscTcpServer.stop();
 	oscUdpServer.stop();
-	controlServer.stop();
 
 	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {
 		output.second->stop();
-	}
-}
-
-void ControlInterface::onNewClientStatic(void* arg, ControlClient* client) {
-	ControlInterface* thisInstance = (ControlInterface*) arg;
-	thisInstance->onNewClient(client);
-}
-
-void ControlInterface::onNewClient(ControlClient* client) {
-	nlohmann::json json = {
-	    {"instance", -1}, {"operation", "outputList"}, {"numOutputInstances", outputs.size()}, {"numEq", numEq}};
-
-	std::string jsonStr = json.dump();
-
-	client->sendMessage(jsonStr.c_str(), jsonStr.size());
-
-	std::set<int> outputsToSend;
-	for(auto& output : outputs) {
-		outputsToSend.insert(output.first);
-	}
-
-	for(const auto& key : oscOutputInstanceKeys.getData()) {
-		int index = key;
-		auto outputIt = outputsToSend.find(index);
-		if(outputIt == outputsToSend.end())
-			continue;
-
-		auto& output = outputs[index];
-
-		nlohmann::json json = {{"instance", -1}, {"operation", "add"}, {"target", index}};
-		std::string jsonStr = json.dump();
-		client->sendMessage(jsonStr.c_str(), jsonStr.size());
-
-		jsonStr = output->getParameters().dump();
-		client->sendMessage(jsonStr.c_str(), jsonStr.size());
-
-		outputsToSend.erase(outputIt);
-	}
-
-	// Send remaning outputs that were not referenced by outputsOrder
-	for(int index : outputsToSend) {
-		auto& output = outputs[index];
-
-		nlohmann::json json = {{"instance", -1}, {"operation", "add"}, {"target", index}};
-		std::string jsonStr = json.dump();
-		client->sendMessage(jsonStr.c_str(), jsonStr.size());
-
-		jsonStr = output->getParameters().dump();
-		client->sendMessage(jsonStr.c_str(), jsonStr.size());
-	}
-}
-
-void ControlInterface::messageProcessorStatic(void* arg, const void* data, size_t size) {
-	ControlInterface* thisInstance = (ControlInterface*) arg;
-	thisInstance->messageProcessor(data, size);
-}
-
-void ControlInterface::messageProcessor(const void* data, size_t size) {
-	nlohmann::json json;
-
-	try {
-		json = nlohmann::json::parse((const char*) data, (const char*) data + size);
-		int outputInstance = json.at("instance").get<int>();
-
-		if(outputInstance == -1) {
-			printf("Received command: %s\n", json.dump().c_str());
-			std::string operation = json.value("operation", "none");
-			int target = json.value("target", -1);
-
-			if(operation == "add") {
-				auto it = addOutputInstance(json);
-
-				if(it != outputs.end()) {
-					json["target"] = it->first;
-					std::string jsonStr = json.dump();
-					controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
-
-					jsonStr = it->second->getParameters().dump();
-					controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
-					printf("Added interface %d\n", it->first);
-					saveConfig();
-				}
-			} else if(operation == "remove") {
-				auto it = outputs.find(target);
-				if(it == outputs.end()) {
-					printf("Bad delete target %d\n", target);
-				} else {
-					removeOutputInstance(it);
-
-					std::string jsonStr = json.dump();
-					controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
-					printf("Removed interface %d\n", target);
-					saveConfig();
-				}
-			} else if(operation == "query") {
-				nlohmann::json json = {{"instance", -1},
-				                       {"operation", "queryResult"},
-				                       {"deviceList", DeviceOutputInstance::getDeviceList()},
-#ifdef _WIN32
-				                       {"deviceListWasapi", WasapiInstance::getDeviceList()},
-#endif
-				                       {"typeList",
-				                        nlohmann::json::array({"Loopback",
-				                                               "RemoteOutput",
-				                                               "RemoteInput",
-				                                               "DeviceOutput",
-				                                               "DeviceInput",
-				                                               "WasapiOutput",
-				                                               "WasapiInput"})}};
-				std::string jsonStr = json.dump();
-				controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
-			} else if(operation == "outputsOrder") {
-				auto outputsOrder = json.value("outputsOrder", std::vector<int>{});
-				oscOutputInstanceKeys.updateData([&outputsOrder](std::vector<int>& data) {
-					data.clear();
-					for(const auto& item : outputsOrder) {
-						data.push_back(item);
-					}
-				});
-				saveConfig();
-			}
-		} else if(outputs.count(outputInstance) > 0) {
-			outputs[outputInstance]->setParameters(json);
-
-			std::string jsonStr = json.dump();
-			controlServer.sendMessage(jsonStr.c_str(), jsonStr.size());
-
-			saveConfig();
-		} else {
-			printf("Bad output instance %d\n", outputInstance);
-		}
-	} catch(const nlohmann::json::exception& e) {
-		printf("Exception while parsing message: %s\n", e.what());
-	} catch(...) {
-		printf("Exception while parsing message\n");
 	}
 }
 
@@ -544,6 +253,7 @@ void ControlInterface::jackOnGraphReordered() {
 		if(portChange.connect) {
 			outputPortConnections[outputPort].insert(inputPort);
 			inputPortConnections[inputPort].insert(outputPort);
+			oscNeedSaveConfig = true;
 			// printf("Port connection %s to %s\n", outputPort, inputPort);
 		} else {
 			// printf("Port disconnection %s to %s\n", outputPort, inputPort);
@@ -551,6 +261,7 @@ void ControlInterface::jackOnGraphReordered() {
 				outputPortConnections[outputPort].erase(inputPort);
 				if(outputPortConnections[outputPort].empty())
 					outputPortConnections.erase(outputPort);
+				oscNeedSaveConfig = true;
 			}
 			if(inputPortConnections.count(inputPort)) {
 				inputPortConnections[inputPort].erase(outputPort);
@@ -601,4 +312,28 @@ void ControlInterface::jackOnPortRegistration(jack_port_id_t port, int is_regist
 			jack_connect(monitoringJackClient, it->first.c_str(), inputPorts.c_str());
 		}
 	}
+}
+
+void ControlInterface::onTimeoutTimerStatic(uv_timer_t* handle) {
+	ControlInterface* thisInstance = (ControlInterface*) handle->data;
+	thisInstance->onTimeoutTimer();
+}
+
+void ControlInterface::onTimeoutTimer() {
+	for(auto& outputInstance : outputs) {
+		outputInstance.second->onTimeoutTimer();
+	}
+	if(oscNeedSaveConfig) {
+		oscNeedSaveConfig = false;
+		saveConfig();
+	}
+}
+
+void ControlInterface::releaseUvTimer(uv_timer_t* handle) {
+	uv_timer_stop(handle);
+	uv_close((uv_handle_t*) handle, &onCloseTimer);
+}
+
+void ControlInterface::onCloseTimer(uv_handle_t* handle) {
+	delete(uv_timer_t*) handle;
 }

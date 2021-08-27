@@ -144,7 +144,6 @@ void OutputController::updateEqEnable() {
 void OutputController::onChangeClockDrift() {
 	QJsonObject json;
 	json["clockDrift"] = ui->clockDriftSpinBox->value() / 1000000 + ui->sampleRateSpinBox->value();
-	interface.sendMessage(json);
 }
 
 void OutputController::onShowEq() {
@@ -235,7 +234,7 @@ void OutputController::dragEnterEvent(QDragEnterEvent* event) {
 			qDebug("Drag enter self");
 		} else {
 			event->acceptProposedAction();
-			qDebug("Drag enter other: %d", interface.getIndex());
+			qDebug("Drag drop other: %s", getName().c_str());
 		}
 	} else {
 		event->ignore();
@@ -275,7 +274,7 @@ void OutputController::dropEvent(QDropEvent* event) {
 			qDebug("Drag drop self");
 		} else {
 			event->acceptProposedAction();
-			qDebug("Drag drop other: %d", interface.getIndex());
+			qDebug("Drag drop other: %s", getName().c_str());
 		}
 	} else {
 		event->ignore();
@@ -293,7 +292,7 @@ void OutputController::mousePressEvent(QMouseEvent* event) {
 	QDrag* drag = new QDrag(this);
 	drag->setMimeData(mimeData);
 
-	qDebug("Begin drag %d", interface.getIndex());
+	qDebug("Begin drag: %s", getName().c_str());
 	if(drag->exec(Qt::MoveAction) == Qt::MoveAction) {
 		qDebug("End drag");
 	} else {

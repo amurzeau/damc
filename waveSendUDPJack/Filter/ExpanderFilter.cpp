@@ -90,23 +90,3 @@ void ExpanderFilter::levelDetector(float dbSample, float& y1, float& yL) {
 	y1 = fminf(dbSample, alphaR * y1 + (1 - alphaR) * dbSample);
 	yL = alphaA * yL + (1 - alphaA) * y1;
 }
-
-void ExpanderFilter::setParameters(const nlohmann::json& json) {
-	enable = json.at("enabled").get<bool>();
-	attackTime = json.at("attackTime").get<float>();
-	releaseTime = json.at("releaseTime").get<float>();
-	threshold = json.at("threshold").get<float>();
-	makeUpGain = json.at("makeUpGain").get<float>();
-	ratio = json.at("ratio").get<float>();
-	kneeWidth = json.at("kneeWidth").get<float>();
-}
-
-nlohmann::json ExpanderFilter::getParameters() {
-	return nlohmann::json::object({{"enabled", enable.get()},
-	                               {"attackTime", attackTime.get()},
-	                               {"releaseTime", releaseTime.get()},
-	                               {"threshold", threshold.get()},
-	                               {"makeUpGain", makeUpGain.get()},
-	                               {"ratio", ratio.get()},
-	                               {"kneeWidth", kneeWidth.get()}});
-}

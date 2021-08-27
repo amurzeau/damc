@@ -3,11 +3,12 @@
 
 #include "../Filter/FilteringChain.h"
 #include "../OscServer.h"
-#include "../json.h"
 #include "IAudioEndpoint.h"
 #include "OscAddress.h"
+#include <Osc/OscCombinedVariable.h>
 #include <stdint.h>
 #include <uv.h>
+
 // Need to be after else stdint might conflict
 #include <jack/jack.h>
 #include <jack/metadata.h>
@@ -26,32 +27,25 @@ public:
 		DeviceInput,
 		WasapiDeviceOutput,
 		WasapiDeviceInput,
+		None,
 		MaxType
 	};
 
 public:
-	OutputInstance(OscContainer* parent, size_t index, IAudioEndpoint* endpoint);
+	OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index);
 	virtual ~OutputInstance();
 
-	int init(ControlInterface* controlInterface,
-	         ControlServer* controlServer,
-	         int type,
-	         size_t numChannel,
-	         const nlohmann::json& json);
 	int start();
 	void stop();
-
-	void setParameters(const nlohmann::json& json);
-	nlohmann::json getParameters();
+	void onTimeoutTimer();
 
 protected:
+	bool updateType(int newValue);
+	void updateEnabledState(bool enable);
+
 	static int processSamplesStatic(jack_nframes_t nframes, void* arg);
 	int processInputSamples(jack_nframes_t nframes);
 	int processSamples(jack_nframes_t nframes);
-
-	static void onTimeoutTimerStatic(uv_timer_t* handle);
-	void onTimeoutTimer();
-	static void onCloseTimer(uv_handle_t* handle);
 
 	static void onJackPropertyChangeCallback(jack_uuid_t subject,
 	                                         const char* key,
@@ -59,34 +53,36 @@ protected:
 	                                         void* arg);
 
 private:
+	int outputInstance;
 	ControlInterface* controlInterface;
-	ControlServer* controlServer;
-	IAudioEndpoint* endpoint;
-	OscVariable<bool> enabled;
-	OscReadOnlyVariable<int32_t> outputInstance;
-	OscReadOnlyVariable<int32_t> type;
+	std::unique_ptr<IAudioEndpoint> endpoint;
 	jack_client_t* client;
 	jack_uuid_t clientUuid;
-	OscVariable<std::string> clientName;
-	OscVariable<std::string> clientDisplayName;
-	OscReadOnlyVariable<int32_t> numChannel;
-	OscReadOnlyVariable<int32_t> sampleRate;
+	int jackSampleRate;
 	FilterChain filters;
 	std::vector<jack_port_t*> inputPorts;
 	std::vector<jack_port_t*> outputPorts;
 	uv_mutex_t filtersMutex;
 
-	nlohmann::json controlSettings;
-
-	uv_timer_t* updateLevelTimer;
 	std::vector<float> levelsDb;
 	uv_mutex_t peakMutex;
 	int samplesInPeaks;
 	std::vector<float> peaksPerChannel;
-	OscReadOnlyVariable<float> oscPeakGlobal;
+	std::string oscPeakGlobalPath;
 	std::string oscPeakPerChannelPath;
+	std::vector<OscArgument> oscPeakPerChannelArguments;
+
+	OscVariable<bool> oscEnable;
+	OscVariable<int32_t> oscType;
+	OscVariable<std::string> oscName;
+	OscVariable<std::string> oscDisplayName;
+	OscVariable<int32_t> oscNumChannel;
+	OscVariable<int32_t> oscSampleRate;
+
 	OscVariable<bool> oscEnablePeakUpdate;
 	OscVariable<bool> oscEnablePeakJsonUpdate;
+
+	OscCombinedVariable readyChecker;
 };
 
 #endif

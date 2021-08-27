@@ -174,6 +174,11 @@ bool OscRoot::notifyOscAtInit() {
 	return doNotifyOscAtInit;
 }
 
+void OscRoot::notifyValueChanged() {
+	if(onOscValueChanged)
+		onOscValueChanged();
+}
+
 void OscRoot::triggerAddress(const std::string& address) {
 	execute(address.c_str() + 1, std::vector<OscArgument>{});
 }
@@ -184,6 +189,10 @@ void OscRoot::addConnector(OscConnector* connector) {
 
 void OscRoot::removeConnector(OscConnector* connector) {
 	connectors.erase(connector);
+}
+
+void OscRoot::setOnOscValueChanged(std::function<void()> onOscValueChanged) {
+	this->onOscValueChanged = onOscValueChanged;
 }
 
 static constexpr uint8_t SLIP_END = 0xC0;

@@ -1,7 +1,6 @@
 #ifndef DELAYFILTER_H
 #define DELAYFILTER_H
 
-#include "../json.h"
 #include <stddef.h>
 #include <vector>
 
@@ -15,9 +14,6 @@ public:
 
 	void setParameters(unsigned int delay);
 	void getParameters(unsigned int& delay) { delay = this->delay; }
-
-	void setParameters(const nlohmann::json& json) { setParameters(json["delay"].get<unsigned int>()); }
-	nlohmann::json getParameters() { return nlohmann::json::object({{"delay", delay}}); }
 
 private:
 	std::vector<float> delayedSamples;

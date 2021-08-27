@@ -30,9 +30,9 @@ int main(int argc, char* argv[]) {
 
 	srand(time(nullptr));
 	Pa_Initialize();
-	ControlInterface controlInterface(argv[0]);
+	ControlInterface controlInterface;
 
-	controlInterface.init("127.0.0.1", 2306);
+	controlInterface.init("127.0.0.1", 2406);
 
 	controlInterface.loadConfig();
 
