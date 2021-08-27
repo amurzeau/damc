@@ -1,14 +1,15 @@
 #include "MainWindow.h"
+#include "OutputController.h"
 #include "ui_MainWindow.h"
 #include <QInputDialog>
-#include <QJsonDocument>
 
 MainWindow::MainWindow(QWidget* parent)
     : QWidget(parent),
       ui(new Ui::MainWindow),
       oscRoot(false),
       wavePlayInterface(&oscRoot),
-      outputInterfaces(&oscRoot, "strip") {
+      outputInterfaces(&oscRoot, "strip"),
+      addDialog(&oscRoot) {
 	ui->setupUi(this);
 
 	outputInterfaces.setWidget(
@@ -22,47 +23,10 @@ MainWindow::MainWindow(QWidget* parent)
 }
 
 MainWindow::~MainWindow() {
-	clearOutputs();
 	delete ui;
 }
 
-void MainWindow::onMessage(const QJsonObject& message) {
-	qDebug("Received global message: %s", QJsonDocument(message).toJson().constData());
-	QJsonValue outputInstance = message["instance"];
-	if(outputInstance.type() != QJsonValue::Undefined && outputInstance.toInt() == -1) {
-		if(message["operation"] == "outputList") {
-			int numOutputInstances = message["numOutputInstances"].toInt();
-			numEq = message["numEq"].toInt();
-
-			if(numOutputInstances > 100) {
-				printf("too many instance %d\n", numOutputInstances);
-				return;
-			}
-
-			clearOutputs();
-
-			printf("%d instances\n", numOutputInstances);
-		} else if(message["operation"] == "queryResult" && openAddDialogRequested) {
-			openAddDialogRequested = false;
-
-			addDialog.setTypeList(message["typeList"].toArray());
-			addDialog.setDeviceList(message["deviceList"].toArray());
-#ifdef _WIN32
-			addDialog.setWasapiDeviceList(message["deviceListWasapi"].toArray());
-#endif
-			addDialog.show();
-		} else if(message["operation"] == "add") {
-		} else if(message["operation"] == "remove") {
-		}
-	}
-}
-
-void MainWindow::onAddInstance() {
-	openAddDialogRequested = true;
-
-	QJsonObject json;
-	json["operation"] = "query";
-}
+void MainWindow::onAddInstance() {}
 
 void MainWindow::onRemoveInstance() {
 	bool ok;
@@ -71,18 +35,7 @@ void MainWindow::onRemoveInstance() {
 	    QInputDialog::getInt(this, "Remove item index", "Put the device index to remove", 0, 0, 2147483647, 1, &ok);
 
 	if(ok) {
-		QJsonObject json;
-		json["operation"] = "remove";
-		json["target"] = value;
 	}
-}
-
-void MainWindow::clearOutputs() {
-	for(auto& output : outputs) {
-		ui->horizontalLayout->removeWidget(output.second);
-		delete output.second;
-	}
-	outputs.clear();
 }
 
 void MainWindow::moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore) {

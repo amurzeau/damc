@@ -9,9 +9,6 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <math.h>
@@ -141,11 +138,6 @@ void OutputController::updateEqEnable() {
 	ui->eqButton->setChecked(equalizersController->getEqEnabled());
 }
 
-void OutputController::onChangeClockDrift() {
-	QJsonObject json;
-	json["clockDrift"] = ui->clockDriftSpinBox->value() / 1000000 + ui->sampleRateSpinBox->value();
-}
-
 void OutputController::onShowEq() {
 	ui->eqButton->toggle();
 	if(equalizersController->isHidden()) {
@@ -178,31 +170,6 @@ void OutputController::onShowBalance() {
 		balanceController->show();
 	} else {
 		balanceController->hide();
-	}
-}
-
-void OutputController::onMessageReceived(const QJsonObject& message) {
-	QJsonValue levelValue = message.value("levels");
-	return;
-	if(levelValue.type() == QJsonValue::Array) {
-	} else {
-		qDebug("Received message %s", QJsonDocument(message).toJson(QJsonDocument::Indented).constData());
-
-		QJsonValue numChannelsValue = message.value("numChannels");
-		if(numChannelsValue.type() != QJsonValue::Undefined) {
-			setNumChannel(numChannelsValue.toInt());
-		}
-
-		QJsonValue clockDriftValue = message.value("clockDrift");
-		if(clockDriftValue.type() != QJsonValue::Undefined) {
-			double drift = clockDriftValue.toDouble();
-			ui->sampleRateSpinBox->blockSignals(true);
-			ui->clockDriftSpinBox->blockSignals(true);
-			ui->sampleRateSpinBox->setValue(roundf(drift));
-			ui->clockDriftSpinBox->setValue((drift - roundf(drift)) * 1000000.0);
-			ui->clockDriftSpinBox->blockSignals(false);
-			ui->sampleRateSpinBox->blockSignals(false);
-		}
 	}
 }
 

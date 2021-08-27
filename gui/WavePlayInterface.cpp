@@ -1,5 +1,4 @@
 #include "WavePlayInterface.h"
-#include <QJsonDocument>
 #include <QMessageBox>
 #include <QNetworkDatagram>
 

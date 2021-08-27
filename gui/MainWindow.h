@@ -3,12 +3,9 @@
 
 #include "NewOutputInstanceDialog.h"
 #include "OscWidgetArray.h"
-#include "OutputController.h"
 #include "WavePlayInterface.h"
 #include <OscRoot.h>
-#include <QJsonObject>
 #include <QWidget>
-#include <unordered_map>
 
 namespace Ui {
 class MainWindow;
@@ -25,15 +22,11 @@ public:
 	bool getShowDisabledOutputInstances();
 
 protected slots:
-	void onMessage(const QJsonObject& message);
 	void onAddInstance();
 	void onRemoveInstance();
 
 signals:
 	void showDisabledChanged();
-
-protected:
-	void clearOutputs();
 
 private:
 	Ui::MainWindow* ui;
@@ -41,11 +34,8 @@ private:
 	OscRoot oscRoot;
 	WavePlayInterface wavePlayInterface;
 	OscWidgetArray outputInterfaces;
-	std::unordered_map<int, OutputController*> outputs;
-	int numEq;
 
 	NewOutputInstanceDialog addDialog;
-	bool openAddDialogRequested;
 };
 
 #endif  // MAINWINDOW_H

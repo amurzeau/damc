@@ -48,7 +48,7 @@ private:
 template<typename T>
 OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noexcept
     : OscContainer(parent, name), keys(this, "keys"), nextKey(0) {
-	keys.setChangeCallback([this](const std::vector<int>&, const std::vector<int>& newValue) {
+	keys.setChangeCallback([this](const std::vector<int>& newValue) {
 		for(const auto& oldKey : value) {
 			if(!Utils::vector_find(newValue, oldKey.first)) {
 				erase(oldKey.first);

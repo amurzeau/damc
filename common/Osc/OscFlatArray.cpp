@@ -48,8 +48,6 @@ template<typename T> std::string OscFlatArray<T>::getAsString() const {
 }
 
 template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument>& arguments) {
-	auto oldData = values;
-
 	bool dataChanged = updateData([this, &arguments](std::vector<T>& data) {
 		data.clear();
 		for(const auto& arg : arguments) {
@@ -63,13 +61,12 @@ template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument
 	});
 	if(dataChanged) {
 		for(auto& callback : onChangeCallbacks) {
-			callback(oldData, values);
+			callback(values);
 		}
 	}
 }
 
-template<typename T>
-void OscFlatArray<T>::setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange) {
+template<typename T> void OscFlatArray<T>::setChangeCallback(std::function<void(const std::vector<T>&)> onChange) {
 	this->onChangeCallbacks.push_back(onChange);
 }
 

@@ -32,28 +32,13 @@ public:
 	int32_t getSampleRate() { return oscSampleRate.get(); }
 
 protected slots:
-	void onChangeClockDrift();
-
-	void onMessageReceived(const QJsonObject& message);
-
 	void onShowEq();
 	void onShowCompressor();
 	void onShowExpander();
 	void onShowBalance();
 
 protected:
-	void setDisplayedVolume(int volume);
 	void setNumChannel(int numChannel);
-
-	void sendChangeCompressor(const char* filterName,
-	                          bool enabled,
-	                          float releaseTime,
-	                          float attackTime,
-	                          float threshold,
-	                          float makeUpGain,
-	                          float ratio,
-	                          float kneeWidth,
-	                          bool useMovingMax);
 
 	void dragEnterEvent(QDragEnterEvent* event) override;
 	void dragMoveEvent(QDragMoveEvent* event) override;

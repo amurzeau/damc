@@ -1,15 +1,11 @@
 #ifndef WAVEPLAYINTERFACE_H
 #define WAVEPLAYINTERFACE_H
 
-#include "OscRoot.h"
-#include <QJsonObject>
+#include <OscRoot.h>
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
-#include <QUdpSocket>
 #include <stdint.h>
-#include <unordered_map>
-#include <vector>
 
 class WavePlayInterface : public QObject, public OscConnector {
 	Q_OBJECT
