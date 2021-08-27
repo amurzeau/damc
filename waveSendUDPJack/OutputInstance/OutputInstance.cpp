@@ -22,7 +22,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
       filters(this),
 
       oscEnable(this, "enable", true),
-      oscType(this, "type", (int32_t) OutputInstance::None),
+      oscType(this, "_type", (int32_t) OutputInstance::None),  // use _type to ensure it is before endpoint config
       oscName(this, "name"),
       oscDisplayName(this, "display_name"),
       oscNumChannel(this, "channels", 0),
