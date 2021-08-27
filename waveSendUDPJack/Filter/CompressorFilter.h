@@ -3,7 +3,6 @@
 
 #include <Osc/OscContainer.h>
 #include <Osc/OscVariable.h>
-#include <array>
 #include <deque>
 #include <stddef.h>
 #include <vector>

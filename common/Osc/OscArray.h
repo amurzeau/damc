@@ -2,6 +2,7 @@
 
 #include "OscGenericArray.h"
 #include "OscVariable.h"
+#include <functional>
 
 template<typename T> class OscArray : public OscGenericArray<OscVariable<T>> {
 public:

@@ -1,4 +1,5 @@
 #include "OscFlatArray.h"
+#include <algorithm>
 #include <type_traits>
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscFlatArray);

@@ -11,9 +11,7 @@
 #include <Osc/OscContainer.h>
 #include <Osc/OscContainerArray.h>
 #include <Osc/OscVariable.h>
-#include <array>
 #include <stddef.h>
-#include <tuple>
 
 class FilterChain : public OscContainer {
 public:

@@ -125,7 +125,7 @@ void OscGenericArray<T>::execute(std::string_view address, const std::vector<Osc
 
 			keysToKeep.insert(key);
 
-			if(std::count(keysOrder.begin(), keysOrder.end(), key) == 0) {
+			if(!Utils::vector_find(keysOrder, key)) {
 				// The item wasn't existing, add it
 				insert(key);
 			}

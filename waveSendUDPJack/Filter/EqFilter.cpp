@@ -1,5 +1,6 @@
 #include "EqFilter.h"
 
+#include <algorithm>
 #include <cmath>
 #include <string.h>
 

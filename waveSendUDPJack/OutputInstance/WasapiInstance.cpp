@@ -2,6 +2,7 @@
 
 #include "WasapiInstance.h"
 #include <FunctionDiscoveryKeys_devpkey.h>
+#include <algorithm>
 #include <codecvt>
 #include <ksmedia.h>
 #include <locale>
