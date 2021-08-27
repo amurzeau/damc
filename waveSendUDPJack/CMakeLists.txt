@@ -47,11 +47,7 @@ add_executable(waveSendUDPJack
 	OutputInstance/ResamplingFilter.h
 
 	${SOURCES}
-	
-	ControlServer.cpp
-	ControlServer.h
-	ControlClient.cpp
-	ControlClient.h
+
 	ControlInterface.cpp
 	ControlInterface.h
 	json.h

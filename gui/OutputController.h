@@ -2,8 +2,10 @@
 #define OUTPUTCONTROLLER_H
 
 #include "BiquadFilter.h"
-#include "OscAddress.h"
 #include "OscWidgetMapper.h"
+#include <Osc/OscContainer.h>
+#include <Osc/OscEndpoint.h>
+#include <Osc/OscVariable.h>
 #include <QWidget>
 
 namespace Ui {

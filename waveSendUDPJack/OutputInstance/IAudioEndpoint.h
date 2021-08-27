@@ -1,12 +1,8 @@
 #ifndef AUDIOENDPOINT_H
 #define AUDIOENDPOINT_H
 
-#include "../Filter/FilteringChain.h"
 #include <stdint.h>
 #include <uv.h>
-
-class ControlServer;
-class ControlClient;
 
 class IAudioEndpoint {
 public:

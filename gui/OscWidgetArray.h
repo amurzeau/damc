@@ -1,6 +1,7 @@
 #pragma once
 
-#include <OscAddress.h>
+#include <Osc/OscContainer.h>
+#include <Osc/OscEndpoint.h>
 #include <QObject>
 
 #include <QBoxLayout>

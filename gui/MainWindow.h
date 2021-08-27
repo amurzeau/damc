@@ -5,7 +5,7 @@
 #include "OscWidgetArray.h"
 #include "OutputController.h"
 #include "WavePlayInterface.h"
-#include <OscAddress.h>
+#include <OscRoot.h>
 #include <QJsonObject>
 #include <QWidget>
 #include <unordered_map>

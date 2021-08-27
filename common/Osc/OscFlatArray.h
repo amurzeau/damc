@@ -1,8 +1,7 @@
 #pragma once
 
 #include "OscContainer.h"
-#include "Utils.h"
-#include <type_traits>
+#include "OscReadOnlyVariable.h"
 
 template<typename T> class OscFlatArray : protected OscContainer {
 public:
@@ -23,89 +22,17 @@ public:
 
 protected:
 	void notifyOsc();
+	bool checkData(const std::vector<T>& savedValues);
 
 private:
 	std::vector<T> values;
 	std::vector<std::function<void(const std::vector<T>&, const std::vector<T>&)>> onChangeCallbacks;
 };
 
+EXPLICIT_INSTANCIATE_OSC_VARIABLE(extern template, OscFlatArray);
+
 template<class T> template<class U> bool OscFlatArray<T>::updateData(const U& lambda) {
 	std::vector<T> savedValues = values;
 	lambda(values);
-	for(auto key : values) {
-		if(std::count(values.begin(), values.end(), key) != 1) {
-			printf("Duplicate data inserted: %d\n", (int) key);
-			abort();
-		}
-	}
-	if(values != savedValues) {
-		notifyOsc();
-		notifyValueChanged();
-		return true;
-	}
-	return false;
-}
-
-template<typename T> const std::vector<T>& OscFlatArray<T>::getData() const {
-	return values;
-}
-
-template<typename T> bool OscFlatArray<T>::setData(const std::vector<T>& newData) {
-	return updateData([&newData](std::vector<T>& data) { data = newData; });
-}
-
-template<typename T> bool OscFlatArray<T>::setData(std::vector<T>&& newData) {
-	return updateData([newData = std::move(newData)](std::vector<T>& data) { data = std::move(newData); });
-}
-
-template<typename T> std::string OscFlatArray<T>::getAsString() const {
-	std::string result = "[";
-
-	for(const auto& item : values) {
-		if constexpr(std::is_same_v<T, std::string>) {
-			result += " \"" + item + "\",";
-		} else {
-			result += " " + std::to_string(item) + ",";
-		}
-	}
-
-	if(result.back() == ',')
-		result.pop_back();
-
-	return result + " ]";
-}
-
-template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument>& arguments) {
-	auto oldData = values;
-
-	bool dataChanged = updateData([this, &arguments](std::vector<T>& data) {
-		data.clear();
-		for(const auto& arg : arguments) {
-			T v;
-			if(this->template getArgumentAs<T>(arg, v)) {
-				data.push_back(v);
-			} else {
-				printf("Bad argument type: %d\n", (int) arg.index());
-			}
-		}
-	});
-	if(dataChanged) {
-		for(auto& callback : onChangeCallbacks) {
-			callback(oldData, values);
-		}
-	}
-}
-
-template<typename T>
-void OscFlatArray<T>::setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange) {
-	this->onChangeCallbacks.push_back(onChange);
-}
-
-template<typename T> void OscFlatArray<T>::notifyOsc() {
-	std::vector<OscArgument> valueToSend;
-	valueToSend.reserve(values.size());
-	for(auto& v : values) {
-		valueToSend.push_back(v);
-	}
-	sendMessage(&valueToSend[0], valueToSend.size());
+	return checkData(savedValues);
 }

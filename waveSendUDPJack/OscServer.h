@@ -11,7 +11,6 @@
 
 #include "OscRoot.h"
 
-class ControlClient;
 class OscNode;
 struct tosc_message_const;
 

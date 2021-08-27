@@ -1,7 +1,6 @@
 #ifndef DIALOG_H
 #define DIALOG_H
 
-#include "WavePlayOutputInterface.h"
 #include <QDialog>
 #include <QJsonArray>
 

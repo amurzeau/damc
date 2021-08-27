@@ -8,6 +8,8 @@
 
 #include "RemoteUdpOutput.h"
 #include "ResamplingFilter.h"
+#include <Osc/OscContainer.h>
+#include <Osc/OscVariable.h>
 
 class RemoteOutputInstance : public IAudioEndpoint, public OscContainer {
 public:

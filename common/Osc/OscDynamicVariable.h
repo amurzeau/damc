@@ -1,6 +1,7 @@
 #pragma once
 
 #include "OscContainer.h"
+#include "OscReadOnlyVariable.h"
 
 template<typename T> class OscDynamicVariable : public OscContainer {
 public:
@@ -23,31 +24,4 @@ private:
 	std::function<std::vector<T>()> onReadCallback;
 };
 
-template<typename T>
-OscDynamicVariable<T>::OscDynamicVariable(OscContainer* parent, std::string name) : OscContainer(parent, name) {}
-
-template<typename T> std::vector<T> OscDynamicVariable<T>::get() {
-	if(onReadCallback)
-		return onReadCallback();
-	else
-		return std::vector<T>{};
-}
-
-template<typename T> std::string OscDynamicVariable<T>::getAsString() const {
-	return {};
-}
-
-template<typename T> void OscDynamicVariable<T>::setReadCallback(std::function<std::vector<T>()> onReadCallback) {
-	this->onReadCallback = onReadCallback;
-}
-
-template<typename T> void OscDynamicVariable<T>::notifyOsc() {
-	std::vector<OscArgument> valueToSend;
-	auto values = get();
-
-	valueToSend.reserve(values.size());
-	for(auto& v : values) {
-		valueToSend.push_back(v);
-	}
-	sendMessage(&valueToSend[0], valueToSend.size());
-}
+EXPLICIT_INSTANCIATE_OSC_VARIABLE(extern template, OscDynamicVariable)

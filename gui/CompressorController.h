@@ -1,8 +1,8 @@
 #ifndef COMPRESSORCONTROLLER_H
 #define COMPRESSORCONTROLLER_H
 
-#include "OscAddress.h"
 #include "OscWidgetMapper.h"
+#include <Osc/OscContainer.h>
 #include <QDialog>
 
 namespace Ui {

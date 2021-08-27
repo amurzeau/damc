@@ -2,10 +2,9 @@
 #define OUTPUTJACKINSTANCE_H
 
 #include "../Filter/FilteringChain.h"
-#include "../OscServer.h"
 #include "IAudioEndpoint.h"
-#include "OscAddress.h"
 #include <Osc/OscCombinedVariable.h>
+#include <Osc/OscContainer.h>
 #include <stdint.h>
 #include <uv.h>
 
@@ -14,8 +13,6 @@
 #include <jack/metadata.h>
 
 class ControlInterface;
-class ControlServer;
-class ControlClient;
 
 class OutputInstance : public OscContainer {
 public:

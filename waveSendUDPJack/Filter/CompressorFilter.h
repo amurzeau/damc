@@ -1,7 +1,8 @@
 #ifndef COMPRESSORFILTER_H
 #define COMPRESSORFILTER_H
 
-#include "OscAddress.h"
+#include <Osc/OscContainer.h>
+#include <Osc/OscVariable.h>
 #include <array>
 #include <deque>
 #include <stddef.h>

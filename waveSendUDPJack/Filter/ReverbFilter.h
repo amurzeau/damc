@@ -2,7 +2,9 @@
 #define REVERBFILTER_H
 
 #include "DelayFilter.h"
-#include "OscAddress.h"
+#include <Osc/OscContainer.h>
+#include <Osc/OscContainerArray.h>
+#include <Osc/OscVariable.h>
 #include <stddef.h>
 #include <vector>
 

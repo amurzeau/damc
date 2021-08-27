@@ -4,6 +4,8 @@
 #include <stdint.h>
 // Need to be after else stdint might conflict
 #include "ResamplingFilter.h"
+#include <Osc/OscContainer.h>
+#include <Osc/OscVariable.h>
 #include <atomic>
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>

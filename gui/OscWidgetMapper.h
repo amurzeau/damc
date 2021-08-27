@@ -1,6 +1,6 @@
 #pragma once
 
-#include <OscAddress.h>
+#include <Osc/OscContainer.h>
 #include <QObject>
 
 #include <QAbstractButton>

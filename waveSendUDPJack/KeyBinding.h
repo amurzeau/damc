@@ -1,6 +1,6 @@
 #pragma once
 
-#include "OscAddress.h"
+#include <Osc/OscEndpoint.h>
 #include <atomic>
 #include <memory>
 #include <mutex>
@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <string>
 #include <thread>
-#include <unordered_map>
 #include <uv.h>
 
 class OscRoot;

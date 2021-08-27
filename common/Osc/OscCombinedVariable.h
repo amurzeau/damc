@@ -1,6 +1,9 @@
 #pragma once
 
 #include "OscReadOnlyVariable.h"
+#include <functional>
+#include <memory>
+#include <vector>
 
 class OscSourceVariable {
 public:

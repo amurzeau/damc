@@ -30,7 +30,6 @@ set(HEADERS
 	OscWidgetMapper.h
 	OutputController.h
 	WavePlayInterface.h
-	WavePlayOutputInterface.h
 )
 
 set(SOURCES
@@ -49,7 +48,6 @@ set(SOURCES
 	OscWidgetMapper.cpp
 	OutputController.cpp
 	WavePlayInterface.cpp
-	WavePlayOutputInterface.cpp
 	main.cpp
 )
 

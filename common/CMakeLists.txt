@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.1)
 add_library(common STATIC
 	BiquadFilter.cpp
 	BiquadFilter.h
-	OscAddress.h
 	OscRoot.cpp
 	OscRoot.h
 	tinyosc.c
@@ -11,20 +10,25 @@ add_library(common STATIC
 	Utils.cpp
 	Utils.h
 
+	Osc/OscArray.cpp
 	Osc/OscArray.h
 	Osc/OscCombinedVariable.cpp
 	Osc/OscCombinedVariable.h
 	Osc/OscContainer.cpp
 	Osc/OscContainer.h
 	Osc/OscContainerArray.h
+	Osc/OscDynamicVariable.cpp
 	Osc/OscDynamicVariable.h
 	Osc/OscEndpoint.cpp
 	Osc/OscEndpoint.h
+	Osc/OscFlatArray.cpp
 	Osc/OscFlatArray.h
 	Osc/OscGenericArray.h
 	Osc/OscNode.cpp
 	Osc/OscNode.h
+	Osc/OscReadOnlyVariable.cpp
 	Osc/OscReadOnlyVariable.h
+	Osc/OscVariable.cpp
 	Osc/OscVariable.h
 )
 

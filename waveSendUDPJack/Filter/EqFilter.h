@@ -2,7 +2,8 @@
 #define EQFILTER_H
 
 #include "BiquadFilter.h"
-#include "OscAddress.h"
+#include <Osc/OscContainer.h>
+#include <Osc/OscVariable.h>
 #include <complex>
 #include <stddef.h>
 

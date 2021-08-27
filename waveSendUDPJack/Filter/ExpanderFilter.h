@@ -1,7 +1,8 @@
 #ifndef EXPANDERFILTER_H
 #define EXPANDERFILTER_H
 
-#include "OscAddress.h"
+#include <Osc/OscContainer.h>
+#include <Osc/OscVariable.h>
 #include <stddef.h>
 #include <vector>
 

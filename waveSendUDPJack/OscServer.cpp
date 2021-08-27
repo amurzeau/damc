@@ -1,9 +1,8 @@
 #include "OscServer.h"
-#include "ControlClient.h"
-#include "OscAddress.h"
-#include "tinyosc.h"
+#include <Osc/OscNode.h>
 #include <math.h>
 #include <string.h>
+#include <tinyosc.h>
 
 OscServer::OscServer(OscRoot* oscRoot) : OscConnector(oscRoot, false), started(false) {}
 

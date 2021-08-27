@@ -3,6 +3,8 @@
 #include "OscContainer.h"
 #include "OscFlatArray.h"
 #include "Utils.h"
+#include <map>
+#include <memory>
 #include <set>
 
 template<typename T> class OscGenericArray : protected OscContainer {

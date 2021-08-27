@@ -2,6 +2,8 @@
 #define REMOTEINPUTJACKINSTANCE_H
 
 #include "IAudioEndpoint.h"
+#include <Osc/OscContainer.h>
+#include <Osc/OscVariable.h>
 #include <stdint.h>
 // Need to be after else stdint might conflict
 #include <jack/jack.h>

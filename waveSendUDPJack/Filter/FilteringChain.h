@@ -6,8 +6,11 @@
 #include "DitheringFilter.h"
 #include "EqFilter.h"
 #include "ExpanderFilter.h"
-#include "OscAddress.h"
 #include "ReverbFilter.h"
+#include <Osc/OscArray.h>
+#include <Osc/OscContainer.h>
+#include <Osc/OscContainerArray.h>
+#include <Osc/OscVariable.h>
 #include <array>
 #include <stddef.h>
 #include <tuple>

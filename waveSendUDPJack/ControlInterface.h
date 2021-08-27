@@ -1,8 +1,6 @@
 #ifndef CONTROLINTERFACE_H
 #define CONTROLINTERFACE_H
 
-#include "ControlClient.h"
-#include "ControlServer.h"
 #include "KeyBinding.h"
 #include "OscRoot.h"
 #include "OscServer.h"
