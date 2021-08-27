@@ -62,6 +62,7 @@ ControlInterface::ControlInterface()
 	uv_timer_init(uv_default_loop(), updateLevelTimer.get());
 	updateLevelTimer->data = this;
 	uv_timer_start(updateLevelTimer.get(), &onTimeoutTimerStatic, 66, 66);  // 15fps
+	uv_unref((uv_handle_t*) updateLevelTimer.get());
 }
 
 ControlInterface::~ControlInterface() {}
