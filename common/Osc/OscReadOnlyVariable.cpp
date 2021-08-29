@@ -56,6 +56,9 @@ template<typename T> OscReadOnlyVariable<T>& OscReadOnlyVariable<T>::operator=(c
 }
 
 template<typename T> std::string OscReadOnlyVariable<T>::getAsString() const {
+	if(isDefaultValue)
+		return {};
+
 	if constexpr(std::is_same_v<T, std::string>) {
 		return "\"" + getToOsc() + "\"";
 	} else {
