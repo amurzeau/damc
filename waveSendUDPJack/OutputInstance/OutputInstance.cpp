@@ -22,8 +22,8 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 
       oscEnable(this, "enable", true),
       oscType(this, "_type", (int32_t) OutputInstance::None),  // use _type to ensure it is before endpoint config
-      oscName(this, "name"),
-      oscDisplayName(this, "display_name"),
+      oscName(this, "name", std::to_string(index)),
+      oscDisplayName(this, "display_name", std::to_string(index)),
       oscNumChannel(this, "channels", 0),
       oscSampleRate(this, "sample_rate"),
 
