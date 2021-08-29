@@ -10,7 +10,7 @@ set(FORMS
 	EqualizerFilters.ui
 	EqualizersController.ui
 	MainWindow.ui
-	NewOutputInstanceDialog.ui
+	OutputInstanceConfigDialog.ui
 	OutputController.ui
 )
 
@@ -25,7 +25,7 @@ set(HEADERS
 	FastLabelWidget.h
 	LevelMeterWidget.h
 	MainWindow.h
-	NewOutputInstanceDialog.h
+	OutputInstanceConfigDialog.h
 	OscWidgetArray.h
 	OscWidgetMapper.h
 	OutputController.h
@@ -43,7 +43,7 @@ set(SOURCES
 	FastLabelWidget.cpp
 	LevelMeterWidget.cpp
 	MainWindow.cpp
-	NewOutputInstanceDialog.cpp
+	OutputInstanceConfigDialog.cpp
 	OscWidgetArray.cpp
 	OscWidgetMapper.cpp
 	OutputController.cpp

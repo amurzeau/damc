@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "NewOutputInstanceDialog.h"
 #include "OscWidgetArray.h"
 #include "WavePlayInterface.h"
 #include <Osc/OscFlatArray.h>
@@ -46,7 +45,6 @@ private:
 	OscFlatArray<std::string> oscTypeArray;
 	OscFlatArray<std::string> oscPortaudioDeviceArray;
 	OscFlatArray<std::string> oscWasapiDeviceArray;
-	NewOutputInstanceDialog addDialog;
 };
 
 #endif  // MAINWINDOW_H

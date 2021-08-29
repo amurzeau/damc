@@ -26,7 +26,6 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
       oscEnable(this, "enable"),
       oscMute(&oscFilterChain, "mute"),
       oscDelay(&oscFilterChain, "delay"),
-      oscClockDrift(&oscFilterChain, "clockDrift"),
       oscVolume(&oscFilterChain, "volume"),
       oscName(this, "name"),
       oscDisplayName(this, "display_name"),
@@ -41,7 +40,6 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	oscEnable.setWidget(ui->enableCheckBox);
 	oscMute.setWidget(ui->muteButton);
 	oscDelay.setWidget(ui->delaySpinBox);
-	oscClockDrift.setWidget(ui->clockDriftSpinBox);
 
 	oscSampleRate.setChangeCallback([this](int32_t newValue) { ui->sampleRateSpinBox->setValue(newValue); });
 
@@ -49,7 +47,6 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	oscVolume.setChangeCallback([this](int32_t value) { ui->volumeLevelLabel->setText(QString::number(value)); });
 
 	equalizersController = new EqualizersController(this, &oscFilterChain);
-
 	balanceController = new BalanceController(this, &oscFilterChain);
 
 	compressorController = new CompressorController(this, &oscFilterChain, "compressorFilter");
@@ -58,17 +55,22 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	expanderController = new CompressorController(this, &oscFilterChain, "expanderFilter");
 	expanderController->getEnableMapper().setWidget(ui->expanderButton, false);
 
+	configDialog = new OutputInstanceConfigDialog(parent, this, this);
+
 	connect(parent, &MainWindow::showDisabledChanged, this, &OutputController::updateHiddenState);
 	connect(ui->enableCheckBox, &QCheckBox::toggled, this, &OutputController::updateHiddenState);
 
 	oscEnable.setChangeCallback([this](bool) {
 		updateHiddenState();
+		setNumChannel(0);
+		ui->levelLabel->setText("--");
 	});
 
 	connect(ui->eqButton, &QAbstractButton::clicked, this, &OutputController::onShowEq);
 	connect(ui->compressorButton, &QAbstractButton::clicked, this, &OutputController::onShowCompressor);
 	connect(ui->expanderButton, &QAbstractButton::clicked, this, &OutputController::onShowExpander);
 	connect(ui->balanceButton, &QAbstractButton::clicked, this, &OutputController::onShowBalance);
+	connect(ui->configButton, &QAbstractButton::clicked, this, &OutputController::onShowConfig);
 	connect(ui->removeButton, &QAbstractButton::clicked, this, &OutputController::onRemove);
 
 	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
@@ -76,7 +78,7 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 	oscMute.setChangeCallback([this](bool newValue) {
 		for(size_t i = 0; i < levelWidgets.size(); i++) {
-			levelWidgets[i]->setDisabled(newValue == 1);
+			levelWidgets[i]->setDisabled(newValue);
 		}
 	});
 
@@ -119,6 +121,10 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 OutputController::~OutputController() {
 	delete ui;
+}
+
+void OutputController::showConfigDialog() {
+	configDialog->show();
 }
 
 void OutputController::updateHiddenState() {
@@ -168,6 +174,14 @@ void OutputController::onShowBalance() {
 		balanceController->show();
 	} else {
 		balanceController->hide();
+	}
+}
+
+void OutputController::onShowConfig() {
+	if(configDialog->isHidden()) {
+		configDialog->show();
+	} else {
+		configDialog->hide();
 	}
 }
 

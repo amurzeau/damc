@@ -12,7 +12,6 @@ MainWindow::MainWindow(QWidget* parent)
       oscTypeArray(&oscRoot, "type_list"),
       oscPortaudioDeviceArray(&oscRoot, "device_list"),
       oscWasapiDeviceArray(&oscRoot, "device_list_wasapi") {
-      addDialog(&oscRoot) {
 	ui->setupUi(this);
 
 	outputInterfaces.setWidget(

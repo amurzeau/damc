@@ -3,6 +3,7 @@
 
 #include "BiquadFilter.h"
 #include "OscWidgetMapper.h"
+#include "OutputInstanceConfigDialog.h"
 #include <Osc/OscContainer.h>
 #include <Osc/OscEndpoint.h>
 #include <Osc/OscVariable.h>
@@ -25,8 +26,7 @@ public:
 	explicit OutputController(MainWindow* parent, OscContainer* oscParent, const std::string& name);
 	~OutputController();
 
-	void updateHiddenState();
-	void updateTooltip();
+	void showConfigDialog();
 	void updateEqEnable();
 
 	int32_t getSampleRate() { return oscSampleRate.get(); }
@@ -36,10 +36,14 @@ protected slots:
 	void onShowCompressor();
 	void onShowExpander();
 	void onShowBalance();
+	void onShowConfig();
 	void onRemove();
 
 protected:
 	void setNumChannel(int numChannel);
+
+	void updateHiddenState();
+	void updateTooltip();
 
 	void dragEnterEvent(QDragEnterEvent* event) override;
 	void dragMoveEvent(QDragMoveEvent* event) override;
@@ -54,6 +58,7 @@ private:
 	CompressorController* compressorController;
 	CompressorController* expanderController;
 	BalanceController* balanceController;
+	OutputInstanceConfigDialog* configDialog;
 	std::vector<LevelMeterWidget*> levelWidgets;
 
 	OscContainer oscFilterChain;
@@ -62,7 +67,6 @@ private:
 	OscWidgetMapper<QAbstractButton> oscEnable;
 	OscWidgetMapper<QAbstractButton> oscMute;
 	OscWidgetMapper<QDoubleSpinBox> oscDelay;
-	OscWidgetMapper<QDoubleSpinBox> oscClockDrift;
 	OscWidgetMapper<QAbstractSlider> oscVolume;
 	OscVariable<std::string> oscName;
 	OscVariable<std::string> oscDisplayName;
