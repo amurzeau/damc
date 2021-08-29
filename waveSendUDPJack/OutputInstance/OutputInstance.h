@@ -89,7 +89,7 @@ private:
 	OscVariable<std::string> oscName;
 	OscVariable<std::string> oscDisplayName;
 	OscVariable<int32_t> oscNumChannel;
-	OscVariable<int32_t> oscSampleRate;
+	OscReadOnlyVariable<int32_t> oscSampleRate;
 
 	OscVariable<bool> oscEnablePeakUpdate;
 	OscVariable<bool> oscEnablePeakJsonUpdate;
