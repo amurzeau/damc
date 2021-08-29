@@ -9,6 +9,9 @@ MainWindow::MainWindow(QWidget* parent)
       oscRoot(false),
       wavePlayInterface(&oscRoot),
       outputInterfaces(&oscRoot, "strip"),
+      oscTypeArray(&oscRoot, "type_list"),
+      oscPortaudioDeviceArray(&oscRoot, "device_list"),
+      oscWasapiDeviceArray(&oscRoot, "device_list_wasapi") {
       addDialog(&oscRoot) {
 	ui->setupUi(this);
 
@@ -20,6 +23,12 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(ui->addButton, &QAbstractButton::clicked, this, &MainWindow::onAddInstance);
 	connect(ui->removeButton, &QAbstractButton::clicked, this, &MainWindow::onRemoveInstance);
 	connect(ui->showDisabledCheckBox, &QCheckBox::toggled, this, &MainWindow::showDisabledChanged);
+
+	oscTypeArray.setChangeCallback([this](const auto&) { emit typeListChanged(); });
+
+	oscPortaudioDeviceArray.setChangeCallback([this](const auto&) { emit deviceListChanged(); });
+
+	oscWasapiDeviceArray.setChangeCallback([this](const auto&) { emit deviceListChanged(); });
 }
 
 MainWindow::~MainWindow() {

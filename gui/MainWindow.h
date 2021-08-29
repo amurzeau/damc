@@ -4,6 +4,7 @@
 #include "NewOutputInstanceDialog.h"
 #include "OscWidgetArray.h"
 #include "WavePlayInterface.h"
+#include <Osc/OscFlatArray.h>
 #include <OscRoot.h>
 #include <QWidget>
 
@@ -22,12 +23,18 @@ public:
 	void moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore);
 	bool getShowDisabledOutputInstances();
 
+	const std::vector<std::string>& getTypeList() { return oscTypeArray.getData(); }
+	const std::vector<std::string>& getDeviceList() { return oscPortaudioDeviceArray.getData(); }
+	const std::vector<std::string>& getDeviceWasapiList() { return oscWasapiDeviceArray.getData(); }
+
 protected slots:
 	void onAddInstance();
 	void onRemoveInstance();
 
 signals:
 	void showDisabledChanged();
+	void typeListChanged();
+	void deviceListChanged();
 
 private:
 	Ui::MainWindow* ui;
@@ -36,6 +43,9 @@ private:
 	WavePlayInterface wavePlayInterface;
 	OscWidgetArray outputInterfaces;
 
+	OscFlatArray<std::string> oscTypeArray;
+	OscFlatArray<std::string> oscPortaudioDeviceArray;
+	OscFlatArray<std::string> oscWasapiDeviceArray;
 	NewOutputInstanceDialog addDialog;
 };
 
