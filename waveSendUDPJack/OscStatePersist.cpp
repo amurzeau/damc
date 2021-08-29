@@ -30,30 +30,6 @@ OscStatePersist::OscStatePersist(OscRoot* oscRoot, std::string fileName) : oscRo
 	}
 }
 
-void execute(OscRoot* oscRoot, std::string_view address, const std::vector<OscArgument>& arguments) {
-	/*printf("%s = ", std::string(address).c_str());
-	for(const auto& arg : arguments) {
-	    std::visit(
-	        [](auto arg) {
-	            if constexpr(std::is_same_v<decltype(arg), bool>) {
-	                printf("%s ", arg ? "true" : "false");
-	            } else if constexpr(std::is_same_v<decltype(arg), int32_t>) {
-	                printf("%d ", (int) arg);
-	            } else if constexpr(std::is_same_v<decltype(arg), float>) {
-	                printf("%f ", arg);
-	            } else if constexpr(std::is_same_v<decltype(arg), std::string>) {
-	                printf("\"%s\" ", arg.c_str());
-	            } else {
-	                printf("unknown ");
-	            }
-	        },
-	        arg);
-	}
-	printf("\n");
-	*/
-	oscRoot->execute(address, arguments);
-}
-
 void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::json& object) {
 	std::vector<OscArgument> values;
 
@@ -112,7 +88,7 @@ void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::j
 				}
 			}
 			if(!skipExecute) {
-				execute(oscRoot, address, values);
+				oscRoot->execute(address, values);
 			}
 			break;
 		}
@@ -146,7 +122,7 @@ void recurseJson(OscRoot* oscRoot, const std::string& address, const nlohmann::j
 			break;
 	}
 	if(!values.empty()) {
-		execute(oscRoot, address, values);
+		oscRoot->execute(address, values);
 	}
 }
 
