@@ -22,7 +22,7 @@ public:
 	OscReadOnlyVariable(OscContainer* parent, std::string name, T initialValue = {});
 	OscReadOnlyVariable(const OscReadOnlyVariable&) = delete;
 
-	void set(T v);
+	void set(T v, bool fromOsc = false);
 	void setDefault(T v);
 	void forceDefault(T v);
 

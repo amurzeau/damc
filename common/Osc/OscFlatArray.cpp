@@ -4,7 +4,7 @@
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscFlatArray);
 
-template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& savedValues) {
+template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& savedValues, bool fromOsc) {
 	for(auto key : values) {
 		if(std::count(values.begin(), values.end(), key) != 1) {
 			printf("Duplicate data inserted\n");
@@ -12,7 +12,8 @@ template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& saved
 		}
 	}
 	if(values != savedValues) {
-		notifyOsc();
+		if(!fromOsc || isOscValueAuthority())
+			notifyOsc();
 		notifyValueChanged();
 		return true;
 	}
@@ -49,17 +50,19 @@ template<typename T> std::string OscFlatArray<T>::getAsString() const {
 }
 
 template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument>& arguments) {
-	bool dataChanged = updateData([this, &arguments](std::vector<T>& data) {
-		data.clear();
-		for(const auto& arg : arguments) {
-			T v;
-			if(this->template getArgumentAs<T>(arg, v)) {
-				data.push_back(v);
-			} else {
-				printf("Bad argument type: %d\n", (int) arg.index());
-			}
-		}
-	});
+	bool dataChanged = updateData(
+	    [this, &arguments](std::vector<T>& data) {
+		    data.clear();
+		    for(const auto& arg : arguments) {
+			    T v;
+			    if(this->template getArgumentAs<T>(arg, v)) {
+				    data.push_back(v);
+			    } else {
+				    printf("Bad argument type: %d\n", (int) arg.index());
+			    }
+		    }
+	    },
+	    true);
 	if(dataChanged) {
 		for(auto& callback : onChangeCallbacks) {
 			callback(values);

@@ -7,7 +7,7 @@ template<typename T> class OscFlatArray : protected OscContainer {
 public:
 	OscFlatArray(OscContainer* parent, std::string name) noexcept : OscContainer(parent, name) {}
 
-	template<class U> bool updateData(const U& lambda);
+	template<class U> bool updateData(const U& lambda, bool fromOsc = false);
 	const std::vector<T>& getData() const;
 	bool setData(const std::vector<T>& newData);
 	bool setData(std::vector<T>&& newData);
@@ -22,7 +22,7 @@ public:
 
 protected:
 	void notifyOsc();
-	bool checkData(const std::vector<T>& savedValues);
+	bool checkData(const std::vector<T>& savedValues, bool fromOsc);
 
 private:
 	std::vector<T> values;
@@ -31,8 +31,8 @@ private:
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(extern template, OscFlatArray);
 
-template<class T> template<class U> bool OscFlatArray<T>::updateData(const U& lambda) {
+template<class T> template<class U> bool OscFlatArray<T>::updateData(const U& lambda, bool fromOsc) {
 	std::vector<T> savedValues = values;
 	lambda(values);
-	return checkData(savedValues);
+	return checkData(savedValues, fromOsc);
 }

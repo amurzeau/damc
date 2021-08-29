@@ -5,24 +5,30 @@ EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscReadOnlyVariable)
 template<typename T>
 OscReadOnlyVariable<T>::OscReadOnlyVariable(OscContainer* parent, std::string name, T initialValue)
     : OscContainer(parent, name), value(initialValue), isDefaultValue(true) {
-	if(notifyOscAtInit())
+	if(isOscValueAuthority())
 		notifyOsc();
 }
 
-template<typename T> void OscReadOnlyVariable<T>::set(T v) {
+template<typename T> void OscReadOnlyVariable<T>::set(T v, bool fromOsc) {
 	if(value != v || isDefaultValue) {
 		bool isDataValid = callCheckCallbacks(v);
 		if(isDataValid) {
 			isDefaultValue = false;
 			value = v;
 			callChangeCallbacks(v);
-			notifyOsc();
+			if(!fromOsc || isOscValueAuthority())
+				notifyOsc();
 			notifyValueChanged();
 		} else {
 			if constexpr(std::is_same_v<T, std::string>)
 				printf("%s: refused value %s\n", getFullAddress().c_str(), v.c_str());
 			else
 				printf("%s: refused value %s\n", getFullAddress().c_str(), std::to_string(v).c_str());
+
+			if(fromOsc) {
+				// Ensure the client that set this is notified that the value didn't changed
+				notifyOsc();
+			}
 		}
 	}
 }
@@ -99,7 +105,7 @@ template<typename T> T OscReadOnlyVariable<T>::getToOsc() const {
 
 template<typename T> void OscReadOnlyVariable<T>::setFromOsc(T value) {
 	if(!convertFromOsc)
-		set(value);
+		set(value, true);
 	else
-		set(convertFromOsc(value));
+		set(convertFromOsc(value), true);
 }

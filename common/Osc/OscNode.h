@@ -53,7 +53,7 @@ public:
 
 	virtual bool visit(const std::function<bool(OscNode*)>* nodeVisitorFunction);
 	virtual void execute(std::string_view address, const std::vector<OscArgument>& arguments);
-	virtual bool notifyOscAtInit();
+	virtual bool isOscValueAuthority();
 	virtual void notifyValueChanged();
 
 	virtual std::string getAsString() const = 0;

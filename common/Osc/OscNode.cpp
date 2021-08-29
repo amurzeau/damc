@@ -49,9 +49,9 @@ void OscNode::sendMessage(const std::string& address, const OscArgument* argumen
 		parent->sendMessage(address, arguments, number);
 }
 
-bool OscNode::notifyOscAtInit() {
+bool OscNode::isOscValueAuthority() {
 	if(parent)
-		return parent->notifyOscAtInit();
+		return parent->isOscValueAuthority();
 
 	return false;
 }

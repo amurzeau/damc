@@ -32,7 +32,7 @@ public:
 protected:
 	void executeMessage(tosc_message_const* osc);
 
-	bool notifyOscAtInit() override;
+	bool isOscValueAuthority() override;
 	void notifyValueChanged() override;
 
 private:
