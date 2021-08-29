@@ -22,8 +22,9 @@ ControlInterface::ControlInterface()
       updateLevelTimer(nullptr, &ControlInterface::releaseUvTimer),
       oscNeedSaveConfig(false),
       oscTypeList(&oscRoot, "type_list"),
-      oscDeviceList(&oscRoot, "device_list"),
+      oscDeviceList(&oscRoot, "device_list")
 #ifdef _WIN32
+      ,
       oscDeviceListWasapi(&oscRoot, "device_list_wasapi")
 #endif
 {
