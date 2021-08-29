@@ -42,20 +42,10 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 		}
 
 		switch(newValue) {
-			case OutputInstance::Loopback:
-			case OutputInstance::RemoteOutput:
-			case OutputInstance::RemoteInput:
-			case OutputInstance::DeviceOutput:
-			case OutputInstance::DeviceInput:
-#ifdef _WIN32
-			case OutputInstance::WasapiDeviceOutput:
-			case OutputInstance::WasapiDeviceInput:
-#endif
-				break;
-
-			case OutputInstance::None:
-				return false;
-				break;
+#define ENUM_ITEM(item) case OutputInstance::item:
+			OUTPUT_INSTANCE_TYPES(ENUM_ITEM)
+#undef ENUM_ITEM
+			break;
 
 			default:
 				printf("Bad type %d\n", newValue);

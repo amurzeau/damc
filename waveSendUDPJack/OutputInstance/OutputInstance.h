@@ -16,16 +16,31 @@ class ControlInterface;
 
 class OutputInstance : public OscContainer {
 public:
+#ifdef _WIN32
+#define WASAPI_TYPES(_) \
+	_(WasapiDeviceOutput) \
+	_(WasapiDeviceInput)
+#else
+#define WASAPI_TYPES(_)
+#endif
+
+#define OUTPUT_INSTANCE_VALID_TYPES(_) \
+	_(Loopback) \
+	_(RemoteOutput) \
+	_(RemoteInput) \
+	_(DeviceOutput) \
+	_(DeviceInput) \
+	WASAPI_TYPES(_)
+
+#define OUTPUT_INSTANCE_TYPES(_) \
+	OUTPUT_INSTANCE_VALID_TYPES(_) \
+	_(None)
+
 	enum Type {
-		Loopback,
-		RemoteOutput,
-		RemoteInput,
-		DeviceOutput,
-		DeviceInput,
-		WasapiDeviceOutput,
-		WasapiDeviceInput,
-		None,
-		MaxType
+#define ENUM_ITEM(item) item,
+		OUTPUT_INSTANCE_TYPES(ENUM_ITEM)
+#undef ENUM_ITEM
+		    MaxType
 	};
 
 public:

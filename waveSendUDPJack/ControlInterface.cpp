@@ -18,15 +18,15 @@ ControlInterface::ControlInterface()
       oscUdpServer(&oscRoot),
       oscTcpServer(&oscRoot),
       outputs(&oscRoot, "strip"),
+      keyBinding(&oscRoot, &oscRoot),
+      updateLevelTimer(nullptr, &ControlInterface::releaseUvTimer),
+      oscNeedSaveConfig(false),
       oscTypeList(&oscRoot, "type_list"),
       oscDeviceList(&oscRoot, "device_list"),
 #ifdef _WIN32
-      oscDeviceListWasapi(&oscRoot, "device_list_wasapi"),
+      oscDeviceListWasapi(&oscRoot, "device_list_wasapi")
 #endif
-      keyBinding(&oscRoot, &oscRoot),
-      updateLevelTimer(nullptr, &ControlInterface::releaseUvTimer),
-      oscNeedSaveConfig(false) {
-
+{
 	outputs.setFactory([this](OscContainer* parent, int name) { return new OutputInstance(parent, this, name); });
 
 	jack_status_t status;
@@ -48,8 +48,11 @@ ControlInterface::ControlInterface()
 	}
 
 	oscTypeList.setReadCallback([]() {
-		return std::vector<std::string>{
-		    {"Loopback", "RemoteOutput", "RemoteInput", "DeviceOutput", "DeviceInput", "WasapiOutput", "WasapiInput"}};
+		return std::vector<std::string>{{
+#define STRING_ITEM(item) #item,
+		    OUTPUT_INSTANCE_TYPES(STRING_ITEM)
+#undef STRING_ITEM
+		}};
 	});
 	oscDeviceList.setReadCallback([]() { return DeviceOutputInstance::getDeviceList(); });
 #ifdef _WIN32

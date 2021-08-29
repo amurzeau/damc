@@ -49,11 +49,6 @@ private:
 	OscServer oscUdpServer;
 	OscTcpServer oscTcpServer;
 	OscContainerArray<OutputInstance> outputs;
-	OscDynamicVariable<std::string> oscTypeList;
-	OscDynamicVariable<std::string> oscDeviceList;
-#ifdef _WIN32
-	OscDynamicVariable<std::string> oscDeviceListWasapi;
-#endif
 	KeyBinding keyBinding;
 	jack_client_t* monitoringJackClient;
 
@@ -89,6 +84,12 @@ private:
 	std::vector<PortConnectionStateChange> pendingPortChanges;
 	std::map<std::string, std::set<std::string>> outputPortConnections;  // outputs to inputs
 	std::map<std::string, std::set<std::string>> inputPortConnections;   // inputs from outputs
+
+	OscDynamicVariable<std::string> oscTypeList;
+	OscDynamicVariable<std::string> oscDeviceList;
+#ifdef _WIN32
+	OscDynamicVariable<std::string> oscDeviceListWasapi;
+#endif
 };
 
 #endif
