@@ -20,7 +20,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
       client(nullptr),
       filters(this),
 
-      oscEnable(this, "enable", true),
+      oscEnable(this, "enable", false),
       oscType(this, "_type", (int32_t) OutputInstance::None),  // use _type to ensure it is before endpoint config
       oscName(this, "name", std::to_string(index)),
       oscDisplayName(this, "display_name", std::to_string(index)),
