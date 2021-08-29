@@ -57,6 +57,14 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 
 	oscType.setChangeCallback([this](int newValue) { updateType(newValue); });
 
+	oscName.addCheckCallback([this](const std::string&) -> bool {
+		if(client) {
+			printf("Can't change jack name when output is enabled\n");
+			return false;
+		}
+		return true;
+	});
+
 	oscNumChannel.addCheckCallback([this](int32_t newValue) {
 		if(client) {
 			printf("Can't change channel number when output is enabled\n");
