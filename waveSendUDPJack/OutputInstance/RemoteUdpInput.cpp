@@ -27,7 +27,9 @@ static long VBAN_SRList[] = {6000,   12000,  24000,  48000, 96000, 192000, 38400
 
 RemoteUdpInput::RemoteUdpInput() : started(false) {}
 
-RemoteUdpInput::~RemoteUdpInput() {}
+RemoteUdpInput::~RemoteUdpInput() {
+	stop();
+}
 
 static unsigned int highestPowerof2(unsigned int n) {
 	unsigned int res = 1;

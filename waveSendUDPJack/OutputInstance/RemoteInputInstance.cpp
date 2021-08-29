@@ -22,6 +22,10 @@ RemoteInputInstance::RemoteInputInstance(OscContainer* parent)
 	});
 }
 
+RemoteInputInstance::~RemoteInputInstance() {
+	RemoteInputInstance::stop();
+}
+
 const char* RemoteInputInstance::getName() {
 	return "remote-in";
 }

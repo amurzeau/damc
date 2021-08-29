@@ -30,7 +30,9 @@ static long VBAN_SRList[] = {6000,   12000,  24000,  48000, 96000, 192000, 38400
 
 RemoteUdpOutput::RemoteUdpOutput() : started(false) {}
 
-RemoteUdpOutput::~RemoteUdpOutput() {}
+RemoteUdpOutput::~RemoteUdpOutput() {
+	stop();
+}
 
 int RemoteUdpOutput::init(int index, int samplerate, const char* ip, int port) {
 	std::string streamName = "waveSendUDP-" + std::to_string(index);

@@ -260,6 +260,10 @@ WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
 	});
 }
 
+WasapiInstance::~WasapiInstance() {
+	WasapiInstance::stop();
+}
+
 const char* WasapiInstance::getName() {
 	return "wasapi";
 }

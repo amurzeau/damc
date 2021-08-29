@@ -14,6 +14,7 @@
 class RemoteOutputInstance : public IAudioEndpoint, public OscContainer {
 public:
 	RemoteOutputInstance(OscContainer* parent);
+	~RemoteOutputInstance();
 
 	virtual const char* getName() override;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) override;

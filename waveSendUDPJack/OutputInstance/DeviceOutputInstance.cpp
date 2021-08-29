@@ -23,6 +23,10 @@ DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
 	});
 }
 
+DeviceOutputInstance::~DeviceOutputInstance() {
+	DeviceOutputInstance::stop();
+}
+
 std::vector<std::string> DeviceOutputInstance::getDeviceList() {
 	std::vector<std::string> result;
 	int numDevices = Pa_GetDeviceCount();

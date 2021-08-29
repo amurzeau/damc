@@ -25,6 +25,7 @@ public:
 	static std::vector<std::string> getDeviceList();
 
 	WasapiInstance(OscContainer* parent, Direction direction);
+	~WasapiInstance();
 
 	virtual const char* getName() override;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) override;

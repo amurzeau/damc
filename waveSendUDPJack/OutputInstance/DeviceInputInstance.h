@@ -17,6 +17,7 @@
 class DeviceInputInstance : public IAudioEndpoint, public OscContainer {
 public:
 	DeviceInputInstance(OscContainer* parent);
+	~DeviceInputInstance();
 
 	static std::vector<std::string> getDeviceList();
 	static int getDeviceIndex(const std::string& name);

@@ -36,8 +36,8 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 	oscPeakPerChannelPath = getFullAddress() + "/meter_per_channel";
 
 	oscType.addCheckCallback([this](int newValue) -> bool {
-		if(endpoint) {
-			printf("Endpoint type already set\n");
+		if(client) {
+			printf("Can't change type when output is enabled\n");
 			return false;
 		}
 
@@ -112,7 +112,7 @@ OutputInstance::~OutputInstance() {
 int OutputInstance::start() {
 	jack_status_t status;
 
-	if(client)
+	if(client || !endpoint)
 		return 0;
 
 	printf("Opening jack client %s\n", oscName.c_str());
@@ -204,16 +204,12 @@ void OutputInstance::stop() {
 		jack_client_close(client);
 		client = nullptr;
 
-		endpoint->stop();
+		if(endpoint)
+			endpoint->stop();
 	}
 }
 
 bool OutputInstance::updateType(int newValue) {
-	if(endpoint) {
-		printf("Endpoint type already set\n");
-		return false;
-	}
-
 	IAudioEndpoint* newEndpoint = nullptr;
 
 	switch(newValue) {
@@ -241,7 +237,7 @@ bool OutputInstance::updateType(int newValue) {
 			break;
 #endif
 		case OutputInstance::None:
-			return false;
+			newEndpoint = nullptr;
 			break;
 
 		default:
@@ -253,7 +249,10 @@ bool OutputInstance::updateType(int newValue) {
 
 	if(oscName.isDefault()) {
 		char buffer[128];
-		sprintf(buffer, "waveSendUDP-osc-%s-%d", this->endpoint->getName(), outputInstance);
+		if(this->endpoint)
+			sprintf(buffer, "waveSendUDP-osc-%s-%d", this->endpoint->getName(), outputInstance);
+		else
+			sprintf(buffer, "waveSendUDP-osc-%d", outputInstance);
 		oscName.setDefault(buffer);
 		oscDisplayName.setDefault(buffer);
 	}
@@ -262,7 +261,7 @@ bool OutputInstance::updateType(int newValue) {
 }
 
 void OutputInstance::updateEnabledState(bool enable) {
-	if(enable && !client && readyChecker.isVariablesReady()) {
+	if(enable && !client && endpoint && readyChecker.isVariablesReady()) {
 		printf("Starting output: %s\n", getName().c_str());
 		start();
 	} else if(!enable && client) {
@@ -416,5 +415,6 @@ void OutputInstance::onTimeoutTimer() {
 	}
 	sendMessage(oscPeakPerChannelPath, oscPeakPerChannelArguments.data(), oscPeakPerChannelArguments.size());
 
-	endpoint->onTimer();
+	if(endpoint)
+		endpoint->onTimer();
 }

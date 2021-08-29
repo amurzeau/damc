@@ -23,6 +23,10 @@ RemoteOutputInstance::RemoteOutputInstance(OscContainer* parent)
 	});
 }
 
+RemoteOutputInstance::~RemoteOutputInstance() {
+	RemoteOutputInstance::stop();
+}
+
 const char* RemoteOutputInstance::getName() {
 	return "remote";
 }
