@@ -43,10 +43,10 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	oscDelay.setWidget(ui->delaySpinBox);
 	oscClockDrift.setWidget(ui->clockDriftSpinBox);
 
-	oscSampleRate.setChangeCallback([this](int newValue) { ui->sampleRateSpinBox->setValue(newValue); });
+	oscSampleRate.setChangeCallback([this](int32_t newValue) { ui->sampleRateSpinBox->setValue(newValue); });
 
 	oscVolume.setWidget(ui->volumeSlider);
-	oscVolume.setChangeCallback([this](float value) { ui->volumeLevelLabel->setText(QString::number((int) value)); });
+	oscVolume.setChangeCallback([this](int32_t value) { ui->volumeLevelLabel->setText(QString::number(value)); });
 
 	equalizersController = new EqualizersController(this, &oscFilterChain);
 
@@ -60,7 +60,10 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 	connect(parent, &MainWindow::showDisabledChanged, this, &OutputController::updateHiddenState);
 	connect(ui->enableCheckBox, &QCheckBox::toggled, this, &OutputController::updateHiddenState);
-	oscEnable.setChangeCallback([this](float) { updateHiddenState(); });
+
+	oscEnable.setChangeCallback([this](bool) {
+		updateHiddenState();
+	});
 
 	connect(ui->eqButton, &QAbstractButton::clicked, this, &OutputController::onShowEq);
 	connect(ui->compressorButton, &QAbstractButton::clicked, this, &OutputController::onShowCompressor);
@@ -71,7 +74,7 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
 	ui->volumeLevelLabel->setTextSize(4, Qt::AlignRight | Qt::AlignVCenter);
 
-	oscMute.setChangeCallback([this](float newValue) {
+	oscMute.setChangeCallback([this](bool newValue) {
 		for(size_t i = 0; i < levelWidgets.size(); i++) {
 			levelWidgets[i]->setDisabled(newValue == 1);
 		}

@@ -1,44 +1,60 @@
 #include "OscWidgetMapper.h"
 #include <type_traits>
 
-template<class T>
-OscWidgetMapper<T>::OscWidgetMapper(OscContainer* parent, std::string name) noexcept
+template<class T, class UnderlyingType>
+OscWidgetMapper<T, UnderlyingType>::OscWidgetMapper(OscContainer* parent, std::string name) noexcept
     : OscContainer(parent, name), scale(1.0) {}
 
-template<class T> void OscWidgetMapper<T>::setWidget(T* widget, bool updateOnChange) {
+template<class T, class UnderlyingType>
+void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChange) {
 	this->widgets.push_back(widget);
+
+	updateWidget(widget);
 
 	if(updateOnChange) {
 		if constexpr(std::is_base_of_v<QAbstractButton, T> || std::is_base_of_v<QGroupBox, T>) {
 			connect(widget, &T::toggled, [this](bool value) {
-				OscArgument valueToSend = value;
-				sendMessage(&valueToSend, 1);
+				this->value = value;
+				notifyChanged();
 			});
 		} else if constexpr(std::is_base_of_v<QDoubleSpinBox, T>) {
 			connect(widget, qOverload<double>(&T::valueChanged), [this](double value) {
-				OscArgument valueToSend = (float) value / scale;
-				sendMessage(&valueToSend, 1);
+				this->value = (float) value / scale;
+				notifyChanged();
 			});
 		} else if constexpr(std::is_base_of_v<QComboBox, T>) {
-			connect(widget, qOverload<int>(&T::currentIndexChanged), [this](int value) {
-				OscArgument valueToSend = (int32_t) value;
-				sendMessage(&valueToSend, 1);
+			if constexpr(std::is_same_v<int32_t, UnderlyingType>) {
+				connect(widget, qOverload<int>(&T::currentIndexChanged), [this](int value) {
+					this->value = (int32_t) value;
+					notifyChanged();
+				});
+			} else {
+				connect(widget, qOverload<const QString&>(&T::currentIndexChanged), [this](const QString& value) {
+					this->value = value.toStdString();
+					notifyChanged();
+				});
+			}
+		} else if constexpr(std::is_base_of_v<QLineEdit, T>) {
+			connect(widget, &QLineEdit::editingFinished, [this, widget]() {
+				this->value = widget->text().toStdString();
+				notifyChanged();
 			});
 		} else {
 			connect(widget, qOverload<int>(&T::valueChanged), [this](int value) {
-				OscArgument valueToSend = (int32_t)(value / scale);
-				sendMessage(&valueToSend, 1);
+				this->value = (int32_t)(value / scale);
+				notifyChanged();
 			});
 		}
 	}
 }
 
-template<class T> void OscWidgetMapper<T>::setScale(float scale) {
+template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::setScale(float scale) {
 	this->scale = scale;
 }
 
-template<class T> void OscWidgetMapper<T>::execute(const std::vector<OscArgument>& arguments) {
-	float value;
+template<class T, class UnderlyingType>
+void OscWidgetMapper<T, UnderlyingType>::execute(const std::vector<OscArgument>& arguments) {
+	UnderlyingType value;
 
 	if(widgets.empty())
 		return;
@@ -46,30 +62,23 @@ template<class T> void OscWidgetMapper<T>::execute(const std::vector<OscArgument
 	if(arguments.empty())
 		return;
 
-	if(!getArgumentAs<float>(arguments[0], value))
+	if(!getArgumentAs<UnderlyingType>(arguments[0], value))
 		return;
 
+	if(this->value == value)
+		return;
+
+	this->value = value;
+
 	for(T* widget : widgets) {
-		widget->blockSignals(true);
-
-		if constexpr(std::is_base_of_v<QAbstractButton, T> || std::is_base_of_v<QGroupBox, T>) {
-			T* w = widget;
-			w->setChecked(value);
-		} else if constexpr(std::is_base_of_v<QComboBox, T>) {
-			QComboBox* w = widgets.front();
-			w->setCurrentIndex((int) value);
-		} else {
-			widget->setValue(value * scale);
-		}
-
-		widget->blockSignals(false);
+		updateWidget(widget);
 	}
 
 	if(onChange)
 		onChange(value);
 }
 
-template<class T> void OscWidgetMapper<T>::dump() {
+template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::dump() {
 	if(widgets.empty())
 		return;
 
@@ -84,6 +93,9 @@ template<class T> void OscWidgetMapper<T>::dump() {
 	} else if constexpr(std::is_base_of_v<QComboBox, T>) {
 		QComboBox* w = widgets.front();
 		arg = OscArgument{(int32_t) w->currentIndex()};
+	} else if constexpr(std::is_base_of_v<QLineEdit, T>) {
+		QLineEdit* w = widgets.front();
+		arg = OscArgument{w->text().toStdString()};
 	} else {
 		arg = OscArgument{(int32_t) widgets.front()->value()};
 	}
@@ -91,8 +103,41 @@ template<class T> void OscWidgetMapper<T>::dump() {
 	sendMessage(&arg, 1);
 }
 
-template<class T> void OscWidgetMapper<T>::setChangeCallback(std::function<void(float)> onChange) {
+template<class T, class UnderlyingType>
+void OscWidgetMapper<T, UnderlyingType>::setChangeCallback(std::function<void(UnderlyingType)> onChange) {
 	this->onChange = onChange;
+	onChange(value);
+}
+
+template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::notifyChanged() {
+	if(onChange)
+		onChange(value);
+
+	OscArgument valueToSend = value;
+	sendMessage(&valueToSend, 1);
+}
+
+template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::updateWidget(T* widget) {
+	widget->blockSignals(true);
+
+	if constexpr(std::is_base_of_v<QAbstractButton, T> || std::is_base_of_v<QGroupBox, T>) {
+		T* w = widget;
+		w->setChecked(value);
+	} else if constexpr(std::is_base_of_v<QComboBox, T>) {
+		QComboBox* w = widgets.front();
+		if constexpr(std::is_same_v<int32_t, UnderlyingType>) {
+			w->setCurrentIndex(value);
+		} else {
+			w->setCurrentText(QString::fromStdString(value));
+		}
+	} else if constexpr(std::is_base_of_v<QLineEdit, T>) {
+		QLineEdit* w = widgets.front();
+		w->setText(QString::fromStdString(value));
+	} else {
+		widget->setValue(value * scale);
+	}
+
+	widget->blockSignals(false);
 }
 
 template class OscWidgetMapper<QAbstractSlider>;
@@ -100,4 +145,6 @@ template class OscWidgetMapper<QAbstractButton>;
 template class OscWidgetMapper<QSpinBox>;
 template class OscWidgetMapper<QDoubleSpinBox>;
 template class OscWidgetMapper<QComboBox>;
+template class OscWidgetMapper<QComboBox, std::string>;
 template class OscWidgetMapper<QGroupBox>;
+template class OscWidgetMapper<QLineEdit>;
