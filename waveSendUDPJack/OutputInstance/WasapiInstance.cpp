@@ -228,7 +228,7 @@ exit:
 }
 
 WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
-    : OscContainer(parent, "wasapiDevice"),
+    : OscContainer(parent, "device"),
       oscDeviceName(this, "deviceName", "default"),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
       oscClockDrift(this, "clockDrift", 1.0f),

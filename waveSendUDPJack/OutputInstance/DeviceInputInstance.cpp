@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 DeviceInputInstance::DeviceInputInstance(OscContainer* parent)
-    : OscContainer(parent, "deviceInput"),
+    : OscContainer(parent, "device"),
       stream(nullptr),
       oscDeviceName(this, "deviceName", "default_in"),
       oscClockDrift(this, "clockDrift", 1.0f),

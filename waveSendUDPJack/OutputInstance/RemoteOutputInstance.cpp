@@ -5,7 +5,7 @@ void RemoteOutputInstance::stop() {
 }
 
 RemoteOutputInstance::RemoteOutputInstance(OscContainer* parent)
-    : OscContainer(parent, "remoteOutput"),
+    : OscContainer(parent, "device"),
       oscIp(this, "ip", "127.0.0.1"),
       oscPort(this, "port", 2305),
       oscClockDrift(this, "clockDrift", 1.0f),

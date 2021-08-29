@@ -5,7 +5,7 @@ void RemoteInputInstance::stop() {
 }
 
 RemoteInputInstance::RemoteInputInstance(OscContainer* parent)
-    : OscContainer(parent, "remoteInput"),
+    : OscContainer(parent, "device"),
       oscIp(this, "ip", "127.0.0.1"),
       oscPort(this, "port", 2305),
       oscClockDrift(this, "clockDrift", 1.0f) {
