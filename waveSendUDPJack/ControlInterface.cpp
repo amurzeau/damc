@@ -304,8 +304,10 @@ void ControlInterface::jackOnPortRegistration(jack_port_id_t port, int is_regist
 
 	auto it = portConnections->find(portName);
 
-	if(it == portConnections->end())
+	if(it == portConnections->end()) {
+		// printf("Port %s not in list\n", portName);
 		return;
+	}
 
 	for(const auto& inputPorts : it->second) {
 		if(portConnections == &inputPortConnections) {
