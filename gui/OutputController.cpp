@@ -35,6 +35,9 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 	numChannels = 0;
 
+	// By default hide, it will be shown if enabled
+	hide();
+
 	oscEnable.setWidget(ui->enableCheckBox);
 	oscMute.setWidget(ui->muteButton);
 	oscDelay.setWidget(ui->delaySpinBox);
