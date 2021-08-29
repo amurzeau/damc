@@ -15,7 +15,7 @@ FilterChain::FilterChain(OscContainer* parent)
       reverbFilters(this, "reverbFilter"),
       eqFilters(this, "eqFilters"),
       delay(this, "delay", 0),
-      volume(this, "balance"),
+      volume(this, "balance", 1.0f),
       masterVolume(this, "volume", 1.0f),
       compressorFilter(this),
       expanderFilter(this),
@@ -36,7 +36,7 @@ FilterChain::FilterChain(OscContainer* parent)
 void FilterChain::init(size_t numChannel) {
 	delayFilters.resize(numChannel + 1);  // +1 for side channel
 	reverbFilters.resize(numChannel);
-	volume.resize(numChannel, 1.0f);
+	volume.resize(numChannel);
 
 	eqFilters.resize(6);
 

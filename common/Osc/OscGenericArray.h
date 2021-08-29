@@ -20,10 +20,10 @@ public:
 	const T& operator[](size_t index) const { return *value[index]; }
 
 	int getNextKey();
-	template<typename... Args> void push_back(Args... args);
-	template<typename... Args> void insert(int key, Args... args);
+	void push_back();
+	void insert(int key);
 	void erase(int key);
-	template<typename... Args> void resize(size_t size, Args... args);
+	void resize(size_t size);
 
 	auto size() const { return value.size(); }
 	auto begin() const { return value.begin(); }
@@ -75,11 +75,11 @@ template<typename T> int OscGenericArray<T>::getNextKey() {
 	return newKey;
 }
 
-template<typename T> template<typename... Args> void OscGenericArray<T>::push_back(Args... args) {
-	insert(getNextKey(), std::forward<Args>(args)...);
+template<typename T> void OscGenericArray<T>::push_back() {
+	insert(getNextKey());
 }
 
-template<typename T> template<typename... Args> void OscGenericArray<T>::insert(int newKey, Args... args) {
+template<typename T> void OscGenericArray<T>::insert(int newKey) {
 	if(nextKey <= newKey)
 		nextKey = newKey + 1;
 
@@ -102,6 +102,21 @@ template<typename T> void OscGenericArray<T>::erase(int key) {
 	}
 
 	keys.updateData([&key](std::vector<int>& data) { Utils::vector_erase(data, key); });
+}
+
+template<typename T> void OscGenericArray<T>::resize(size_t newSize) {
+	if(newSize == value.size())
+		return;
+
+	if(newSize < value.size()) {
+		while(value.size() > newSize) {
+			erase(value.rbegin()->first);
+		}
+	} else {
+		while(value.size() < newSize) {
+			push_back();
+		}
+	}
 }
 
 template<typename T>
@@ -157,20 +172,5 @@ void OscGenericArray<T>::execute(std::string_view address, const std::vector<Osc
 		}
 
 		OscContainer::execute(address, arguments);
-	}
-}
-
-template<typename T> template<typename... Args> void OscGenericArray<T>::resize(size_t newSize, Args... args) {
-	if(newSize == value.size())
-		return;
-
-	if(newSize < value.size()) {
-		while(value.size() > newSize) {
-			erase(value.rbegin()->first);
-		}
-	} else {
-		while(value.size() < newSize) {
-			push_back(args...);
-		}
 	}
 }

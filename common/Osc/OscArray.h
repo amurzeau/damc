@@ -6,7 +6,7 @@
 
 template<typename T> class OscArray : public OscGenericArray<OscVariable<T>> {
 public:
-	OscArray(OscContainer* parent, std::string name);
+	OscArray(OscContainer* parent, std::string name, T defaultValue = {});
 
 	void setOscConverters(std::function<T(T)> convertToOsc, std::function<T(T)> convertFromOsc);
 	void setChangeCallback(std::function<void(T)> onChangeCallbacks);

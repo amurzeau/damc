@@ -3,8 +3,11 @@
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscArray)
 
 template<typename T>
-OscArray<T>::OscArray(OscContainer* parent, std::string name) : OscGenericArray<OscVariable<T>>(parent, name) {
-	this->setFactory([](OscContainer* parent, int name) { return new OscVariable<T>(parent, std::to_string(name)); });
+OscArray<T>::OscArray(OscContainer* parent, std::string name, T defaultValue)
+    : OscGenericArray<OscVariable<T>>(parent, name) {
+	this->setFactory([defaultValue](OscContainer* parent, int name) {
+		return new OscVariable<T>(parent, std::to_string(name), defaultValue);
+	});
 }
 
 template<typename T>
