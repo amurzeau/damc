@@ -11,6 +11,9 @@ RemoteInputInstance::RemoteInputInstance(OscContainer* parent)
       oscClockDrift(this, "clockDrift", 1.0f) {
 	direction = D_Input;
 
+	oscIp.addCheckCallback([this](auto) { return !remoteUdpInput.isStarted(); });
+	oscPort.addCheckCallback([this](auto) { return !remoteUdpInput.isStarted(); });
+
 	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
 	oscClockDrift.setChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {

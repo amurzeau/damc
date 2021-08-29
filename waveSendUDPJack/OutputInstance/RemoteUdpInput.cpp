@@ -25,7 +25,7 @@ static long VBAN_SRList[] = {6000,   12000,  24000,  48000, 96000, 192000, 38400
 
 #define VBAN_CODEC_PCM 0x00
 
-RemoteUdpInput::RemoteUdpInput() {}
+RemoteUdpInput::RemoteUdpInput() : started(false) {}
 
 RemoteUdpInput::~RemoteUdpInput() {}
 
@@ -44,7 +44,11 @@ int RemoteUdpInput::init(int index, int samplerate, const char* ip, int port) {
 	uint32_t targetIp = inet_addr(ip);
 	struct sockaddr_in sin_server;
 
+	if(started)
+		return 1;
+
 	sampleRate = 48000;
+	started = true;
 
 	printf("Receiving audio %d on %s:%d\n", index, ip, port);
 
@@ -78,7 +82,14 @@ int RemoteUdpInput::init(int index, int samplerate, const char* ip, int port) {
 }
 
 void RemoteUdpInput::stop() {
-	uv_close((uv_handle_t*) &udpSocket, nullptr);
+	if(started) {
+		started = false;
+		uv_close((uv_handle_t*) &udpSocket, nullptr);
+	}
+}
+
+bool RemoteUdpInput::isStarted() {
+	return started;
 }
 
 void RemoteUdpInput::onAlloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {

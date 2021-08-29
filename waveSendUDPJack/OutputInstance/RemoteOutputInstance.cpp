@@ -12,6 +12,9 @@ RemoteOutputInstance::RemoteOutputInstance(OscContainer* parent)
       oscAddVbanHeader(this, "vbanFormat") {
 	resamplingFilters.resize(2);
 
+	oscIp.addCheckCallback([this](auto) { return !remoteUdpOutput.isStarted(); });
+	oscPort.addCheckCallback([this](auto) { return !remoteUdpOutput.isStarted(); });
+
 	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
 	oscClockDrift.setChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {

@@ -12,6 +12,7 @@ public:
 
 	int init(int index, int samplerate, const char* ip, int port);
 	void stop();
+	bool isStarted();
 
 	size_t receivePacket(float* samplesLeft, float* samplesRight, size_t maxSamples);
 	int getSampleRate() { return sampleRate; }
@@ -43,6 +44,7 @@ private:
 	uv_udp_t udpSocket;
 	jack_ringbuffer_t* sampleRing;
 	std::atomic<int> sampleRate;
+	bool started;
 };
 
 #endif

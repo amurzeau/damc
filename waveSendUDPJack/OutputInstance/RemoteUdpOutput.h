@@ -10,6 +10,7 @@ public:
 
 	int init(int index, int samplerate, const char* ip, int port);
 	void stop();
+	bool isStarted();
 
 	void sendAudio(float* samplesLeft, float* samplesRight, size_t samplesCount);
 	void sendAudioWithoutVBAN(float* samplesLeft, float* samplesRight, size_t samplesCount);
@@ -35,6 +36,7 @@ private:
 	struct sockaddr_in sin_server;
 	int sock_fd;
 	VbanBuffer dataBuffer;
+	bool started;
 };
 
 #endif

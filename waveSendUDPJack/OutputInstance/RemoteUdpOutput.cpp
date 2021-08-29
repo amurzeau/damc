@@ -28,7 +28,7 @@ static long VBAN_SRList[] = {6000,   12000,  24000,  48000, 96000, 192000, 38400
 
 #define VBAN_CODEC_PCM 0x00
 
-RemoteUdpOutput::RemoteUdpOutput() {}
+RemoteUdpOutput::RemoteUdpOutput() : started(false) {}
 
 RemoteUdpOutput::~RemoteUdpOutput() {}
 
@@ -36,6 +36,10 @@ int RemoteUdpOutput::init(int index, int samplerate, const char* ip, int port) {
 	std::string streamName = "waveSendUDP-" + std::to_string(index);
 	uint32_t targetIp = inet_addr(ip);
 
+	if(started)
+		return 1;
+
+	started = true;
 	printf("Sending audio %d to %s:%d\n", index, ip, port);
 
 	sin_server.sin_addr.s_addr = targetIp;
@@ -75,13 +79,20 @@ int RemoteUdpOutput::init(int index, int samplerate, const char* ip, int port) {
 }
 
 void RemoteUdpOutput::stop() {
-	int sock_fd = this->sock_fd;
-	this->sock_fd = -1;
+	if(started) {
+		started = false;
+		int sock_fd = this->sock_fd;
+		this->sock_fd = -1;
 #ifdef _WIN32
-	closesocket(sock_fd);
+		closesocket(sock_fd);
 #else
-	close(sock_fd);
+		close(sock_fd);
 #endif
+	}
+}
+
+bool RemoteUdpOutput::isStarted() {
+	return started;
 }
 
 void RemoteUdpOutput::sendAudio(float* samplesLeft, float* samplesRight, size_t samplesCount) {
