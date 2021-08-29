@@ -18,6 +18,7 @@ public:
 	explicit MainWindow(QWidget* parent = 0);
 	~MainWindow();
 
+	void removeInstance(int key);
 	void moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore);
 	bool getShowDisabledOutputInstances();
 

@@ -9,6 +9,7 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
+#include <QMessageBox>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <math.h>
@@ -48,6 +49,12 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 	balanceController = new BalanceController(this, &oscFilterChain);
 
+	compressorController = new CompressorController(this, &oscFilterChain, "compressorFilter");
+	compressorController->getEnableMapper().setWidget(ui->compressorButton, false);
+
+	expanderController = new CompressorController(this, &oscFilterChain, "expanderFilter");
+	expanderController->getEnableMapper().setWidget(ui->expanderButton, false);
+
 	connect(parent, &MainWindow::showDisabledChanged, this, &OutputController::updateHiddenState);
 	connect(ui->enableCheckBox, &QCheckBox::toggled, this, &OutputController::updateHiddenState);
 	oscEnable.setChangeCallback([this](float) { updateHiddenState(); });
@@ -56,12 +63,7 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	connect(ui->compressorButton, &QAbstractButton::clicked, this, &OutputController::onShowCompressor);
 	connect(ui->expanderButton, &QAbstractButton::clicked, this, &OutputController::onShowExpander);
 	connect(ui->balanceButton, &QAbstractButton::clicked, this, &OutputController::onShowBalance);
-
-	compressorController = new CompressorController(this, &oscFilterChain, "compressorFilter");
-	compressorController->getEnableMapper().setWidget(ui->compressorButton, false);
-
-	expanderController = new CompressorController(this, &oscFilterChain, "expanderFilter");
-	expanderController->getEnableMapper().setWidget(ui->expanderButton, false);
+	connect(ui->removeButton, &QAbstractButton::clicked, this, &OutputController::onRemove);
 
 	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
 	ui->volumeLevelLabel->setTextSize(4, Qt::AlignRight | Qt::AlignVCenter);
@@ -170,6 +172,27 @@ void OutputController::onShowBalance() {
 		balanceController->show();
 	} else {
 		balanceController->hide();
+	}
+}
+
+void OutputController::onRemove() {
+	QMessageBox msgBox;
+	msgBox.setText(QString("Really remove %1 (%2)?")
+	                   .arg(QString::fromStdString(oscDisplayName.get()), QString::fromStdString(oscName.get())));
+	msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+	msgBox.setDefaultButton(QMessageBox::Cancel);
+	int ret = msgBox.exec();
+
+	switch(ret) {
+		case QMessageBox::Ok:
+			mainWindow->removeInstance(atoi(getName().c_str()));
+			break;
+		case QMessageBox::Cancel:
+			// Cancel was clicked
+			break;
+		default:
+			// should never be reached
+			break;
 	}
 }
 

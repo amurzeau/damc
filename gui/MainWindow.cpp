@@ -26,7 +26,15 @@ MainWindow::~MainWindow() {
 	delete ui;
 }
 
-void MainWindow::onAddInstance() {}
+void MainWindow::onAddInstance() {
+	int key = outputInterfaces.addItem();
+	QWidget* outputInstance = outputInterfaces.getWidget(key);
+	if(outputInstance) {
+		OutputController* outputController = (OutputController*) outputInstance;
+		outputController->showConfigDialog();
+		outputController->show();
+	}
+}
 
 void MainWindow::onRemoveInstance() {
 	bool ok;
@@ -35,7 +43,12 @@ void MainWindow::onRemoveInstance() {
 	    QInputDialog::getInt(this, "Remove item index", "Put the device index to remove", 0, 0, 2147483647, 1, &ok);
 
 	if(ok) {
+		outputInterfaces.removeItem(value);
 	}
+}
+
+void MainWindow::removeInstance(int key) {
+	outputInterfaces.removeItem(key);
 }
 
 void MainWindow::moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore) {

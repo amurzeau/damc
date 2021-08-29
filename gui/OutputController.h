@@ -36,6 +36,7 @@ protected slots:
 	void onShowCompressor();
 	void onShowExpander();
 	void onShowBalance();
+	void onRemove();
 
 protected:
 	void setNumChannel(int numChannel);
