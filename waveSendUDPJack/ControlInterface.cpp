@@ -15,7 +15,7 @@
 ControlInterface::ControlInterface()
     : oscRoot(true),
       oscStatePersister(&oscRoot, "waveSendUDPJack_osc.json"),
-      oscUdpServer(&oscRoot),
+      oscUdpServer(&oscRoot, &oscRoot),
       oscTcpServer(&oscRoot),
       outputs(&oscRoot, "strip"),
       keyBinding(&oscRoot, &oscRoot),

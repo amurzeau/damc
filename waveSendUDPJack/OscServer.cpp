@@ -4,7 +4,8 @@
 #include <string.h>
 #include <tinyosc.h>
 
-OscServer::OscServer(OscRoot* oscRoot) : OscConnector(oscRoot, false), started(false) {}
+OscServer::OscServer(OscRoot* oscRoot, OscContainer* oscParent)
+    : OscConnector(oscRoot, false), started(false), oscSendOverUDP(oscParent, "osc_enable_udp", false) {}
 
 OscServer::~OscServer() {}
 
@@ -36,7 +37,7 @@ void OscServer::stop() {
 }
 
 void OscServer::sendOscData(const uint8_t* data, size_t size) {
-	if(!started) {
+	if(!started || !oscSendOverUDP) {
 		return;
 	}
 

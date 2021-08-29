@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Osc/OscVariable.h>
 #include <list>
 #include <memory>
 #include <stdint.h>
@@ -16,7 +17,7 @@ struct tosc_message_const;
 
 class OscServer : public OscConnector {
 public:
-	OscServer(OscRoot* oscRoot);
+	OscServer(OscRoot* oscRoot, OscContainer* oscParent);
 	~OscServer();
 
 	void init(const char* ip, uint16_t port);
@@ -44,4 +45,6 @@ private:
 	};
 
 	std::list<std::unique_ptr<char>> availableBuffersForRecv;
+
+	OscVariable<bool> oscSendOverUDP;
 };
