@@ -18,15 +18,21 @@ public:
 	OscWidgetArray(OscContainer* parent, std::string name) noexcept;
 
 	void setWidget(QWidget* parentWidget, QBoxLayout* widget, OscWidgetFactoryFunction widgetFactoryFunction);
+	QWidget* getWidget(int key);
 	std::vector<QWidget*> getWidgets();
 
 	void execute(std::string_view address, const std::vector<OscArgument>& arguments) override;
 
 	std::string getAsString() const override { return std::string{}; }
 
+	int addItem();
+	void removeItem(int key);
+	void swapWidgets(int sourceKey, int targetKey, bool insertBefore, bool notifyOsc);
+
+protected:
 	void addWidget(int key);
 	void removeWidget(int key);
-	void swapWidgets(int sourceKey, int targetKey, bool insertBefore, bool notifyOsc);
+	void notifyOsc();
 
 private:
 	QWidget* parentWidget;
@@ -35,4 +41,5 @@ private:
 	std::vector<int> keysOrder;
 	OscWidgetFactoryFunction widgetFactoryFunction;
 	OscEndpoint keysEndpoint;
+	int nextKey;
 };

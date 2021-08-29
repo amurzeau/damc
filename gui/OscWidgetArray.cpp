@@ -6,7 +6,7 @@
 #include <type_traits>
 
 OscWidgetArray::OscWidgetArray(OscContainer* parent, std::string name) noexcept
-    : OscContainer(parent, name), layout(nullptr), keysEndpoint(this, "keys") {}
+    : OscContainer(parent, name), layout(nullptr), keysEndpoint(this, "keys"), nextKey(0) {}
 
 void OscWidgetArray::setWidget(QWidget* parentWidget,
                                QBoxLayout* layout,
@@ -14,6 +14,14 @@ void OscWidgetArray::setWidget(QWidget* parentWidget,
 	this->parentWidget = parentWidget;
 	this->layout = layout;
 	this->widgetFactoryFunction = widgetFactoryFunction;
+}
+
+QWidget* OscWidgetArray::getWidget(int key) {
+	auto it = childWidgets.find(key);
+	if(it == childWidgets.end())
+		return nullptr;
+
+	return it->second;
 }
 
 std::vector<QWidget*> OscWidgetArray::getWidgets() {
@@ -27,6 +35,21 @@ std::vector<QWidget*> OscWidgetArray::getWidgets() {
 	return ret;
 }
 
+int OscWidgetArray::addItem() {
+	int key = nextKey;
+	nextKey++;
+
+	addWidget(key);
+	notifyOsc();
+
+	return key;
+}
+
+void OscWidgetArray::removeItem(int key) {
+	removeWidget(key);
+	notifyOsc();
+}
+
 void OscWidgetArray::addWidget(int key) {
 	qDebug("Adding %d to %s", key, getFullAddress().c_str());
 
@@ -36,8 +59,10 @@ void OscWidgetArray::addWidget(int key) {
 
 	QWidget* newWidget = widgetFactoryFunction(parentWidget, this, key);
 	layout->addWidget(newWidget);
-	keysOrder.push_back(key);
 	childWidgets.insert(std::make_pair(key, newWidget));
+	keysOrder.push_back(key);
+	if(nextKey <= key)
+		nextKey = key + 1;
 }
 
 void OscWidgetArray::removeWidget(int key) {
@@ -75,16 +100,20 @@ void OscWidgetArray::swapWidgets(int sourceKey, int targetKey, bool insertBefore
 		keysOrder.insert(keysOrder.begin() + insertPosition, itSource->first);
 
 		if(notifyOsc) {
-			std::vector<OscArgument> keys;
-			for(const auto& key : keysOrder) {
-				keys.push_back(key);
-			}
-			keysEndpoint.sendMessage(&keys[0], keys.size());
+			this->notifyOsc();
 		}
 	} else {
 		layout->insertWidget(originalPosition, itSource->second);
 		keysOrder.insert(keysOrder.begin() + originalPosition, itSource->first);
 	}
+}
+
+void OscWidgetArray::notifyOsc() {
+	std::vector<OscArgument> keys;
+	for(const auto& key : keysOrder) {
+		keys.push_back(key);
+	}
+	keysEndpoint.sendMessage(&keys[0], keys.size());
 }
 
 void OscWidgetArray::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
