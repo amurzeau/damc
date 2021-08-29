@@ -175,6 +175,8 @@ std::vector<std::string> WasapiInstance::getDeviceList() {
 	hr = pMMDeviceCollection->GetCount(&count);
 	EXIT_ON_ERROR(hr);
 
+	result.push_back("default");
+
 	for(UINT i = 0; i < count; i++) {
 		IMMDevice* pEndpoint;
 		DWORD state;

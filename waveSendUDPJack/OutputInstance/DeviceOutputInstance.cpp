@@ -24,6 +24,9 @@ std::vector<std::string> DeviceOutputInstance::getDeviceList() {
 	std::vector<std::string> result;
 	int numDevices = Pa_GetDeviceCount();
 
+	result.push_back("default_in");
+	result.push_back("default_out");
+
 	for(int i = 0; i < numDevices; i++) {
 		const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
 		std::string name;
