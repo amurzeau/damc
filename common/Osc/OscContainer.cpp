@@ -46,7 +46,7 @@ void OscContainer::execute(std::string_view address, const std::vector<OscArgume
 	// printf("Executing %s from %s\n", std::string(address).c_str(), getFullAddress().c_str());
 
 	if(address.empty() || address == "/") {
-		printf("Executing address %s\n", getFullAddress().c_str());
+		// printf("Executing address %s\n", getFullAddress().c_str());
 		execute(arguments);
 	} else {
 		std::string_view childAddress;
