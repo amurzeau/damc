@@ -127,18 +127,8 @@ void OutputController::updateHiddenState() {
 }
 
 void OutputController::updateTooltip() {
-	//	QJsonValue nameValue = message.value("name");
-	//	QJsonValue deviceValue = message.value("device");
-	//	QJsonValue ipValue = message.value("ip");
-	//	QJsonValue portValue = message.value("port");
-
 	QString title = QString::fromStdString(oscName.get()).replace("waveSendUDP-", "");
 
-	//	if(deviceValue.type() == QJsonValue::String)
-	//		ui->groupBox->setToolTip(title + " Device: " + deviceValue.toString());
-	//	else if(ipValue.type() == QJsonValue::String)
-	//		ui->groupBox->setToolTip(title + " Endpoint: " + ipValue.toString() + ":" +
-	// QString::number(portValue.toInt())); 	else
 	ui->groupBox->setToolTip(title);
 }
 
