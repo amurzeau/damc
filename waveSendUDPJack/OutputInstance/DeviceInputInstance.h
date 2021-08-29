@@ -38,14 +38,14 @@ protected:
 	int renderCallback(const float* const* samples, size_t numChannel, uint32_t nframes);
 
 private:
-	std::string inputDevice = "default_in";
-	PaStream* stream = nullptr;
+	PaStream* stream;
 	std::vector<std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)>> ringBuffers;
 	std::vector<ResamplingFilter> resamplingFilters;
 	std::vector<float> resampledBuffer;
 	bool overflowOccured;
 	bool underflowOccured;
 
+	OscVariable<std::string> oscDeviceName;
 	OscVariable<float> oscClockDrift;
 	OscVariable<int32_t> oscDeviceSampleRate;
 

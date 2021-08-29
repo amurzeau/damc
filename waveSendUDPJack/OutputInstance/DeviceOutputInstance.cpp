@@ -3,6 +3,8 @@
 
 DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
     : OscContainer(parent, "deviceOutput"),
+      stream(nullptr),
+      oscDeviceName(this, "deviceName", "default_out"),
       oscClockDrift(this, "clockDrift", 1.0f),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000) {
 	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
@@ -73,12 +75,12 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 
 	stream = nullptr;
 
-	outputDeviceIndex = getDeviceIndex(outputDevice);
+	outputDeviceIndex = getDeviceIndex(oscDeviceName);
 
 	doDebug = outputDeviceIndex == 24;
 
 	if(outputDeviceIndex < 0 || outputDeviceIndex >= Pa_GetDeviceCount()) {
-		printf("Bad portaudio output device %s\n", outputDevice.c_str());
+		printf("Bad portaudio output device %s\n", oscDeviceName.c_str());
 		return paInvalidDevice;
 	}
 
@@ -250,21 +252,21 @@ void DeviceOutputInstance::onTimer() {
 	//	counter++;
 
 	if(overflowOccured) {
-		printf("%s: Overflow: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, (int) overflowSize);
+		printf("%s: Overflow: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun: %d, %d\n", outputDevice.c_str(), bufferLatencyNr, (int) underflowSize);
+		printf("%s: underrun: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) underflowSize);
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
-		printf("%s: average latency: %f\n", outputDevice.c_str(), previousAverageLatency);
-		printf("%s: drift: %f\n", outputDevice.c_str(), clockDriftPpm);
+		printf("%s: average latency: %f\n", oscDeviceName.c_str(), previousAverageLatency);
+		printf("%s: drift: %f\n", oscDeviceName.c_str(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
 
 	if(!isPaRunning) {
-		printf("%s: portaudio not running !\n", outputDevice.c_str());
+		printf("%s: portaudio not running !\n", oscDeviceName.c_str());
 	} else {
 		isPaRunning = false;
 	}

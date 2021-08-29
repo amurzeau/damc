@@ -3,6 +3,8 @@
 
 DeviceInputInstance::DeviceInputInstance(OscContainer* parent)
     : OscContainer(parent, "deviceInput"),
+      stream(nullptr),
+      oscDeviceName(this, "deviceName", "default_in"),
       oscClockDrift(this, "clockDrift", 1.0f),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000) {
 	direction = D_Input;
@@ -77,10 +79,10 @@ int DeviceInputInstance::start(int index, size_t numChannel, int sampleRate, int
 
 	stream = nullptr;
 
-	inputDeviceIndex = getDeviceIndex(inputDevice);
+	inputDeviceIndex = getDeviceIndex(oscDeviceName);
 
 	if(inputDeviceIndex < 0 || inputDeviceIndex >= Pa_GetDeviceCount()) {
-		printf("Bad portaudio input device %s\n", inputDevice.c_str());
+		printf("Bad portaudio input device %s\n", oscDeviceName.c_str());
 		return paInvalidDevice;
 	}
 
@@ -228,21 +230,21 @@ int DeviceInputInstance::postProcessSamples(float** samples, size_t numChannel, 
 
 void DeviceInputInstance::onTimer() {
 	if(overflowOccured) {
-		printf("%s: Overflow: %d, %d\n", inputDevice.c_str(), bufferLatencyNr, (int) overflowSize);
+		printf("%s: Overflow: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun: %d, %d\n", inputDevice.c_str(), bufferLatencyNr, (int) underflowSize);
+		printf("%s: underrun: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) underflowSize);
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
-		printf("%s: average latency: %f\n", inputDevice.c_str(), previousAverageLatency);
-		printf("%s: drift: %f\n", inputDevice.c_str(), clockDriftPpm);
+		printf("%s: average latency: %f\n", oscDeviceName.c_str(), previousAverageLatency);
+		printf("%s: drift: %f\n", oscDeviceName.c_str(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
 
 	if(!isPaRunning) {
-		printf("%s: portaudio not running !\n", inputDevice.c_str());
+		printf("%s: portaudio not running !\n", oscDeviceName.c_str());
 	} else {
 		isPaRunning = false;
 	}

@@ -38,7 +38,6 @@ protected:
 	                          void* userData);
 
 private:
-	std::string outputDevice = "default_out";
 	PaStream* stream = nullptr;
 	std::vector<std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)>> ringBuffers;
 	std::vector<ResamplingFilter> resamplingFilters;
@@ -50,6 +49,7 @@ private:
 	bool overflowOccured;
 	bool underflowOccured;
 
+	OscVariable<std::string> oscDeviceName;
 	OscVariable<float> oscClockDrift;
 	OscVariable<int32_t> oscDeviceSampleRate;
 
