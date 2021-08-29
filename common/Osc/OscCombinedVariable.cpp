@@ -1,6 +1,6 @@
 #include "OscCombinedVariable.h"
 
-OscCombinedVariable::OscCombinedVariable() noexcept : isAllVariableSet(false) {}
+OscCombinedVariable::OscCombinedVariable() noexcept : isAllVariableSet(false), isCheckingVariables(false) {}
 
 void OscCombinedVariable::addVariable(std::unique_ptr<OscSourceVariable> variable,
                                       bool callOnChangeWhenReady,
@@ -36,16 +36,21 @@ bool OscCombinedVariable::isVariablesReady() {
 }
 
 void OscCombinedVariable::checkVariables() {
-	if(isAllVariableSet == false && isVariablesReady()) {
-		isAllVariableSet = true;
+	if(isCheckingVariables)
+		return;
+
+	isAllVariableSet = isVariablesReady();
+	if(isAllVariableSet) {
 		if(callback) {
 			callback();
 		}
 
+		isCheckingVariables = true;
 		for(const auto& variable : variables) {
 			if(variable.callOnChangeWhenReady) {
 				variable.variable->callChangeCallback();
 			}
 		}
+		isCheckingVariables = false;
 	}
 }

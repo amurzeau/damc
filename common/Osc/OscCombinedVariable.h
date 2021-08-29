@@ -60,6 +60,7 @@ private:
 	std::vector<VariableData> variables;
 	std::function<void()> callback;
 	bool isAllVariableSet;
+	bool isCheckingVariables;
 };
 
 template<class T>
