@@ -34,8 +34,10 @@ template<typename T> void OscReadOnlyVariable<T>::set(T v, bool fromOsc) {
 }
 
 template<typename T> void OscReadOnlyVariable<T>::setDefault(T v) {
-	if(isDefaultValue)
+	if(isDefaultValue) {
 		set(v);
+		isDefaultValue = true;
+	}
 }
 
 template<typename T> void OscReadOnlyVariable<T>::forceDefault(T v) {
