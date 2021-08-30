@@ -29,8 +29,8 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 					notifyChanged();
 				});
 			} else {
-				connect(widget, qOverload<const QString&>(&T::currentIndexChanged), [this](const QString& value) {
-					this->value = value.toStdString();
+				connect(widget, qOverload<int>(&T::currentIndexChanged), [this, widget](int) {
+					this->value = widget->currentText().toStdString();
 					notifyChanged();
 				});
 			}
