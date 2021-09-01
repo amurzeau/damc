@@ -616,11 +616,11 @@ int WasapiInstance::postProcessSamplesRender(float** samples, size_t numChannel,
 		return 0;
 	EXIT_ON_ERROR(hr);
 
-	//	if(validSize == 0) {
-	//		// Assume underflow
-	//		underflowOccured = true;
-	//		underflowSize = 0;
-	//	}
+	if(validSize == 0) {
+		// Assume underflow
+		underflowOccured = true;
+		underflowSize = 0;
+	}
 
 	availableForWrite = wasapiBufferSize - validSize;
 
