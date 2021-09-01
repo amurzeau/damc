@@ -221,11 +221,13 @@ std::vector<std::string> WasapiInstance::getDeviceList() {
 		pEndpoint->Release();
 	}
 
+	if(count > 0)
+		std::sort(result.begin() + 1, result.end());
+
 exit:
 	SAFE_RELEASE(pMMDeviceCollection);
 	SAFE_RELEASE(pMMDeviceEnumerator);
 
-	std::sort(result.begin(), result.end());
 	return result;
 }
 

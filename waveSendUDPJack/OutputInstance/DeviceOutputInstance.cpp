@@ -53,6 +53,9 @@ std::vector<std::string> DeviceOutputInstance::getDeviceList() {
 		result.push_back(name);
 	}
 
+	if(numDevices > 0)
+		std::sort(result.begin() + 2, result.end());
+
 	return result;
 }
 
