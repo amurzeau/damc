@@ -8,13 +8,12 @@ RemoteInputInstance::RemoteInputInstance(OscContainer* parent)
     : OscContainer(parent, "device"),
       oscIp(this, "ip", "127.0.0.1"),
       oscPort(this, "port", 2305),
-      oscClockDrift(this, "clockDrift", 1.0f) {
+      oscClockDrift(this, "clockDrift", 0.0f) {
 	direction = D_Input;
 
 	oscIp.addCheckCallback([this](auto) { return !remoteUdpInput.isStarted(); });
 	oscPort.addCheckCallback([this](auto) { return !remoteUdpInput.isStarted(); });
 
-	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
 	oscClockDrift.setChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);
@@ -52,9 +51,9 @@ int RemoteInputInstance::postProcessSamples(float** samples, size_t numChannel, 
 	for(size_t i = 0; i < resamplingFilters.size(); i++) {
 		for(size_t j = 0; j < readSize; j++) {
 			resamplingFilters[i].put(resampledBuffer[i][j]);
-			resamplingFilters[i].get(
-			    inBuffers[i],
-			    resamplingFilters[i].getOverSamplingRatio() / (oscClockDrift * this->sampleRate / inputSampleRate));
+			resamplingFilters[i].get(inBuffers[i],
+			                         resamplingFilters[i].getOverSamplingRatio() /
+			                             ((1.0 + (double) oscClockDrift) * this->sampleRate / inputSampleRate));
 		}
 	}
 

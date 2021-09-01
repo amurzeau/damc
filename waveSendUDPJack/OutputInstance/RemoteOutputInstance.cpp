@@ -8,14 +8,13 @@ RemoteOutputInstance::RemoteOutputInstance(OscContainer* parent)
     : OscContainer(parent, "device"),
       oscIp(this, "ip", "127.0.0.1"),
       oscPort(this, "port", 2305),
-      oscClockDrift(this, "clockDrift", 1.0f),
+      oscClockDrift(this, "clockDrift", 0.0f),
       oscAddVbanHeader(this, "vbanFormat") {
 	resamplingFilters.resize(2);
 
 	oscIp.addCheckCallback([this](auto) { return !remoteUdpOutput.isStarted(); });
 	oscPort.addCheckCallback([this](auto) { return !remoteUdpOutput.isStarted(); });
 
-	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
 	oscClockDrift.setChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);

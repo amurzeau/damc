@@ -233,17 +233,15 @@ WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
     : OscContainer(parent, "device"),
       oscDeviceName(this, "deviceName", "default"),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
-      oscClockDrift(this, "clockDrift", 1.0f),
+      oscClockDrift(this, "clockDrift", 0.0f),
       oscExclusiveMode(this, "exclusiveMode", true) {
 	this->direction = direction;
 
 	// Only allow changes when stopped
 	oscDeviceName.addCheckCallback([this](const std::string&) { return pDevice == nullptr; });
 	oscDeviceSampleRate.addCheckCallback([this](int) { return pDevice == nullptr; });
-	oscClockDrift.addCheckCallback([this](int) { return pDevice == nullptr; });
 	oscExclusiveMode.addCheckCallback([this](int) { return pDevice == nullptr; });
 
-	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
 	oscClockDrift.setChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);

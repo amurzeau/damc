@@ -9,7 +9,7 @@ class ResamplingFilter {
 public:
 	void reset(double fs);
 	void put(double sample);
-	int get(std::vector<float>& out, float period);
+	int get(std::vector<float>& out, double period);
 
 	int processSamples(std::vector<float>& output, const float* input, size_t count);
 	int getNextOutputSize();
@@ -29,18 +29,18 @@ public:
 	float getDownSamplingRatio() { return downsamplingRatio; }
 
 protected:
-	inline double getLinearInterpolatedPoint(float delay) const;
-	inline double getZeroOrderHoldInterpolatedPoint(float delay) const;
+	inline double getLinearInterpolatedPoint(double delay) const;
+	inline double getZeroOrderHoldInterpolatedPoint(double delay) const;
 	inline double getOnePoint(unsigned int delay) const;
 
 private:
 	unsigned int currentPos;
-	float previousDelay;
+	double previousDelay;
 	std::array<double, 256> history;
 
-	float baseSamplingRate = 48000.f;
-	float targetSamplingRate = 48000.f;
-	float downsamplingRatio = oversamplingRatio;
+	double baseSamplingRate = 48000.f;
+	double targetSamplingRate = 48000.f;
+	double downsamplingRatio = oversamplingRatio;
 
 	static bool initialized;
 	static const std::array<double, 8192> coefs;

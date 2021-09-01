@@ -31,8 +31,8 @@ void ResamplingFilter::put(double sample) {
 	currentPos = (currentPos - 1) % history.size();
 }
 
-int ResamplingFilter::get(std::vector<float>& out, float period) {
-	float delay;
+int ResamplingFilter::get(std::vector<float>& out, double period) {
+	double delay;
 	int k = 0;
 
 	for(delay = previousDelay; delay >= 0; delay -= period, k++) {
@@ -56,7 +56,7 @@ int ResamplingFilter::processSamples(std::vector<float>& output, const float* in
 
 int ResamplingFilter::getNextOutputSize() {
 	int iterations = 0;
-	float delay;
+	double delay;
 
 	for(delay = previousDelay; delay >= 0; delay -= downsamplingRatio) {
 		iterations++;
@@ -66,21 +66,21 @@ int ResamplingFilter::getNextOutputSize() {
 }
 
 size_t ResamplingFilter::getMaxRequiredOutputSize(size_t count) {
-	return ceilf(count * oversamplingRatio / downsamplingRatio);
+	return ceil(count * oversamplingRatio / downsamplingRatio);
 }
 
 size_t ResamplingFilter::getMinRequiredOutputSize(size_t count) {
-	return floorf(count * oversamplingRatio / downsamplingRatio);
+	return floor(count * oversamplingRatio / downsamplingRatio);
 }
 
 void ResamplingFilter::setClockDrift(float drift) {
-	float newRatio = oversamplingRatio * baseSamplingRate / targetSamplingRate / drift;
+	double newRatio = oversamplingRatio * baseSamplingRate / targetSamplingRate / (1.0 + (double) drift);
 	if(newRatio >= 1)
 		downsamplingRatio = newRatio;
 }
 
 float ResamplingFilter::getClockDrift() {
-	return oversamplingRatio * baseSamplingRate / targetSamplingRate / downsamplingRatio;
+	return (oversamplingRatio * baseSamplingRate / targetSamplingRate / downsamplingRatio) - 1.0;
 }
 
 void ResamplingFilter::setSourceSamplingRate(float samplingRate) {
@@ -101,7 +101,7 @@ float ResamplingFilter::getTargetSamplingRate() {
 	return targetSamplingRate;
 }
 
-double ResamplingFilter::getLinearInterpolatedPoint(float delay) const {
+double ResamplingFilter::getLinearInterpolatedPoint(double delay) const {
 	if(delay < 0 || delay > oversamplingRatio) {
 		printf("Bad delay %f\n", delay);
 	}
@@ -117,7 +117,7 @@ double ResamplingFilter::getLinearInterpolatedPoint(float delay) const {
 	return v1 + rem * (v2 - v1);
 }
 
-double ResamplingFilter::getZeroOrderHoldInterpolatedPoint(float delay) const {
+double ResamplingFilter::getZeroOrderHoldInterpolatedPoint(double delay) const {
 	return getOnePoint(int(delay));
 }
 

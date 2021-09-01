@@ -5,12 +5,11 @@ DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
     : OscContainer(parent, "device"),
       stream(nullptr),
       oscDeviceName(this, "deviceName", "default_out"),
-      oscClockDrift(this, "clockDrift", 1.0f),
+      oscClockDrift(this, "clockDrift", 0.0f),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000) {
 	oscDeviceName.addCheckCallback([this](const std::string&) { return stream == nullptr; });
 	oscDeviceSampleRate.addCheckCallback([this](int) { return stream == nullptr; });
 
-	oscClockDrift.setOscConverters([](float v) { return v - 1.0f; }, [](float v) { return v + 1.0f; });
 	oscClockDrift.setChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);

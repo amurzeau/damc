@@ -38,6 +38,8 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	oscAddVbanHeader.setWidget(ui->vbanCheckBox);
 	oscExclusiveMode.setWidget(ui->useExclusiveModeCheckBox);
 
+	oscClockDrift.setScale(1000000);
+
 	oscType.setChangeCallback([this](int) { updateGroupBoxes(); });
 }
 
