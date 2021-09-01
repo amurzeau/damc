@@ -30,8 +30,11 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 				});
 			} else {
 				connect(widget, qOverload<int>(&T::currentIndexChanged), [this, widget](int) {
-					this->value = widget->currentText().toStdString();
-					notifyChanged();
+					std::string newValue = widget->currentText().toStdString();
+					if(!newValue.empty()) {
+						this->value = newValue;
+						notifyChanged();
+					}
 				});
 			}
 		} else if constexpr(std::is_base_of_v<QLineEdit, T>) {
