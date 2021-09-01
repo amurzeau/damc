@@ -91,6 +91,7 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 		compressorController->setWindowTitle(tr("Compressor - %1").arg(title));
 		expanderController->setWindowTitle(tr("Expander - %1").arg(title));
 		balanceController->setWindowTitle(tr("Balance - %1").arg(title));
+		configDialog->setWindowTitle(tr("Config - %1").arg(title));
 	});
 
 	oscMeterPerChannel.setCallback([this](const std::vector<OscArgument>& arguments) {
