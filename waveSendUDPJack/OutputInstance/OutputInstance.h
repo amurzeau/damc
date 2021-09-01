@@ -65,7 +65,7 @@ protected:
 	                                         void* arg);
 
 private:
-	int outputInstance;
+	const int outputInstance;
 	ControlInterface* controlInterface;
 	std::unique_ptr<IAudioEndpoint> endpoint;
 	jack_client_t* client;

@@ -22,8 +22,8 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 
       oscEnable(this, "enable", false),
       oscType(this, "_type", (int32_t) OutputInstance::None),  // use _type to ensure it is before endpoint config
-      oscName(this, "name", std::to_string(index)),
-      oscDisplayName(this, "display_name", std::to_string(index)),
+      oscName(this, "name", "waveSendUDP-" + std::to_string(index)),
+      oscDisplayName(this, "display_name", oscName.get()),
       oscNumChannel(this, "channels", 0),
       oscSampleRate(this, "sample_rate"),
 
@@ -257,16 +257,6 @@ bool OutputInstance::updateType(int newValue) {
 	}
 
 	this->endpoint.reset(newEndpoint);
-
-	if(oscName.isDefault()) {
-		char buffer[128];
-		if(this->endpoint)
-			sprintf(buffer, "waveSendUDP-%s-%d", this->endpoint->getName(), outputInstance);
-		else
-			sprintf(buffer, "waveSendUDP-%d", outputInstance);
-		oscName.setDefault(buffer);
-		oscDisplayName.setDefault(buffer);
-	}
 
 	return true;
 }
