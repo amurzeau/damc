@@ -22,6 +22,7 @@ public:
 	void moveOutputInstance(int sourceInstance, int targetInstance, bool insertBefore);
 	bool getShowDisabledOutputInstances();
 
+	void updateDeviceList();
 	const std::vector<std::string>& getTypeList() { return oscTypeArray.getData(); }
 	const std::vector<std::string>& getDeviceList() { return oscPortaudioDeviceArray.getData(); }
 	const std::vector<std::string>& getDeviceWasapiList() { return oscWasapiDeviceArray.getData(); }

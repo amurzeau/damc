@@ -79,6 +79,9 @@ void OutputInstanceConfigDialog::updateDeviceCombo() {
 		}
 	}
 	ui->deviceDeviceCombo->setCurrentText(QString::fromStdString(oscDeviceName.get()));
+	int index = ui->deviceDeviceCombo->findText(QString::fromStdString(oscDeviceName.get()));
+	if(index >= 0)
+		ui->deviceDeviceCombo->setCurrentIndex(index);
 
 	ui->deviceDeviceCombo->blockSignals(false);
 }
@@ -86,6 +89,7 @@ void OutputInstanceConfigDialog::updateDeviceCombo() {
 void OutputInstanceConfigDialog::showEvent(QShowEvent*) {
 	updateTypeCombo();
 	updateDeviceCombo();
+	mainWindow->updateDeviceList();
 }
 
 void OutputInstanceConfigDialog::updateGroupBoxes() {

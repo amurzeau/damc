@@ -66,3 +66,8 @@ void MainWindow::moveOutputInstance(int sourceInstance, int targetInstance, bool
 bool MainWindow::getShowDisabledOutputInstances() {
 	return ui->showDisabledCheckBox->isChecked();
 }
+
+void MainWindow::updateDeviceList() {
+	oscRoot.sendMessage("/device_list/dump", nullptr, 0);
+	oscRoot.sendMessage("/device_list_wasapi/dump", nullptr, 0);
+}

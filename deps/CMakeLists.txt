@@ -12,6 +12,7 @@ set(ENABLE_FLOAT ON)
 set(BUILD_TESTS ${BUILD_TESTING})
 add_subdirectory(fftw-3.3.8 EXCLUDE_FROM_ALL)
 
+target_compile_definitions(PortAudio PRIVATE PA_WASAPI_MAX_CONST_DEVICE_COUNT=128)
 target_compile_definitions(mysofa PUBLIC VDEBUG)
 
 if(BUILD_SHARED_LIBS)

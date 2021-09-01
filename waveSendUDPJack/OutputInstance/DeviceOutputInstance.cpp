@@ -33,6 +33,9 @@ DeviceOutputInstance::~DeviceOutputInstance() {
 }
 
 std::vector<std::string> DeviceOutputInstance::getDeviceList() {
+#ifdef _WIN32
+	PaWasapi_UpdateDeviceList();
+#endif
 	std::vector<std::string> result;
 	int numDevices = Pa_GetDeviceCount();
 
@@ -43,8 +46,8 @@ std::vector<std::string> DeviceOutputInstance::getDeviceList() {
 		const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
 		std::string name;
 
-		/*if(deviceInfo->maxOutputChannels <= 0)
-		    continue;*/
+		if(deviceInfo->name[0] == 0)
+			continue;
 
 		name = std::string(Pa_GetHostApiInfo(deviceInfo->hostApi)->name) + "::" + std::string(deviceInfo->name);
 		result.push_back(name);
