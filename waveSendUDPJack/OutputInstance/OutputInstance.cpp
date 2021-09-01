@@ -258,9 +258,9 @@ bool OutputInstance::updateType(int newValue) {
 	if(oscName.isDefault()) {
 		char buffer[128];
 		if(this->endpoint)
-			sprintf(buffer, "waveSendUDP-osc-%s-%d", this->endpoint->getName(), outputInstance);
+			sprintf(buffer, "waveSendUDP-%s-%d", this->endpoint->getName(), outputInstance);
 		else
-			sprintf(buffer, "waveSendUDP-osc-%d", outputInstance);
+			sprintf(buffer, "waveSendUDP-%d", outputInstance);
 		oscName.setDefault(buffer);
 		oscDisplayName.setDefault(buffer);
 	}
