@@ -1,14 +1,20 @@
 #include "DeviceOutputInstance.h"
 #include <stdio.h>
 
+#ifdef _WIN32
+#include <pa_win_wasapi.h>
+#endif
+
 DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
     : OscContainer(parent, "device"),
       stream(nullptr),
       oscDeviceName(this, "deviceName", "default_out"),
       oscClockDrift(this, "clockDrift", 0.0f),
-      oscDeviceSampleRate(this, "deviceSampleRate", 48000) {
+      oscDeviceSampleRate(this, "deviceSampleRate", 48000),
+      oscExclusiveMode(this, "exclusiveMode", true) {
 	oscDeviceName.addCheckCallback([this](const std::string&) { return stream == nullptr; });
 	oscDeviceSampleRate.addCheckCallback([this](int) { return stream == nullptr; });
+	oscExclusiveMode.addCheckCallback([this](int) { return stream == nullptr; });
 
 	oscClockDrift.setChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
@@ -111,6 +117,23 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	outputParameters.sampleFormat = paFloat32 | paNonInterleaved;  // 32 bit floating point output
 	outputParameters.suggestedLatency = jackBufferSize * 1.0f / sampleRate;
 	outputParameters.hostApiSpecificStreamInfo = NULL;
+
+#ifdef _WIN32
+	struct PaWasapiStreamInfo wasapiInfo = {};
+
+	if(oscExclusiveMode && Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDeviceIndex)->hostApi)->type == paWASAPI) {
+		wasapiInfo.size = sizeof(PaWasapiStreamInfo);
+		wasapiInfo.hostApiType = paWASAPI;
+		wasapiInfo.version = 1;
+		wasapiInfo.flags = paWinWasapiExclusive;
+		wasapiInfo.channelMask = 0;
+		wasapiInfo.hostProcessorOutput = nullptr;
+		wasapiInfo.hostProcessorInput = nullptr;
+		wasapiInfo.threadPriority = eThreadPriorityNone;
+		outputParameters.hostApiSpecificStreamInfo = &wasapiInfo;
+		printf("Using exclusive mode\n");
+	}
+#endif
 
 	int ret = Pa_OpenStream(&stream,
 	                        nullptr,

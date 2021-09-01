@@ -133,6 +133,9 @@ void OutputInstanceConfigDialog::updateGroupBoxes() {
 		case DeviceInput:
 			clockConfigEnable = true;
 			deviceConfigEnable = true;
+#ifdef _WIN32
+			deviceExclusiveModeConfigEnable = true;
+#endif
 			break;
 #ifdef _WIN32
 		case WasapiDeviceOutput:

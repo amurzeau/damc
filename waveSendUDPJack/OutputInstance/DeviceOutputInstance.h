@@ -53,6 +53,7 @@ private:
 	OscVariable<std::string> oscDeviceName;
 	OscVariable<float> oscClockDrift;
 	OscVariable<int32_t> oscDeviceSampleRate;
+	OscVariable<bool> oscExclusiveMode;
 
 	uint32_t bufferLatencyNr;
 	std::vector<uint32_t> bufferLatencyHistory;
