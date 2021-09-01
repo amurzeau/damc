@@ -220,6 +220,9 @@ void OutputInstance::stop() {
 bool OutputInstance::updateType(int newValue) {
 	IAudioEndpoint* newEndpoint = nullptr;
 
+	// Reset before to avoid having duplicate OSC addresses
+	this->endpoint.reset(nullptr);
+
 	switch(newValue) {
 		case OutputInstance::Loopback:
 			newEndpoint = new LoopbackOutputInstance();
