@@ -28,7 +28,7 @@ public:
 	OscWidgetMapper(OscContainer* parent, std::string name) noexcept;
 
 	void setWidget(T* widget, bool updateOnChange = true);
-	void setScale(float scale);
+	void setScale(double scale);
 	UnderlyingType get() const { return value; }
 
 	void execute(const std::vector<OscArgument>& arguments) override;
@@ -45,7 +45,7 @@ protected:
 private:
 	std::vector<T*> widgets;
 	std::function<void(UnderlyingType)> onChange;
-	float scale;
+	double scale;
 	UnderlyingType value;
 };
 

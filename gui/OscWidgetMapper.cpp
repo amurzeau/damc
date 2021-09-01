@@ -19,7 +19,7 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 			});
 		} else if constexpr(std::is_base_of_v<QDoubleSpinBox, T>) {
 			connect(widget, qOverload<double>(&T::valueChanged), [this](double value) {
-				this->value = (float) value / scale;
+				this->value = (float) (value / scale);
 				notifyChanged();
 			});
 		} else if constexpr(std::is_base_of_v<QComboBox, T>) {
@@ -51,7 +51,7 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 	}
 }
 
-template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::setScale(float scale) {
+template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::setScale(double scale) {
 	this->scale = scale;
 }
 
