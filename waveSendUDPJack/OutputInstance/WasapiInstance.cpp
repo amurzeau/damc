@@ -398,7 +398,7 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 	static constexpr WaveFormat WAVE_FORMATS[] = {
 	    {F_Float, WAVE_FORMAT_IEEE_FLOAT, 32, 4},
 	    {F_Int32, WAVE_FORMAT_PCM, 32, 4},
-	    //{F_Int24, WAVE_FORMAT_PCM, 24, 3},
+	    {F_Int24, WAVE_FORMAT_PCM, 24, 3},
 	    {F_Int16, WAVE_FORMAT_PCM, 16, 2},
 	};
 
@@ -577,11 +577,11 @@ void WasapiInstance::copySamplesRender(
 		for(size_t i = 0; i < numChannel; i++) {
 			for(size_t j = 0; j < nframes; j++) {
 				uint8_t* targetSampleValue = &data[(i + j * numChannel) * 3];
-				uint32_t value =
-				    static_cast<uint32_t>(static_cast<int32_t>(resampledBuffer[i][j] * static_cast<float>(INT32_MAX)));
-				targetSampleValue[0] = value >> 8;
-				targetSampleValue[1] = value >> 16;
-				targetSampleValue[2] = value >> 24;
+				uint32_t value = static_cast<uint32_t>(
+				    static_cast<int32_t>(resampledBuffer[i][j] * static_cast<float>(INT32_MAX / 256)));
+				targetSampleValue[0] = value;
+				targetSampleValue[1] = value >> 8;
+				targetSampleValue[2] = value >> 16;
 			}
 		}
 	} else if(format == F_Int16) {
