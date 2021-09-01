@@ -16,8 +16,12 @@ public:
 
 	void setFactory(OscFactoryFunction factoryFunction);
 
-	T& operator[](size_t index) { return *value[index]; }
-	const T& operator[](size_t index) const { return *value[index]; }
+	// T& operator[](size_t index) { return *value.at(index); }
+	// const T& operator[](size_t index) const { return *value.at(index); }
+
+	T& at(size_t index) { return *value.at(index); }
+	const T& at(size_t index) const { return *value.at(index); }
+	bool contains(size_t index) const;
 
 	int getNextKey();
 	void push_back();
@@ -37,6 +41,7 @@ public:
 
 protected:
 	virtual void initializeItem(T*) {}
+	void updateNextKeyToMaxKey();
 
 private:
 	OscFlatArray<int> keys;
@@ -67,6 +72,10 @@ OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noex
 
 template<typename T> void OscGenericArray<T>::setFactory(OscFactoryFunction factoryFunction) {
 	this->factoryFunction = factoryFunction;
+}
+
+template<typename T> bool OscGenericArray<T>::contains(size_t index) const {
+	return value.count(index) > 0;
 }
 
 template<typename T> int OscGenericArray<T>::getNextKey() {
@@ -101,6 +110,7 @@ template<typename T> void OscGenericArray<T>::erase(int key) {
 		}
 	}
 
+	updateNextKeyToMaxKey();
 	keys.updateData([&key](std::vector<int>& data) { Utils::vector_erase(data, key); });
 }
 
@@ -173,4 +183,14 @@ void OscGenericArray<T>::execute(std::string_view address, const std::vector<Osc
 
 		OscContainer::execute(address, arguments);
 	}
+}
+
+template<typename T> void OscGenericArray<T>::updateNextKeyToMaxKey() {
+	int maxKey = 0;
+	for(auto it = value.begin(); it != value.end(); ++it) {
+		if(it->first + 1 > maxKey || it == value.begin())
+			maxKey = it->first + 1;
+	}
+
+	nextKey = maxKey;
 }

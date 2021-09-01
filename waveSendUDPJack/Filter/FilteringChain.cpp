@@ -80,11 +80,11 @@ void FilterChain::processSamples(
 	compressorFilter.processSamples(output, const_cast<const float**>(output), count);
 
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
-		reverbFilters[channel].processSamples(output[channel], output[channel], count);
+		reverbFilters.at(channel).processSamples(output[channel], output[channel], count);
 	}
 
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
-		float volume = this->volume[channel].get() * masterVolume;
+		float volume = this->volume.at(channel).get() * masterVolume;
 		float peak = 0;
 		for(size_t i = 0; i < count; i++) {
 			output[channel][i] *= volume;
