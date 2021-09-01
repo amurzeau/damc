@@ -16,7 +16,7 @@ void OscRoot::printAllNodes() {
 
 void OscRoot::sendMessage(const std::string& address, const OscArgument* arguments, size_t number) {
 	tosc_message osc;
-	char format[128] = ",";
+	char format[256] = ",";
 	char* formatPtr = format + 1;
 
 	if(number > sizeof(format) - 2) {
