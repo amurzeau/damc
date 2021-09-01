@@ -129,7 +129,12 @@ void OutputController::showConfigDialog() {
 }
 
 void OutputController::updateHiddenState() {
-	bool hide = !mainWindow->getShowDisabledOutputInstances() && ui->enableCheckBox->isChecked() == false;
+	// Hide when:
+	// - Show disabled is not checked
+	// - This output is not enabled
+	// - And the config dialog is not opened
+	bool hide = !mainWindow->getShowDisabledOutputInstances() && ui->enableCheckBox->isChecked() == false &&
+	            configDialog->isHidden();
 	setHidden(hide);
 }
 
