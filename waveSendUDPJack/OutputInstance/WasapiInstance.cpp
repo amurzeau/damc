@@ -643,7 +643,7 @@ int WasapiInstance::postProcessSamplesRender(float** samples, size_t numChannel,
 	if(underflowOccured || overflowOccured) {
 		bufferLatencyHistory.clear();
 	} else {
-		bufferLatencyHistory.push_back(requiredBufferSize + resampledBuffer[0].size());
+		bufferLatencyHistory.push_back(validSize + requiredBufferSize + resampledBuffer[0].size());
 
 		if(bufferLatencyHistory.size() == bufferLatencyMeasurePeriodSize) {
 			double averageLatency = 0;
