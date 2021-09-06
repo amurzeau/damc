@@ -39,7 +39,7 @@ public:
 	void setChangeCallback(std::function<void(UnderlyingType)> onChange);
 
 protected:
-	void notifyChanged();
+	void notifyChanged(T* originatorWidget);
 	void updateWidget(T* widget);
 
 private:

@@ -13,39 +13,39 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 
 	if(updateOnChange) {
 		if constexpr(std::is_base_of_v<QAbstractButton, T> || std::is_base_of_v<QGroupBox, T>) {
-			connect(widget, &T::toggled, [this](bool value) {
+			connect(widget, &T::toggled, [this, widget](bool value) {
 				this->value = value;
-				notifyChanged();
+				notifyChanged(widget);
 			});
 		} else if constexpr(std::is_base_of_v<QDoubleSpinBox, T>) {
-			connect(widget, qOverload<double>(&T::valueChanged), [this](double value) {
+			connect(widget, qOverload<double>(&T::valueChanged), [this, widget](double value) {
 				this->value = (float) (value / scale);
-				notifyChanged();
+				notifyChanged(widget);
 			});
 		} else if constexpr(std::is_base_of_v<QComboBox, T>) {
 			if constexpr(std::is_same_v<int32_t, UnderlyingType>) {
-				connect(widget, qOverload<int>(&T::currentIndexChanged), [this](int value) {
+				connect(widget, qOverload<int>(&T::currentIndexChanged), [this, widget](int value) {
 					this->value = (int32_t) value;
-					notifyChanged();
+					notifyChanged(widget);
 				});
 			} else {
 				connect(widget, qOverload<int>(&T::currentIndexChanged), [this, widget](int) {
 					std::string newValue = widget->currentText().toStdString();
 					if(!newValue.empty()) {
 						this->value = newValue;
-						notifyChanged();
+						notifyChanged(widget);
 					}
 				});
 			}
 		} else if constexpr(std::is_base_of_v<QLineEdit, T>) {
 			connect(widget, &QLineEdit::editingFinished, [this, widget]() {
 				this->value = widget->text().toStdString();
-				notifyChanged();
+				notifyChanged(widget);
 			});
 		} else {
-			connect(widget, qOverload<int>(&T::valueChanged), [this](int value) {
+			connect(widget, qOverload<int>(&T::valueChanged), [this, widget](int value) {
 				this->value = (int32_t)(value / scale);
-				notifyChanged();
+				notifyChanged(widget);
 			});
 		}
 	}
@@ -112,7 +112,12 @@ void OscWidgetMapper<T, UnderlyingType>::setChangeCallback(std::function<void(Un
 	onChange(value);
 }
 
-template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::notifyChanged() {
+template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::notifyChanged(T* originatorWidget) {
+	for(T* widget : widgets) {
+		if(widget != originatorWidget)
+			updateWidget(widget);
+	}
+
 	if(onChange)
 		onChange(value);
 
