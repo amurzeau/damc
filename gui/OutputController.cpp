@@ -86,7 +86,8 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 	oscDisplayName.setChangeCallback([this](const std::string& value) {
 		QString title = QString::fromStdString(value).replace("waveSendUDP-", "");
-		ui->groupBox->setTitle(title);
+		QString shortTitle = QString::fromStdString(value).replace("waveSendUDP-", "");
+		ui->groupBox->setTitle(shortTitle);
 		equalizersController->setWindowTitle(tr("Equalizer - %1").arg(title));
 		compressorController->setWindowTitle(tr("Compressor - %1").arg(title));
 		expanderController->setWindowTitle(tr("Expander - %1").arg(title));
