@@ -28,6 +28,8 @@ public:
 
 	void showConfigDialog();
 	void updateEqEnable();
+	OscWidgetMapper<QLineEdit>* getOscName() { return &oscName; }
+	OscWidgetMapper<QLineEdit>* getOscDisplayName() { return &oscDisplayName; }
 
 	int32_t getSampleRate() { return oscSampleRate.get(); }
 
@@ -68,8 +70,10 @@ private:
 	OscWidgetMapper<QAbstractButton> oscMute;
 	OscWidgetMapper<QDoubleSpinBox> oscDelay;
 	OscWidgetMapper<QAbstractSlider> oscVolume;
-	OscVariable<std::string> oscName;
-	OscVariable<std::string> oscDisplayName;
+
+	OscWidgetMapper<QLineEdit> oscName;
+	OscWidgetMapper<QLineEdit> oscDisplayName;
+
 	OscVariable<int32_t> oscSampleRate;
 };
 

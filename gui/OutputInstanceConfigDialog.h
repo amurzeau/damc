@@ -11,12 +11,13 @@ class OutputInstanceConfigDialog;
 }
 
 class MainWindow;
+class OutputController;
 
 class OutputInstanceConfigDialog : public QDialog, public OscContainer {
 	Q_OBJECT
 
 public:
-	explicit OutputInstanceConfigDialog(MainWindow* mainWindow, OscContainer* oscParent, QWidget* parent = 0);
+	explicit OutputInstanceConfigDialog(MainWindow* mainWindow, OutputController* parent);
 	~OutputInstanceConfigDialog();
 
 protected slots:

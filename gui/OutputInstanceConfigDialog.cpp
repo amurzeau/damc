@@ -1,14 +1,15 @@
 #include "OutputInstanceConfigDialog.h"
 #include "MainWindow.h"
+#include "OutputController.h"
 #include "ui_OutputInstanceConfigDialog.h"
 
-OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, OscContainer* oscParent, QWidget* parent)
+OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, OutputController* parent)
     : QDialog(parent),
-      OscContainer(oscParent, "device"),
+      OscContainer(parent, "device"),
       ui(new Ui::OutputInstanceConfigDialog),
       mainWindow(mainWindow),
-      oscType(oscParent, "_type"),
-      oscChannelNumber(oscParent, "channels"),
+      oscType(parent, "_type"),
+      oscChannelNumber(parent, "channels"),
       oscDeviceName(this, "deviceName"),
       oscClockDrift(this, "clockDrift"),
       oscDeviceSampleRate(this, "deviceSampleRate"),
@@ -27,6 +28,9 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 
 	updateTypeCombo();
 	updateDeviceCombo();
+
+	parent->getOscName()->setWidget(ui->nameEdit);
+	parent->getOscDisplayName()->setWidget(ui->displayNameEdit);
 
 	oscType.setWidget(ui->typeCombo);
 	oscChannelNumber.setWidget(ui->channelsSpin);

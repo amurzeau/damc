@@ -55,7 +55,7 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	expanderController = new CompressorController(this, &oscFilterChain, "expanderFilter");
 	expanderController->getEnableMapper().setWidget(ui->expanderButton, false);
 
-	configDialog = new OutputInstanceConfigDialog(parent, this, this);
+	configDialog = new OutputInstanceConfigDialog(parent, this);
 
 	connect(parent, &MainWindow::showDisabledChanged, this, &OutputController::updateHiddenState);
 	connect(ui->enableCheckBox, &QCheckBox::toggled, this, &OutputController::updateHiddenState);
