@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
+find_package(Threads REQUIRED)
+
 if(WIN32)
 	set(SOURCES
 		OutputInstance/WasapiInstance.cpp
@@ -63,7 +65,7 @@ add_executable(waveSendUDPJack
 	OscStatePersist.cpp
 	waveSendUDPJack.cpp
 )
-target_link_libraries(waveSendUDPJack PUBLIC uv::uv PortAudio JACK::jack common)
+target_link_libraries(waveSendUDPJack PUBLIC uv::uv PortAudio JACK::jack common Threads::Threads)
 target_compile_definitions(waveSendUDPJack PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 if(WIN32)
