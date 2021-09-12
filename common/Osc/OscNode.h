@@ -36,6 +36,7 @@ template<typename... ExpectedTypes> bool check_osc_arguments(const std::vector<O
 }
 
 class OscContainer;
+class OscRoot;
 
 class OscNode {
 public:
@@ -53,8 +54,8 @@ public:
 
 	virtual bool visit(const std::function<bool(OscNode*)>* nodeVisitorFunction);
 	virtual void execute(std::string_view address, const std::vector<OscArgument>& arguments);
-	virtual bool isOscValueAuthority();
-	virtual void notifyValueChanged();
+
+	virtual OscRoot* getRoot();
 
 	virtual std::string getAsString() const = 0;
 
@@ -62,9 +63,6 @@ public:
 	void sendMessage(const OscArgument* arguments, size_t number);
 
 protected:
-	// Called by the sendMessage above and bubble the call to OscRoot instance
-	virtual void sendMessage(const std::string& address, const OscArgument* arguments, size_t number);
-
 	// Called by the public execute to really execute the action on this node (rather than descending through the tree
 	// of nodes)
 	virtual void execute(const std::vector<OscArgument>&) {}

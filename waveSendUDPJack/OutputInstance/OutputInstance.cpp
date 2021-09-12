@@ -406,7 +406,7 @@ void OutputInstance::onTimeoutTimer() {
 
 	if(oscEnablePeakUpdate.get()) {
 		OscArgument argument = maxLevel;
-		sendMessage(oscPeakGlobalPath, &argument, 1);
+		getRoot()->sendMessage(oscPeakGlobalPath, &argument, 1);
 	}
 
 	oscPeakPerChannelArguments.clear();
@@ -414,7 +414,7 @@ void OutputInstance::onTimeoutTimer() {
 	for(auto v : levelsDb) {
 		oscPeakPerChannelArguments.emplace_back(v);
 	}
-	sendMessage(oscPeakPerChannelPath, oscPeakPerChannelArguments.data(), oscPeakPerChannelArguments.size());
+	getRoot()->sendMessage(oscPeakPerChannelPath, oscPeakPerChannelArguments.data(), oscPeakPerChannelArguments.size());
 
 	if(endpoint)
 		endpoint->onTimer();

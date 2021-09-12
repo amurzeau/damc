@@ -1,4 +1,5 @@
 #include "OscFlatArray.h"
+#include "OscRoot.h"
 #include <algorithm>
 #include <type_traits>
 
@@ -16,9 +17,10 @@ template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& saved
 			callback(savedValues, values);
 		}
 
-		if(!fromOsc || isOscValueAuthority())
+		if(!fromOsc || getRoot()->isOscValueAuthority())
 			notifyOsc();
-		notifyValueChanged();
+		getRoot()->notifyValueChanged();
+
 		return true;
 	}
 	return false;

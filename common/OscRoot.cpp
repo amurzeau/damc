@@ -169,6 +169,10 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 	execute(address + 1, std::move(arguments));
 }
 
+OscRoot* OscRoot::getRoot() {
+	return this;
+}
+
 bool OscRoot::isOscValueAuthority() {
 	return doNotifyOscAtInit;
 }

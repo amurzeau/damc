@@ -1,11 +1,12 @@
 #include "OscReadOnlyVariable.h"
+#include "OscRoot.h"
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscReadOnlyVariable)
 
 template<typename T>
 OscReadOnlyVariable<T>::OscReadOnlyVariable(OscContainer* parent, std::string name, T initialValue)
     : OscContainer(parent, name), value(initialValue), isDefaultValue(true) {
-	if(isOscValueAuthority())
+	if(getRoot()->isOscValueAuthority())
 		notifyOsc();
 }
 
@@ -16,9 +17,9 @@ template<typename T> void OscReadOnlyVariable<T>::set(T v, bool fromOsc) {
 			isDefaultValue = false;
 			value = v;
 			callChangeCallbacks(v);
-			if(!fromOsc || isOscValueAuthority())
+			if(!fromOsc || getRoot()->isOscValueAuthority())
 				notifyOsc();
-			notifyValueChanged();
+			getRoot()->notifyValueChanged();
 		} else {
 			if constexpr(std::is_same_v<T, std::string>)
 				printf("%s: refused value %s\n", getFullAddress().c_str(), v.c_str());

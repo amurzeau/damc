@@ -1,5 +1,6 @@
 #include "OscNode.h"
 #include "OscContainer.h"
+#include "OscRoot.h"
 
 OscNode::OscNode(OscContainer* parent, std::string name) noexcept : name(name), parent(nullptr) {
 	setOscParent(parent);
@@ -41,28 +42,15 @@ bool OscNode::visit(const std::function<bool(OscNode*)>* nodeVisitorFunction) {
 }
 
 void OscNode::sendMessage(const OscArgument* arguments, size_t number) {
-	sendMessage(getFullAddress(), arguments, number);
-}
-
-void OscNode::sendMessage(const std::string& address, const OscArgument* arguments, size_t number) {
-	if(parent)
-		parent->sendMessage(address, arguments, number);
-}
-
-bool OscNode::isOscValueAuthority() {
-	if(parent)
-		return parent->isOscValueAuthority();
-
-	return false;
-}
-
-void OscNode::notifyValueChanged() {
-	if(parent)
-		parent->notifyValueChanged();
+	getRoot()->sendMessage(getFullAddress(), arguments, number);
 }
 
 void OscNode::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
 	if(address.empty() || address == "/") {
 		execute(arguments);
 	}
+}
+
+OscRoot* OscNode::getRoot() {
+	return parent->getRoot();
 }

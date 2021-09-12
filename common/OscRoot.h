@@ -27,13 +27,14 @@ public:
 	void removeConnector(OscConnector* connector);
 	void setOnOscValueChanged(std::function<void()> onOscValueChanged);
 
-	void sendMessage(const std::string& address, const OscArgument* argument, size_t number) override;
+	// Called by nodes
+	void sendMessage(const std::string& address, const OscArgument* argument, size_t number);
+	bool isOscValueAuthority();
+	void notifyValueChanged();
 
 protected:
 	void executeMessage(tosc_message_const* osc);
-
-	bool isOscValueAuthority() override;
-	void notifyValueChanged() override;
+	OscRoot* getRoot() override;
 
 private:
 	std::set<OscConnector*> connectors;
