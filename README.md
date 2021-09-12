@@ -80,3 +80,14 @@ Steps to use WavePlayer:
 Here is the global configuration for this example:
 
 ![Global configuration](doc/images/global_configuration.png)
+
+## Additional information
+
+As WavePlayer uses Jack audio server, you can use other tools that use Jack too.
+For example, with [Carla](https://github.com/falkTX/Carla), you can use VST plugins.
+
+
+## Known issues
+
+1. On Windows, when disabling / enabling a jack client, sometimes Jack "hang" while the audio still runs fine, for example changing the volume has no effect.
+If this happens, you need to kill the WavePlayer server with CTRL+C in its console and restart it.
