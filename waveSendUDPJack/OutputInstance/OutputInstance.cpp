@@ -13,7 +13,7 @@
 #include "WasapiInstance.h"
 #endif
 
-OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index)
+OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning)
     : OscContainer(parent, std::to_string(index)),
       outputInstance(index),
       controlInterface(controlInterface),
@@ -103,6 +103,10 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 		//
 		printf("Output instance %d ready\n", this->outputInstance);
 	});
+
+	if(audioRunning) {
+		activate();
+	}
 }
 
 OutputInstance::~OutputInstance() {

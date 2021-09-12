@@ -55,6 +55,7 @@ private:
 
 	std::unique_ptr<uv_timer_t, decltype(&ControlInterface::releaseUvTimer)> updateLevelTimer;
 	bool oscNeedSaveConfig;
+	bool audioRunning;
 
 	struct PortConnectionStateChange {
 		jack_port_id_t a;

@@ -21,6 +21,7 @@ ControlInterface::ControlInterface()
       keyBinding(&oscRoot, &oscRoot),
       updateLevelTimer(nullptr, &ControlInterface::releaseUvTimer),
       oscNeedSaveConfig(false),
+      audioRunning(false),
       oscTypeList(&oscRoot, "type_list"),
       oscDeviceList(&oscRoot, "device_list")
 #ifdef _WIN32
@@ -28,7 +29,8 @@ ControlInterface::ControlInterface()
       oscDeviceListWasapi(&oscRoot, "device_list_wasapi")
 #endif
 {
-	outputs.setFactory([this](OscContainer* parent, int name) { return new OutputInstance(parent, this, name); });
+	outputs.setFactory(
+	    [this](OscContainer* parent, int name) { return new OutputInstance(parent, this, name, audioRunning); });
 
 	jack_status_t status;
 
@@ -92,6 +94,7 @@ void ControlInterface::saveConfig() {
 int ControlInterface::init(const char* controlIp, int controlPort) {
 	loadConfig();
 
+	audioRunning = true;
 	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {
 		output.second->activate();
 	}

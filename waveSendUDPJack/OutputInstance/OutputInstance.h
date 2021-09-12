@@ -44,7 +44,7 @@ public:
 	};
 
 public:
-	OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index);
+	OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning);
 	virtual ~OutputInstance();
 
 	void activate();
