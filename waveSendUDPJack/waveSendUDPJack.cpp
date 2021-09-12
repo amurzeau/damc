@@ -21,7 +21,7 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 	uv_close((uv_handle_t*) stream, nullptr);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
 	uv_tty_t ttyRead;
 
 	unsigned int oldMXCSR = _mm_getcsr();      /* read the old MXCSR setting */
