@@ -34,8 +34,6 @@ int main(int argc, char* argv[]) {
 
 	controlInterface.init("127.0.0.1", 2406);
 
-	controlInterface.loadConfig();
-
 	if(uv_tty_init(uv_default_loop(), &ttyRead, 0, 1) == 0) {
 		ttyRead.data = &controlInterface;
 		uv_read_start((uv_stream_t*) &ttyRead, &onTtyAllocBuffer, &onTtyRead);

@@ -30,23 +30,13 @@ OscStatePersist::OscStatePersist(OscRoot* oscRoot, std::string fileName) : oscRo
 	}
 }
 
-static void execute(OscRoot* oscRoot,
-                    std::map<std::string, std::vector<OscArgument>>* enableCommands,
+static void execute(std::map<std::string, std::vector<OscArgument>>* configValues,
                     const std::string& address,
                     const std::vector<OscArgument>& arguments) {
-	auto lastDot = address.find_last_of('/');
-	if(lastDot != std::string::npos) {
-		if(address.substr(lastDot + 1) == "enable") {
-			enableCommands->insert(std::make_pair(address, arguments));
-			return;
-		}
-	}
-
-	oscRoot->execute(address, arguments);
+	configValues->insert(std::make_pair(address, arguments));
 }
 
-static void recurseJson(OscRoot* oscRoot,
-                        std::map<std::string, std::vector<OscArgument>>* enableCommands,
+static void recurseJson(std::map<std::string, std::vector<OscArgument>>* configValues,
                         const std::string& address,
                         const nlohmann::json& object) {
 	std::vector<OscArgument> values;
@@ -56,11 +46,8 @@ static void recurseJson(OscRoot* oscRoot,
 		case nlohmann::json::value_t::object:
 			for(const auto& property : object.items()) {
 				std::string objectAddress;
-				if(address.empty())
-					objectAddress = property.key();
-				else
-					objectAddress = address + "/" + property.key();
-				recurseJson(oscRoot, enableCommands, objectAddress, property.value());
+				objectAddress = address + "/" + property.key();
+				recurseJson(configValues, objectAddress, property.value());
 			}
 			break;
 
@@ -106,7 +93,7 @@ static void recurseJson(OscRoot* oscRoot,
 				}
 			}
 			if(!skipExecute) {
-				execute(oscRoot, enableCommands, address, values);
+				execute(configValues, address, values);
 			}
 			break;
 		}
@@ -140,14 +127,14 @@ static void recurseJson(OscRoot* oscRoot,
 			break;
 	}
 	if(!values.empty()) {
-		execute(oscRoot, enableCommands, address, values);
+		execute(configValues, address, values);
 	}
 }
 
 void OscStatePersist::loadState(std::map<std::string, std::set<std::string>>& outputPortConnections) {
 	std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
 	std::string jsonData;
-	std::map<std::string, std::vector<OscArgument>> enableCommands;
+	std::map<std::string, std::vector<OscArgument>> configValues;
 
 	printf("Loading config file %s\n", saveFileName.c_str());
 
@@ -166,13 +153,11 @@ void OscStatePersist::loadState(std::map<std::string, std::set<std::string>>& ou
 
 	try {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
-		recurseJson(oscRoot, &enableCommands, "", jsonConfig);
-
-		for(auto item : enableCommands) {
-			oscRoot->execute(item.first, item.second);
-		}
+		recurseJson(&configValues, "", jsonConfig);
 
 		outputPortConnections = jsonConfig.value("portConnections", std::map<std::string, std::set<std::string>>{});
+
+		oscRoot->loadNodeConfig(configValues);
 	} catch(const std::exception& e) {
 		printf("Exception while parsing config: %s\n", e.what());
 		printf("json: %s\n", jsonData.c_str());

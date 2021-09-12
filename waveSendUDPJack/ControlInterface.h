@@ -24,10 +24,11 @@ public:
 	void run();
 	void stop();
 
-	void loadConfig();
 	void saveConfig();
 
 protected:
+	void loadConfig();
+
 	static void jackOnPortConnectStatic(jack_port_id_t a, jack_port_id_t b, int connect, void* arg);
 	static int jackOnGraphReorderedStatic(void* arg);
 	static void jackOnPortRegistrationStatic(jack_port_id_t port, int is_registered, void* arg);

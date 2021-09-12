@@ -1,4 +1,5 @@
 #include "OscVariable.h"
+#include "OscRoot.h"
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscVariable)
 
@@ -7,6 +8,8 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
     : OscReadOnlyVariable<T>(parent, name, initialValue), fixedSize(fixedSize) {
 	if(fixedSize)
 		return;
+
+	this->getRoot()->addPendingConfigNode(this);
 
 	if constexpr(std::is_same_v<T, bool>) {
 		subEndpoint.emplace_back(new OscEndpoint(this, "toggle"))->setCallback([this](auto) {

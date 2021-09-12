@@ -26,6 +26,11 @@ template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& saved
 	return false;
 }
 
+template<typename T>
+OscFlatArray<T>::OscFlatArray(OscContainer* parent, std::string name) noexcept : OscContainer(parent, name) {
+	this->getRoot()->addPendingConfigNode(this);
+}
+
 template<typename T> const std::vector<T>& OscFlatArray<T>::getData() const {
 	return values;
 }

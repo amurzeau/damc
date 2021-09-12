@@ -81,6 +81,21 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 	}
 }
 
+void OscRoot::loadNodeConfig(const std::map<std::string, std::vector<OscArgument>>& configValues) {
+	std::vector<OscNode*> nodesToConfigure;
+	do {
+		nodesToConfigure.clear();
+		nodesToConfigure.swap(nodesPendingConfig);
+
+		for(auto node : nodesToConfigure) {
+			auto it = configValues.find(node->getFullAddress());
+			if(it != configValues.end()) {
+				node->execute(it->second);
+			}
+		}
+	} while(!nodesToConfigure.empty());
+}
+
 void OscRoot::onOscPacketReceived(const uint8_t* data, size_t size) {
 	if(tosc_isBundle((const char*) data)) {
 		tosc_bundle_const bundle;
@@ -180,6 +195,10 @@ bool OscRoot::isOscValueAuthority() {
 void OscRoot::notifyValueChanged() {
 	if(onOscValueChanged)
 		onOscValueChanged();
+}
+
+void OscRoot::addPendingConfigNode(OscNode* node) {
+	nodesPendingConfig.push_back(node);
 }
 
 void OscRoot::triggerAddress(const std::string& address) {

@@ -90,6 +90,8 @@ void ControlInterface::saveConfig() {
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
+	loadConfig();
+
 	oscUdpServer.init(controlIp, controlPort + 1);
 	oscTcpServer.init(controlIp, controlPort + 2);
 

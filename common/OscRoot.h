@@ -12,6 +12,7 @@
 struct tosc_message_const;
 
 class OscConnector;
+class OscNode;
 
 class OscRoot : public OscContainer {
 public:
@@ -32,6 +33,9 @@ public:
 	bool isOscValueAuthority();
 	void notifyValueChanged();
 
+	void addPendingConfigNode(OscNode* node);
+	void loadNodeConfig(const std::map<std::string, std::vector<OscArgument>>& configValues);
+
 protected:
 	void executeMessage(tosc_message_const* osc);
 	OscRoot* getRoot() override;
@@ -42,6 +46,8 @@ private:
 	size_t oscOutputMaxSize;
 	std::function<void()> onOscValueChanged;
 	bool doNotifyOscAtInit;
+
+	std::vector<OscNode*> nodesPendingConfig;
 };
 
 class OscConnector {

@@ -63,6 +63,7 @@ public:
 	void sendMessage(const OscArgument* arguments, size_t number);
 
 protected:
+	friend class OscRoot;  // OscRoot calls execute on loadConfig
 	// Called by the public execute to really execute the action on this node (rather than descending through the tree
 	// of nodes)
 	virtual void execute(const std::vector<OscArgument>&) {}
