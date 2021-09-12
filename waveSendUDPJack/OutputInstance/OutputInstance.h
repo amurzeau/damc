@@ -60,6 +60,7 @@ protected:
 	int processInputSamples(jack_nframes_t nframes);
 	int processSamples(jack_nframes_t nframes);
 
+	void updateJackDisplayName();
 	static void onJackPropertyChangeCallback(jack_uuid_t subject,
 	                                         const char* key,
 	                                         jack_property_change_t change,
@@ -97,6 +98,10 @@ private:
 	OscVariable<bool> oscEnablePeakJsonUpdate;
 
 	OscCombinedVariable readyChecker;
+
+	bool displayNameUpdateRequested;
+
+	static const std::string JACK_CLIENT_NAME_PREFIX;
 };
 
 #endif

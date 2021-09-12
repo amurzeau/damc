@@ -85,9 +85,8 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	oscName.setChangeCallback([this](const std::string&) { updateTooltip(); });
 
 	oscDisplayName.setChangeCallback([this](const std::string& value) {
-		QString title = QString::fromStdString(value).replace("waveSendUDP-", "");
-		QString shortTitle = QString::fromStdString(value).replace("waveSendUDP-", "");
-		ui->groupBox->setTitle(shortTitle);
+		QString title = QString::fromStdString(value);
+		ui->groupBox->setTitle(title);
 		equalizersController->setWindowTitle(tr("Equalizer - %1").arg(title));
 		compressorController->setWindowTitle(tr("Compressor - %1").arg(title));
 		expanderController->setWindowTitle(tr("Expander - %1").arg(title));
@@ -140,7 +139,7 @@ void OutputController::updateHiddenState() {
 }
 
 void OutputController::updateTooltip() {
-	QString title = QString::fromStdString(oscName.get()).replace("waveSendUDP-", "");
+	QString title = QString::fromStdString(oscName.get());
 
 	ui->groupBox->setToolTip(title);
 }

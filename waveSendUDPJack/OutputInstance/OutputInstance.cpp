@@ -13,6 +13,8 @@
 #include "WasapiInstance.h"
 #endif
 
+const std::string OutputInstance::JACK_CLIENT_NAME_PREFIX = "waveSendUDP-";
+
 OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning)
     : OscContainer(parent, std::to_string(index)),
       outputInstance(index),
@@ -23,13 +25,14 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
       enableAudio(false),
       oscEnable(this, "enable", false),
       oscType(this, "_type", (int32_t) OutputInstance::None),  // use _type to ensure it is before endpoint config
-      oscName(this, "name", "waveSendUDP-" + std::to_string(index)),
+      oscName(this, "name", std::to_string(index)),
       oscDisplayName(this, "display_name", oscName.get()),
       oscNumChannel(this, "channels", 0),
       oscSampleRate(this, "sample_rate"),
 
       oscEnablePeakUpdate(this, "enable_peak", false),
-      oscEnablePeakJsonUpdate(this, "enable_peak_json", true) {
+      oscEnablePeakJsonUpdate(this, "enable_peak_json", true),
+      displayNameUpdateRequested(false) {
 	uv_mutex_init(&filtersMutex);
 	uv_mutex_init(&peakMutex);
 
@@ -65,6 +68,8 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 		}
 		return true;
 	});
+
+	oscDisplayName.setChangeCallback([this](const std::string&) { displayNameUpdateRequested = true; });
 
 	oscNumChannel.addCheckCallback([this](int32_t newValue) {
 		if(client) {
@@ -131,8 +136,9 @@ int OutputInstance::start() {
 	if(client || !endpoint)
 		return 0;
 
-	printf("Opening jack client %s\n", oscName.c_str());
-	client = jack_client_open(oscName.c_str(), JackNullOption, &status);
+	std::string jackClientName = JACK_CLIENT_NAME_PREFIX + oscName.get();
+	printf("Opening jack client %s\n", jackClientName.c_str());
+	client = jack_client_open(jackClientName.c_str(), JackNullOption, &status);
 	if(client == NULL) {
 		printf("Failed to open jack: %d.\n", status);
 		return -3;
@@ -190,16 +196,14 @@ int OutputInstance::start() {
 
 	jack_set_process_callback(client, &processSamplesStatic, this);
 
-	const char* pszClientUuid = ::jack_get_uuid_for_client_name(client, oscName.c_str());
+	const char* pszClientUuid = ::jack_get_uuid_for_client_name(client, jackClientName.c_str());
 	if(pszClientUuid) {
 		::jack_uuid_parse(pszClientUuid, &clientUuid);
-		if(!oscDisplayName.get().empty() && oscDisplayName != oscName) {
-			::jack_set_property(client, clientUuid, JACK_METADATA_PRETTY_NAME, oscDisplayName.c_str(), NULL);
-		}
 		jack_free((void*) pszClientUuid);
 	} else {
 		clientUuid = 0;
 	}
+	updateJackDisplayName();
 	jack_set_property_change_callback(client, &OutputInstance::onJackPropertyChangeCallback, this);
 
 	int ret = jack_activate(client);
@@ -282,6 +286,21 @@ void OutputInstance::updateEnabledState(bool newValue) {
 	}
 }
 
+void OutputInstance::updateJackDisplayName() {
+	if(clientUuid == 0)
+		return;
+
+	if(!oscDisplayName.get().empty()) {
+		::jack_set_property(client,
+		                    clientUuid,
+		                    JACK_METADATA_PRETTY_NAME,
+		                    (JACK_CLIENT_NAME_PREFIX + oscDisplayName.get()).c_str(),
+		                    NULL);
+	} else {
+		oscDisplayName.forceDefault(oscName.get());
+	}
+}
+
 void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
                                                   const char* key,
                                                   jack_property_change_t change,
@@ -296,7 +315,15 @@ void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
 			case PropertyChanged:
 				::jack_get_property(thisInstance->clientUuid, JACK_METADATA_PRETTY_NAME, &pszValue, &pszType);
 				if(pszValue) {
-					thisInstance->oscDisplayName = pszValue;
+					std::string newValue = pszValue;
+					size_t prefixPos = newValue.find(JACK_CLIENT_NAME_PREFIX);
+					if(prefixPos == 0) {
+						newValue.replace(prefixPos, JACK_CLIENT_NAME_PREFIX.size(), "");
+						thisInstance->oscDisplayName = newValue;
+					} else {
+						// Invalid name, keep previous
+						thisInstance->displayNameUpdateRequested = true;
+					}
 					::jack_free(pszValue);
 				}
 				if(pszType)
@@ -306,7 +333,6 @@ void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
 				thisInstance->oscDisplayName.forceDefault(thisInstance->oscName.get());
 				break;
 		}
-		thisInstance->controlInterface->saveConfig();
 	}
 }
 
@@ -429,4 +455,11 @@ void OutputInstance::onTimeoutTimer() {
 
 	if(endpoint)
 		endpoint->onTimer();
+
+	if(displayNameUpdateRequested) {
+		displayNameUpdateRequested = false;
+		// Don't call that function directly as displayName can be update in Jack notification thread
+		// where we can't call jack functions
+		updateJackDisplayName();
+	}
 }
