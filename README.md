@@ -10,7 +10,7 @@ DAMC is a audio mixing console to be used with [Jack](https://jackaudio.org/) an
 ## Installation
 
 Typical installation on Windows:
- - DAMC: https://github.com/amurzeau/waveplay/actions
+ - DAMC: https://github.com/amurzeau/damc/actions
  - Jack audio server: https://jackaudio.org/downloads/
  - QJackCtl with alias support for renaming audio clients: https://github.com/rncbc/qjackctl/actions?query=branch%3Amaster
  - SAR: https://github.com/eiz/SynchronousAudioRouter/releases (requires TESTSIGNING for 0.13.2, else try 0.13.1 but it might cause Jack to hang until reboot when stopping)
