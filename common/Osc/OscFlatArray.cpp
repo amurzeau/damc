@@ -5,27 +5,6 @@
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscFlatArray);
 
-template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& savedValues, bool fromOsc) {
-	for(auto key : values) {
-		if(std::count(values.begin(), values.end(), key) != 1) {
-			printf("Duplicate data inserted\n");
-			abort();
-		}
-	}
-	if(values != savedValues) {
-		for(auto& callback : onChangeCallbacks) {
-			callback(savedValues, values);
-		}
-
-		if(!fromOsc || getRoot()->isOscValueAuthority())
-			notifyOsc();
-		getRoot()->notifyValueChanged();
-
-		return true;
-	}
-	return false;
-}
-
 template<typename T>
 OscFlatArray<T>::OscFlatArray(OscContainer* parent, std::string name) noexcept : OscContainer(parent, name) {
 	this->getRoot()->addPendingConfigNode(this);
@@ -91,4 +70,25 @@ template<typename T> void OscFlatArray<T>::notifyOsc() {
 		valueToSend.push_back(v);
 	}
 	sendMessage(&valueToSend[0], valueToSend.size());
+}
+
+template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& savedValues, bool fromOsc) {
+	for(auto key : values) {
+		if(std::count(values.begin(), values.end(), key) != 1) {
+			printf("Duplicate data inserted\n");
+			abort();
+		}
+	}
+	if(values != savedValues) {
+		for(auto& callback : onChangeCallbacks) {
+			callback(savedValues, values);
+		}
+
+		if(!fromOsc || getRoot()->isOscValueAuthority())
+			notifyOsc();
+		getRoot()->notifyValueChanged();
+
+		return true;
+	}
+	return false;
 }
