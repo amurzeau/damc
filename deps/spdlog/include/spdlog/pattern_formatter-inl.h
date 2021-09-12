@@ -44,6 +44,14 @@ public:
         remaining_pad_ = static_cast<long>(padinfo.width_) - static_cast<long>(wrapped_size);
         if (remaining_pad_ <= 0)
         {
+            if (remaining_pad_ < 0 && padinfo.truncate_ && padinfo_.side_ == padding_info::pad_side::left)
+            {
+                // If we need to truncate the right of the field, save the current buffer to original_dest_
+                // dest_ is cleared and will only contain the field data when ~scoped_padder() will be called
+                // allowing us to add only the wanted part of the field.
+                original_dest_ = std::move(dest_);
+                dest_.clear();
+            }
             return;
         }
 
@@ -73,6 +81,15 @@ public:
         {
             pad_it(remaining_pad_);
         }
+        else if (padinfo_.truncate_ && padinfo_.side_ == padding_info::pad_side::left)
+        {
+            size_t truncated_size = dest_.size() - padinfo_.width_;
+            // At this time, dest_ only contains the field data as it was moved to original_dest_ in the constructor
+            // So append only the padinfo.width_ last bytes of the field data to original_dest_
+            // and the move it back to dest_.
+            original_dest_.append(dest_.data() + truncated_size, dest_.data() + dest_.size());
+            dest_ = std::move(original_dest_);
+        }
         else if (padinfo_.truncate_)
         {
             long new_size = static_cast<long>(dest_.size()) + remaining_pad_;
@@ -90,6 +107,7 @@ private:
     memory_buf_t &dest_;
     long remaining_pad_;
     string_view_t spaces_{"                                                                ", 64};
+    memory_buf_t original_dest_;
 };
 
 struct null_scoped_padder
