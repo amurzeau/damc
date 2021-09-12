@@ -47,6 +47,7 @@ public:
 	OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index);
 	virtual ~OutputInstance();
 
+	void activate();
 	int start();
 	void stop();
 	void onTimeoutTimer();
@@ -84,6 +85,7 @@ private:
 	std::string oscPeakPerChannelPath;
 	std::vector<OscArgument> oscPeakPerChannelArguments;
 
+	bool enableAudio;
 	OscVariable<bool> oscEnable;
 	OscVariable<int32_t> oscType;
 	OscVariable<std::string> oscName;

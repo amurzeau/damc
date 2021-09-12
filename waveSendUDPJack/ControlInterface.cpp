@@ -92,6 +92,10 @@ void ControlInterface::saveConfig() {
 int ControlInterface::init(const char* controlIp, int controlPort) {
 	loadConfig();
 
+	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {
+		output.second->activate();
+	}
+
 	oscUdpServer.init(controlIp, controlPort + 1);
 	oscTcpServer.init(controlIp, controlPort + 2);
 

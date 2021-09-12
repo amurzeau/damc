@@ -20,6 +20,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
       client(nullptr),
       filters(this),
 
+      enableAudio(false),
       oscEnable(this, "enable", false),
       oscType(this, "_type", (int32_t) OutputInstance::None),  // use _type to ensure it is before endpoint config
       oscName(this, "name", "waveSendUDP-" + std::to_string(index)),
@@ -102,8 +103,6 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 		//
 		printf("Output instance %d ready\n", this->outputInstance);
 	});
-
-	oscEnable.setChangeCallback([this](bool newValue) { updateEnabledState(newValue); });
 }
 
 OutputInstance::~OutputInstance() {
@@ -115,6 +114,11 @@ OutputInstance::~OutputInstance() {
 
 	uv_mutex_destroy(&peakMutex);
 	uv_mutex_destroy(&filtersMutex);
+}
+
+void OutputInstance::activate() {
+	enableAudio = true;
+	oscEnable.setChangeCallback([this](bool newValue) { updateEnabledState(newValue); });
 }
 
 int OutputInstance::start() {
@@ -261,11 +265,14 @@ bool OutputInstance::updateType(int newValue) {
 	return true;
 }
 
-void OutputInstance::updateEnabledState(bool enable) {
-	if(enable && !client && endpoint && readyChecker.isVariablesReady()) {
+void OutputInstance::updateEnabledState(bool newValue) {
+	if(!enableAudio)
+		return;
+
+	if(newValue && !client && endpoint && readyChecker.isVariablesReady()) {
 		printf("Starting output: %s\n", getName().c_str());
 		start();
-	} else if(!enable && client) {
+	} else if(!newValue && client) {
 		printf("Stopping output: %s\n", getName().c_str());
 		stop();
 	}
