@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(waveOverUDP)
+project(waveOverUDP VERSION 1.0)
 
 # option() honors normal variables
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
