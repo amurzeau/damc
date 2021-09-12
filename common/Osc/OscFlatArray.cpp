@@ -12,6 +12,10 @@ template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& saved
 		}
 	}
 	if(values != savedValues) {
+		for(auto& callback : onChangeCallbacks) {
+			callback(savedValues, values);
+		}
+
 		if(!fromOsc || isOscValueAuthority())
 			notifyOsc();
 		notifyValueChanged();
@@ -50,7 +54,9 @@ template<typename T> std::string OscFlatArray<T>::getAsString() const {
 }
 
 template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument>& arguments) {
-	bool dataChanged = updateData(
+	auto oldValues = values;
+
+	updateData(
 	    [this, &arguments](std::vector<T>& data) {
 		    data.clear();
 		    for(const auto& arg : arguments) {
@@ -63,15 +69,12 @@ template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument
 		    }
 	    },
 	    true);
-	if(dataChanged) {
-		for(auto& callback : onChangeCallbacks) {
-			callback(values);
-		}
-	}
 }
 
-template<typename T> void OscFlatArray<T>::setChangeCallback(std::function<void(const std::vector<T>&)> onChange) {
+template<typename T>
+void OscFlatArray<T>::setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange) {
 	this->onChangeCallbacks.push_back(onChange);
+	onChange({}, values);
 }
 
 template<typename T> void OscFlatArray<T>::notifyOsc() {

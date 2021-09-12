@@ -43,6 +43,9 @@ protected:
 	virtual void initializeItem(T*) {}
 	void updateNextKeyToMaxKey();
 
+	void insertValue(int key);
+	void eraseValue(int key);
+
 private:
 	OscFlatArray<int> keys;
 	std::map<int, std::unique_ptr<T>> value;
@@ -53,18 +56,24 @@ private:
 template<typename T>
 OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noexcept
     : OscContainer(parent, name), keys(this, "keys"), nextKey(0) {
-	keys.setChangeCallback([this](const std::vector<int>& newValue) {
-		for(const auto& oldKey : value) {
-			if(!Utils::vector_find(newValue, oldKey.first)) {
-				erase(oldKey.first);
+	keys.setChangeCallback([this](const std::vector<int>& oldKeys, const std::vector<int>& newKeys) {
+		std::set<int> keysToKeep;
+
+		for(size_t i = 0; i < newKeys.size(); i++) {
+			int key = newKeys[i];
+
+			keysToKeep.insert(key);
+
+			if(!Utils::vector_find(oldKeys, key)) {
+				// The item wasn't existing, add it
+				insertValue(key);
 			}
 		}
-		for(const auto& newKey : newValue) {
-			if(value.count(newKey) == 0) {
-				T* newValue = factoryFunction(this, newKey);
 
-				initializeItem(newValue);
-				value.insert(std::make_pair(newKey, std::unique_ptr<T>{newValue}));
+		std::vector<int> keyToRemove;
+		for(int key : oldKeys) {
+			if(keysToKeep.count(key) == 0) {
+				keyToRemove.push_back(key);
 			}
 		}
 	});
@@ -93,24 +102,9 @@ template<typename T> void OscGenericArray<T>::insert(int newKey) {
 		nextKey = newKey + 1;
 
 	keys.updateData([&newKey](std::vector<int>& keys) { keys.push_back(newKey); });
-
-	T* newValue = factoryFunction(this, newKey);
-
-	initializeItem(newValue);
-	value.insert(std::make_pair(newKey, std::unique_ptr<T>(newValue)));
 }
 
 template<typename T> void OscGenericArray<T>::erase(int key) {
-	for(auto it = value.begin(); it != value.end();) {
-		if(it->first == key) {
-			value.erase(it);
-			break;
-		} else {
-			++it;
-		}
-	}
-
-	updateNextKeyToMaxKey();
 	keys.updateData([&key](std::vector<int>& data) { Utils::vector_erase(data, key); });
 }
 
@@ -131,58 +125,19 @@ template<typename T> void OscGenericArray<T>::resize(size_t newSize) {
 
 template<typename T>
 void OscGenericArray<T>::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
-	if(address == "keys") {
-		std::vector<int> newKeys;
-		std::set<int> keysToKeep;
-		const auto& keysOrder = keys.getData();
+	std::string_view childAddress;
 
-		for(const auto& arg : arguments) {
-			int key;
+	splitAddress(address, &childAddress, nullptr);
 
-			if(!getArgumentAs<int>(arg, key))
-				return;
+	if(!childAddress.empty() && Utils::isNumber(childAddress)) {
+		int key = atoi(std::string(childAddress).c_str());
 
-			newKeys.push_back(key);
+		if(value.count(key) == 0) {
+			insert(key);
 		}
-
-		for(size_t i = 0; i < newKeys.size(); i++) {
-			int key = newKeys[i];
-
-			keysToKeep.insert(key);
-
-			if(!Utils::vector_find(keysOrder, key)) {
-				// The item wasn't existing, add it
-				insert(key);
-			}
-		}
-
-		std::vector<int> keyToRemove;
-		for(int key : keysOrder) {
-			if(keysToKeep.count(key) == 0) {
-				keyToRemove.push_back(key);
-			}
-		}
-
-		for(const auto& key : keyToRemove) {
-			erase(key);
-		}
-
-		keys.setData(newKeys);
-	} else {
-		std::string_view childAddress;
-
-		splitAddress(address, &childAddress, nullptr);
-
-		if(!childAddress.empty() && Utils::isNumber(childAddress)) {
-			int key = atoi(std::string(childAddress).c_str());
-
-			if(value.count(key) == 0) {
-				insert(key);
-			}
-		}
-
-		OscContainer::execute(address, arguments);
 	}
+
+	OscContainer::execute(address, arguments);
 }
 
 template<typename T> void OscGenericArray<T>::updateNextKeyToMaxKey() {
@@ -193,4 +148,24 @@ template<typename T> void OscGenericArray<T>::updateNextKeyToMaxKey() {
 	}
 
 	nextKey = maxKey;
+}
+
+template<typename T> void OscGenericArray<T>::insertValue(int key) {
+	T* newValue = factoryFunction(this, key);
+
+	initializeItem(newValue);
+	value.insert(std::make_pair(key, std::unique_ptr<T>(newValue)));
+}
+
+template<typename T> void OscGenericArray<T>::eraseValue(int key) {
+	for(auto it = value.begin(); it != value.end();) {
+		if(it->first == key) {
+			value.erase(it);
+			break;
+		} else {
+			++it;
+		}
+	}
+
+	updateNextKeyToMaxKey();
 }

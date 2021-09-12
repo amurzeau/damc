@@ -18,7 +18,7 @@ public:
 
 	void execute(const std::vector<OscArgument>& arguments) override;
 
-	void setChangeCallback(std::function<void(const std::vector<T>&)> onChange);
+	void setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange);
 
 protected:
 	void notifyOsc();
@@ -26,7 +26,7 @@ protected:
 
 private:
 	std::vector<T> values;
-	std::vector<std::function<void(const std::vector<T>&)>> onChangeCallbacks;
+	std::vector<std::function<void(const std::vector<T>&, const std::vector<T>&)>> onChangeCallbacks;
 };
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(extern template, OscFlatArray);
