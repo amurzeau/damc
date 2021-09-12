@@ -18,8 +18,3 @@ target_link_libraries(binauralSynthesis JACK::jack)
 
 add_executable(testdft testdft.cpp DiscreteFourierTransform.cpp DiscreteFourierTransform.h)
 target_link_libraries(testdft fftw3f)
-
-install(TARGETS binauralSynthesis
-	RUNTIME DESTINATION ./
-	LIBRARY DESTINATION ./
-)
