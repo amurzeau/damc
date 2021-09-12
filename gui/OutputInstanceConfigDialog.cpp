@@ -19,8 +19,6 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
       oscExclusiveMode(this, "exclusiveMode") {
 	ui->setupUi(this);
 
-	connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &OutputInstanceConfigDialog::onConfirm);
-	connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &OutputInstanceConfigDialog::hide);
 	connect(ui->typeCombo, qOverload<int>(&QComboBox::activated), this, &OutputInstanceConfigDialog::updateDeviceCombo);
 
 	connect(mainWindow, &MainWindow::typeListChanged, this, &OutputInstanceConfigDialog::updateTypeCombo);
