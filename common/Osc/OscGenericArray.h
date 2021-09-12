@@ -73,7 +73,7 @@ OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noex
 		std::vector<int> keyToRemove;
 		for(int key : oldKeys) {
 			if(keysToKeep.count(key) == 0) {
-				keyToRemove.push_back(key);
+				eraseValue(key);
 			}
 		}
 	});
