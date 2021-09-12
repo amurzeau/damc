@@ -22,7 +22,7 @@ Equalizer::Equalizer(QWidget* parent,
 
 	bodePlot->addEqualizer(this);
 
-	oscEnable.setWidget(ui->parametricEqGroupBox);
+	oscEnable.setWidget(ui->enableCheckBox);
 	oscType.setWidget(ui->typeComboBox);
 	oscF0.setWidget(ui->f0SpinBox);
 	oscQ.setWidget(ui->qSpinBox);
@@ -51,12 +51,12 @@ std::complex<double> Equalizer::getResponse(double f0) {
 }
 
 bool Equalizer::getEnabled() {
-	return ui->parametricEqGroupBox->isChecked();
+	return ui->enableCheckBox->isChecked();
 }
 
 void Equalizer::updateResponse() {
 	this->fs = outputController->getSampleRate();
-	biquadFilter.computeFilter(ui->parametricEqGroupBox->isChecked(),
+	biquadFilter.computeFilter(ui->enableCheckBox->isChecked(),
 	                           (FilterType) ui->typeComboBox->currentIndex(),
 	                           ui->f0SpinBox->value(),
 	                           this->fs,

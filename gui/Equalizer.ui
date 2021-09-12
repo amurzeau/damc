@@ -31,12 +31,6 @@
    </property>
    <item row="0" column="0">
     <widget class="QGroupBox" name="parametricEqGroupBox">
-     <property name="title">
-      <string>Enable</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
      <property name="checked">
       <bool>false</bool>
      </property>
@@ -59,21 +53,47 @@
       <property name="verticalSpacing">
        <number>2</number>
       </property>
-      <item row="1" column="0">
-       <widget class="QLabel" name="f0Label">
-        <property name="text">
-         <string>f0</string>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="qSpinBox">
+        <property name="minimum">
+         <double>0.500000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>200.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="f0SpinBox">
+        <property name="minimum">
+         <double>10.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>96000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>133.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="typeLabel">
+        <property name="text">
+         <string>Type</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
        <widget class="QLabel" name="gainLabel">
         <property name="text">
          <string>Gain</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item row="1" column="1">
        <widget class="QComboBox" name="typeComboBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
@@ -133,40 +153,14 @@
         </item>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="qSpinBox">
-        <property name="minimum">
-         <double>0.500000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>200.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>1.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QDoubleSpinBox" name="f0SpinBox">
-        <property name="minimum">
-         <double>10.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>96000.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>133.000000000000000</double>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="qLabel">
+       <widget class="QLabel" name="f0Label">
         <property name="text">
-         <string>Q</string>
+         <string>f0</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QDoubleSpinBox" name="gainSpinBox">
         <property name="minimum">
          <double>-100.000000000000000</double>
@@ -179,10 +173,17 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="typeLabel">
+      <item row="3" column="0">
+       <widget class="QLabel" name="qLabel">
         <property name="text">
-         <string>Type</string>
+         <string>Q</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QCheckBox" name="enableCheckBox">
+        <property name="text">
+         <string>Enable</string>
         </property>
        </widget>
       </item>

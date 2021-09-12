@@ -37,7 +37,7 @@ private:
 	BiquadFilter biquadFilter;
 	BodePlot* bodePlot;
 
-	OscWidgetMapper<QGroupBox> oscEnable;
+	OscWidgetMapper<QAbstractButton> oscEnable;
 	OscWidgetMapper<QComboBox> oscType;
 	OscWidgetMapper<QDoubleSpinBox> oscF0;
 	OscWidgetMapper<QDoubleSpinBox> oscQ;
