@@ -224,11 +224,13 @@ static constexpr uint8_t SLIP_ESC_ESC = 0xDD;
 
 OscConnector::OscConnector(OscRoot* oscRoot, bool useSlipProtocol)
     : oscRoot(oscRoot), useSlipProtocol(useSlipProtocol), oscIsEscaping(false) {
-	oscRoot->addConnector(this);
+	if(oscRoot)
+		oscRoot->addConnector(this);
 }
 
 OscConnector::~OscConnector() {
-	oscRoot->removeConnector(this);
+	if(oscRoot)
+		oscRoot->removeConnector(this);
 }
 
 void OscConnector::sendOscMessage(const uint8_t* data, size_t size) {
@@ -262,6 +264,9 @@ void OscConnector::sendOscMessage(const uint8_t* data, size_t size) {
 }
 
 void OscConnector::onOscDataReceived(const uint8_t* data, size_t size) {
+	if(oscRoot == nullptr)
+		return;
+
 	if(useSlipProtocol) {
 		// Decode SLIP frame
 		for(size_t i = 0; i < size; i++) {

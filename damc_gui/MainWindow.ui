@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>207</width>
+    <width>271</width>
     <height>409</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>waveOverUDP</string>
+   <string>Digital Audio Mixing Console - DAMC</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="1">

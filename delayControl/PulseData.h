@@ -1,6 +1,6 @@
 #ifndef PULSEDATA_H
 
-#include "../waveSendUDPJack/OutputInstance/ResamplingFilter.h"
+#include "ResamplingFilter.h"
 #include <array>
 #include <string>
 #include <uv.h>

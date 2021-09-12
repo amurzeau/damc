@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 
-add_library(common STATIC
+set(TARGET_NAME damc_common)
+
+add_library(${TARGET_NAME} STATIC
 	BiquadFilter.cpp
 	BiquadFilter.h
 	OscRoot.cpp
@@ -32,4 +34,4 @@ add_library(common STATIC
 	Osc/OscVariable.h
 )
 
-target_include_directories(common PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})

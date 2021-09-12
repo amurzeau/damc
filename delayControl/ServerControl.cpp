@@ -1,9 +1,10 @@
 #include "ServerControl.h"
-#include "json.h"
+
+ServerControl::ServerControl() : OscRoot(false), OscConnector(this, true) {}
 
 void ServerControl::init(int baseDelayOutputInstance) {
 	struct sockaddr_in dest;
-	uv_ip4_addr("127.0.0.1", 2306, &dest);
+	uv_ip4_addr("127.0.0.1", 2408, &dest);
 
 	uv_tcp_init(uv_default_loop(), &tcpClient);
 
@@ -51,11 +52,9 @@ void ServerControl::onWrite(uv_write_t* req, int status) {
 	thisInstance->processSendNextMessage();
 }
 
-void ServerControl::sendMessage(const std::string& data) {
+void ServerControl::sendOscData(const uint8_t* data, size_t size) {
 	std::string message;
-	message.resize(data.size() + 4);
-	*reinterpret_cast<int*>(&message[0]) = data.size();
-	memcpy(&message[4], data.data(), data.size());
+	message.assign(data, data + size);
 
 	commands.push_back(message);
 
@@ -93,9 +92,9 @@ void ServerControl::setRawDelay(int outputInstance, int delay) {
 
 	configuredDelayPerOutputInstance[outputInstance] = delay;
 
-	nlohmann::json json{{"instance", outputInstance}, {"delayFilter", nlohmann::json::object({{"delay", delay}})}};
-	printf("Setting delay of %d to %d: %s\n", outputInstance, delay, json.dump().c_str());
-	sendMessage(json.dump());
+	OscArgument oscArg = delay;
+	printf("Setting delay of %d to %d\n", outputInstance, delay);
+	sendMessage("/strip/" + std::to_string(outputInstance) + "/filterChain/delay", &oscArg, 1);
 }
 
 void ServerControl::updateDelays() {
@@ -116,8 +115,8 @@ void ServerControl::updateDelays() {
 }
 
 void ServerControl::setClockDrift(int outputInstance, float clockDrift) {
-	nlohmann::json json{{"instance", outputInstance}, {"clockDrift", clockDrift}};
-	sendMessage(json.dump());
+	OscArgument oscArg = clockDrift;
+	sendMessage("/strip/" + std::to_string(outputInstance) + "/device/clockDrift", &oscArg, 1);
 }
 
 void ServerControl::adjustDelay(int outputInstance, int delay) {

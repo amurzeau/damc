@@ -13,7 +13,7 @@
 #include "WasapiInstance.h"
 #endif
 
-const std::string OutputInstance::JACK_CLIENT_NAME_PREFIX = "waveSendUDP-";
+const std::string OutputInstance::JACK_CLIENT_NAME_PREFIX = "damc-";
 
 OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning)
     : OscContainer(parent, std::to_string(index)),

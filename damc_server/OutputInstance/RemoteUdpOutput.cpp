@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #endif
+#include "OutputInstance.h"
 #include <string.h>
 #include <string>
 
@@ -35,7 +36,7 @@ RemoteUdpOutput::~RemoteUdpOutput() {
 }
 
 int RemoteUdpOutput::init(int index, int samplerate, const char* ip, int port) {
-	std::string streamName = "waveSendUDP-" + std::to_string(index);
+	std::string streamName = OutputInstance::JACK_CLIENT_NAME_PREFIX + std::to_string(index);
 	uint32_t targetIp = inet_addr(ip);
 
 	if(started)

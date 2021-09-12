@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
+set(TARGET_NAME damc_server)
+
 find_package(Threads REQUIRED)
 
 if(WIN32)
@@ -11,7 +13,7 @@ else()
 	set(SOURCES)
 endif()
 
-add_executable(waveSendUDPJack
+add_executable(${TARGET_NAME}
 	Filter/EqFilter.cpp
 	Filter/EqFilter.h
 	Filter/DitheringFilter.cpp
@@ -63,16 +65,16 @@ add_executable(waveSendUDPJack
 	OscServer.cpp
 	OscStatePersist.h
 	OscStatePersist.cpp
-	waveSendUDPJack.cpp
+	main.cpp
 )
-target_link_libraries(waveSendUDPJack PUBLIC uv::uv PortAudio JACK::jack common Threads::Threads)
-target_compile_definitions(waveSendUDPJack PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
+target_link_libraries(${TARGET_NAME} PUBLIC uv::uv PortAudio JACK::jack damc_common Threads::Threads)
+target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 if(WIN32)
-	target_link_libraries(waveSendUDPJack PUBLIC avrt ksuser)
+	target_link_libraries(${TARGET_NAME} PUBLIC avrt ksuser)
 endif()
 
-install(TARGETS waveSendUDPJack
+install(TARGETS ${TARGET_NAME}
 	RUNTIME DESTINATION ./
 	LIBRARY DESTINATION ./
 )

@@ -2,6 +2,7 @@
 #ifndef _WIN32
 #include <netinet/in.h>
 #endif
+#include "OutputInstance.h"
 #include <algorithm>
 #include <limits.h>
 #include <string.h>
@@ -42,7 +43,7 @@ static unsigned int highestPowerof2(unsigned int n) {
 }
 
 int RemoteUdpInput::init(int index, int samplerate, const char* ip, int port) {
-	std::string streamName = "waveSendUDP-" + std::to_string(index);
+	std::string streamName = OutputInstance::JACK_CLIENT_NAME_PREFIX + std::to_string(index);
 	uint32_t targetIp = inet_addr(ip);
 	struct sockaddr_in sin_server;
 

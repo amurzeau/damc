@@ -14,7 +14,7 @@
 
 ControlInterface::ControlInterface()
     : oscRoot(true),
-      oscStatePersister(&oscRoot, "waveSendUDPJack_osc.json"),
+      oscStatePersister(&oscRoot, "damc_config.json"),
       oscUdpServer(&oscRoot, &oscRoot),
       oscTcpServer(&oscRoot),
       outputs(&oscRoot, "strip"),
@@ -38,7 +38,8 @@ ControlInterface::ControlInterface()
 	uv_async_init(uv_default_loop(), &jackNotificationPending, &ControlInterface::onJackNotificationStatic);
 	uv_unref((uv_handle_t*) &jackNotificationPending);
 
-	monitoringJackClient = jack_client_open("waveSendUDP-monitoringclient", JackNullOption, &status);
+	monitoringJackClient = jack_client_open(
+	    (OutputInstance::JACK_CLIENT_NAME_PREFIX + "monitoringclient").c_str(), JackNullOption, &status);
 	if(monitoringJackClient != nullptr) {
 		printf("Started monitoring client\n");
 		jack_set_port_connect_callback(monitoringJackClient, &ControlInterface::jackOnPortConnectStatic, this);

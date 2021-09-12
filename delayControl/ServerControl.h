@@ -1,12 +1,15 @@
 #ifndef SERVERCONTROL_H
 
 #include "uv.h"
+#include <OscRoot.h>
 #include <list>
 #include <string>
 #include <unordered_map>
 
-class ServerControl {
+class ServerControl : public OscRoot, public OscConnector {
 public:
+	ServerControl();
+
 	void init(int baseDelayOutputInstance);
 	void stop();
 
@@ -20,7 +23,7 @@ protected:
 	static void onRead(uv_stream_t* tcp, ssize_t nread, const uv_buf_t* buf);
 	static void onWrite(uv_write_t* req, int status);
 
-	void sendMessage(const std::string& data);
+	void sendOscData(const uint8_t* data, size_t size) override;
 	void processSendNextMessage();
 
 	void setRawDelay(int outputInstance, int delay);

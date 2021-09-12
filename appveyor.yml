@@ -31,15 +31,15 @@ build_script:
     if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode )  }
     cmake --build . --target package --config RelWithDebInfo
     if($LastExitCode -ne 0) { $host.SetShouldExit($LastExitCode )  }
-    foreach ($file in $(ls waveOverUDP-*.zip)) { Push-AppveyorArtifact $file }
+    foreach ($file in $(ls damc-*.zip)) { Push-AppveyorArtifact $file }
 deploy:
   tag: $(APPVEYOR_REPO_TAG_NAME)
-  release: waveOverUDP $(APPVEYOR_REPO_TAG_NAME)
-  description: 'waveOverUDP release $(APPVEYOR_REPO_TAG_NAME)'
+  release: damc $(APPVEYOR_REPO_TAG_NAME)
+  description: 'damc release $(APPVEYOR_REPO_TAG_NAME)'
   provider: GitHub
   auth_token:
     secure: ZLpI8aoNJxwWCJ9AFsXSBz7+bSOLOR0nuHi0engVUbpKZivwtwgKR7exIpnqawgM
-  artifact: /waveOverUDP.*\.zip/  # upload all binaries package (not tests logs)
+  artifact: /damc.*\.zip/  # upload all binaries package (not tests logs)
   draft: false
   prerelease: false
   force_update: true

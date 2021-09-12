@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-set(TARGET_NAME waveSendUDPJackGui)
+set(TARGET_NAME damc_gui)
 
 set(FORMS
 	Balance.ui
@@ -85,7 +85,7 @@ if(TARGET QtDependencies)
 	endif()
 
 	target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-	target_link_libraries(${TARGET_NAME} PRIVATE QtDependencies common)
+	target_link_libraries(${TARGET_NAME} PRIVATE QtDependencies damc_common)
 
 	install(TARGETS ${TARGET_NAME} DESTINATION ./)
 

@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           # Artifact name
-          name: "waveOverUDP-linux" # optional, default is artifact
+          name: "damc-linux" # optional, default is artifact
           # A file, directory or wildcard pattern that describes what to upload
           path: build/*.zip
 
@@ -199,7 +199,7 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           # Artifact name
-          name: "waveOverUDP-win${{ matrix.config.arch }}" # optional, default is artifact
+          name: "damc-win${{ matrix.config.arch }}" # optional, default is artifact
           # A file, directory or wildcard pattern that describes what to upload
           path: build/*.zip
 

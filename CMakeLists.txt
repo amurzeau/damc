@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(waveOverUDP VERSION 1.0)
+project(damc VERSION 1.0)
 
 # option() honors normal variables
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
@@ -54,41 +54,15 @@ add_subdirectory(deps)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "waveSendUDPJack")
+set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "damc")
 
-add_subdirectory(common)
-add_subdirectory(waveSendUDPJack)
-add_subdirectory(gui)
+add_subdirectory(damc_common)
+add_subdirectory(damc_server)
+add_subdirectory(damc_gui)
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "tools")
 
-if(UNIX)
-	find_package(ALSA)
-	find_package(PulseAudio)
-
-	if(ALSA_FOUND)
-		add_executable(wavePlayUDP wavePlayUDP.cpp filter.h filter_fir2.h Logger.cpp Logger.h)
-		target_link_libraries(wavePlayUDP ALSA::ALSA)
-		install(TARGETS wavePlayUDP RUNTIME DESTINATION ./)
-
-		add_executable(waveSendUDP waveSendUDP.cpp Logger.cpp Logger.h)
-		target_link_libraries(waveSendUDP ALSA::ALSA)
-		install(TARGETS waveSendUDP RUNTIME DESTINATION ./)
-	endif()
-
-	if(PULSEAUDIO_FOUND)
-		add_executable(waveSendUDPPulse waveSendUDPPulse.cpp Logger.cpp Logger.h)
-		target_link_libraries(waveSendUDPPulse PulseAudio::PulseAudioSimple)
-		install(TARGETS waveSendUDPPulse RUNTIME DESTINATION ./)
-	endif()
-
-	add_executable(wavePlayUDPJack wavePlayUDPJack.cpp Logger.cpp Logger.h)
-	target_link_libraries(wavePlayUDPJack JACK::jack)
-	install(TARGETS wavePlayUDPJack RUNTIME DESTINATION ./)
-endif()
-
 add_subdirectory(delayControl)
-add_subdirectory(parseWave)
 add_subdirectory(binauralSynthesis)
 add_subdirectory(osctools)
 

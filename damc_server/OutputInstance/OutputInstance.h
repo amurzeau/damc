@@ -43,6 +43,8 @@ public:
 		    MaxType
 	};
 
+	static const std::string JACK_CLIENT_NAME_PREFIX;
+
 public:
 	OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning);
 	virtual ~OutputInstance();
@@ -100,8 +102,6 @@ private:
 	OscCombinedVariable readyChecker;
 
 	bool displayNameUpdateRequested;
-
-	static const std::string JACK_CLIENT_NAME_PREFIX;
 };
 
 #endif
