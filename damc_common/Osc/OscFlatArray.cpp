@@ -76,7 +76,6 @@ template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& saved
 	for(auto key : values) {
 		if(std::count(values.begin(), values.end(), key) != 1) {
 			printf("Duplicate data inserted\n");
-			abort();
 		}
 	}
 	if(values != savedValues) {
