@@ -14,8 +14,10 @@ int openJackPort(jack_client_t* client, jack_port_t** ports, size_t number, Jack
 	for(size_t i = 0; i < number; i++) {
 		if(type & JackPortIsInput)
 			sprintf(name, "input_%d", (int) (i + 1));
-		else
+		else if(i < number - 3)
 			sprintf(name, "output_%d", (int) (i + 1));
+		else
+			sprintf(name, "debug_sync_%d", (int) (i + 1));
 
 		ports[i] = jack_port_register(client, name, JACK_DEFAULT_AUDIO_TYPE, type, 0);
 		if(ports[i] == 0) {
@@ -29,6 +31,7 @@ int openJackPort(jack_client_t* client, jack_port_t** ports, size_t number, Jack
 
 int DelayMeasure::start(float timeBetweenPulses,
                         const std::string& pulseFileName,
+                        int thresholdRatio,
                         const std::vector<int>& outputInstances) {
 	jack_status_t status;
 	std::string clientName = "delayControl";
@@ -52,7 +55,7 @@ int DelayMeasure::start(float timeBetweenPulses,
 	sampleRate = jack_get_sample_rate(client);
 	this->samplesBetweenPulses = timeBetweenPulses * sampleRate;
 
-	pulseData.open(pulseFileName, jack_get_buffer_size(client), sampleRate);
+	pulseData.open(pulseFileName, jack_get_buffer_size(client), sampleRate, thresholdRatio);
 
 	inputPorts.resize(1);
 	if(openJackPort(client, &inputPorts[0], inputPorts.size(), JackPortIsInput) < 0)

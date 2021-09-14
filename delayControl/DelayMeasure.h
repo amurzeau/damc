@@ -12,7 +12,10 @@
 
 class DelayMeasure {
 public:
-	int start(float timeBetweenPulses, const std::string& pulseFileName, const std::vector<int>& outputInstances);
+	int start(float timeBetweenPulses,
+	          const std::string& pulseFileName,
+	          int thresholdRatio,
+	          const std::vector<int>& outputInstances);
 	void stop();
 
 protected:

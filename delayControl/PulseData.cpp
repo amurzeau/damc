@@ -33,7 +33,7 @@ double BiquadFilter::put(double input) {
 	return y;
 }
 
-int PulseData::open(const std::string& pulseFilename, jack_nframes_t bufferSize, float sampleRate) {
+int PulseData::open(const std::string& pulseFilename, jack_nframes_t bufferSize, float sampleRate, int thresholdRatio) {
 	std::vector<int16_t> pulseRaw;
 	std::vector<float> pulseResampled;
 
@@ -79,6 +79,7 @@ int PulseData::open(const std::string& pulseFilename, jack_nframes_t bufferSize,
 	insidePeak = false;
 	snapshotedThreshold = 0;
 	resamplingFilter.reset(sampleRate);
+	this->thresholdRatio = thresholdRatio;
 
 	uv_mutex_init(&detectedPulsesMutex);
 
@@ -167,7 +168,7 @@ void PulseData::doAGC(jack_default_audio_sample_t in,
 	currentFilteredHistoryPos = (currentFilteredHistoryPos + 1) & (filteredHistorySize - 1);
 
 	static const int pulseDetectDelay = 0.0012 * sampleRate;
-	const float threshold = doCFAR(pulseDetectDelay) * 4;
+	const float threshold = doCFAR(pulseDetectDelay) * thresholdRatio;
 	maxElt = filteredHistory[(currentFilteredHistoryPos - 1 - pulseDetectDelay) & (filteredHistorySize - 1)];
 	if(maxElt > threshold && currentTime > previousPeak + uint64_t(0.030 * sampleRate)) {
 		uint64_t detectTime = currentTime;
@@ -195,7 +196,8 @@ void PulseData::doAGC(jack_default_audio_sample_t in,
 	out1 = filteredHistory[(currentFilteredHistoryPos - 1) & (filteredHistorySize - 1)] * 100 *
 	       ((currentTime == previousPeak) ? -1 : 1);  // * (0.001 / meanAgc);
 	out2 = threshold * 100;                           // threshold * 100;
-	out3 = resampledBuffer[0] * 100;
+	// out3 = resampledBuffer[0] * 100;
+	out3 = (currentTime < previousPeak + uint64_t(0.0001 * sampleRate)) ? 1 : 0;
 
 	// previousMaxElt = maxElt;
 }

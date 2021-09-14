@@ -24,7 +24,7 @@ public:
 
 class PulseData {
 public:
-	int open(const std::string& pulseFilename, jack_nframes_t bufferSize, float sampleRate);
+	int open(const std::string& pulseFilename, jack_nframes_t bufferSize, float sampleRate, int thresholdRatio);
 
 	const std::vector<jack_default_audio_sample_t>& getData() { return pulseWave; }
 
@@ -57,6 +57,7 @@ private:
 	unsigned int currentPeakHistoryPos;
 	float previousSample = 0;
 	float previousDerivative = 0;
+	int thresholdRatio;
 
 	bool insidePeak;
 	float snapshotedThreshold;
