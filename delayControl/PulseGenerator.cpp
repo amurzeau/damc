@@ -126,7 +126,7 @@ void PulseGenerator::computeDelayControl(int delayError, uint64_t timestamp) {
 		// Add an offset to compensate static delay (smoothedError)
 		sampleRateControl = sampleRateControl * (1 - smoothedError / sampleRate / timeDiff / 10);
 
-		serverControl->setClockDrift(outputInstance, sampleRateControl);
+		serverControl->setClockDrift(outputInstance, sampleRateControl - 1.0);
 
 		printf("Delay error: %.3fms (%d), smooth: %fms (%.3f), drift: %.3f, integral: %.6f, instance: %d\n",
 		       delayError / (sampleRate / 1000),
