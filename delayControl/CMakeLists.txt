@@ -22,3 +22,6 @@ target_link_libraries(${TARGET_NAME} uv::uv damc_common)
 target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX)
 
 target_link_libraries(${TARGET_NAME} JACK::jack)
+
+install(TARGETS ${TARGET_NAME} DESTINATION ./)
+install(FILES data/pulse.wav DESTINATION ./)
