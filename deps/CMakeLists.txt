@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.13)
 
 set(JACK OFF)
 set(PA_USE_JACK OFF)
+set(DEBUG_OUTPUT ON)
+set(PA_ENABLE_DEBUG_OUTPUT ON)
 add_subdirectory(portaudio EXCLUDE_FROM_ALL)
 add_subdirectory(libuv EXCLUDE_FROM_ALL)
 add_subdirectory(zlib EXCLUDE_FROM_ALL)
@@ -12,7 +14,9 @@ set(ENABLE_FLOAT ON)
 set(BUILD_TESTS ${BUILD_TESTING})
 add_subdirectory(fftw-3.3.8 EXCLUDE_FROM_ALL)
 
-target_compile_definitions(PortAudio PRIVATE PA_WASAPI_MAX_CONST_DEVICE_COUNT=128)
+add_subdirectory(spdlog EXCLUDE_FROM_ALL)
+
+target_compile_definitions(PortAudio PRIVATE PA_WASAPI_MAX_CONST_DEVICE_COUNT=128 PA_LOG_API_CALLS)
 target_compile_definitions(mysofa PUBLIC VDEBUG)
 
 if(BUILD_SHARED_LIBS)
@@ -31,5 +35,6 @@ install(TARGETS
 	zlib
 	mysofa
 	fftw3f
+	spdlog
 	RUNTIME DESTINATION ./
 )
