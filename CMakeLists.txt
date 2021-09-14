@@ -66,6 +66,8 @@ add_subdirectory(delayControl)
 add_subdirectory(binauralSynthesis)
 add_subdirectory(osctools)
 
+install(FILES README.md DESTINATION ./)
+
 set(CPACK_GENERATOR ZIP)
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 set(CPACK_STRIP_FILES ON)
