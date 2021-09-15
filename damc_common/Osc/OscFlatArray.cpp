@@ -56,10 +56,23 @@ template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument
 	    true);
 }
 
+template<typename T> void OscFlatArray<T>::addCheckCallback(std::function<bool(const std::vector<T>&)> checkCallback) {
+	checkCallbacks.push_back(checkCallback);
+	checkCallback(this->getData());
+}
+
 template<typename T>
 void OscFlatArray<T>::setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange) {
 	this->onChangeCallbacks.push_back(onChange);
 	onChange({}, values);
+}
+
+template<typename T> bool OscFlatArray<T>::callCheckCallbacks(const std::vector<T>& v) {
+	bool isDataValid = true;
+	for(auto& callback : checkCallbacks) {
+		isDataValid = isDataValid && callback(v);
+	}
+	return isDataValid;
 }
 
 template<typename T> void OscFlatArray<T>::notifyOsc() {
@@ -73,15 +86,28 @@ template<typename T> void OscFlatArray<T>::notifyOsc() {
 
 template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& savedValues, bool fromOsc) {
 	if(values != savedValues) {
-		for(auto& callback : onChangeCallbacks) {
-			callback(savedValues, values);
+		bool isDataValid = callCheckCallbacks(values);
+		if(isDataValid) {
+			for(auto& callback : onChangeCallbacks) {
+				callback(savedValues, values);
+			}
+
+			if(!fromOsc || getRoot()->isOscValueAuthority())
+				notifyOsc();
+			getRoot()->notifyValueChanged();
+
+			return true;
+		} else {
+			SPDLOG_WARN("{}: refused invalid value", getFullAddress());
+
+			values = savedValues;
+
+			if(fromOsc) {
+				// Ensure the client that set this is notified that the value didn't changed
+				notifyOsc();
+			}
 		}
-
-		if(!fromOsc || getRoot()->isOscValueAuthority())
-			notifyOsc();
-		getRoot()->notifyValueChanged();
-
-		return true;
 	}
+
 	return false;
 }

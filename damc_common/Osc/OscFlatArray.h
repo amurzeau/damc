@@ -17,7 +17,10 @@ public:
 
 	void execute(const std::vector<OscArgument>& arguments) override;
 
+	void addCheckCallback(std::function<bool(const std::vector<T>&)> checkCallback);
 	void setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange);
+
+	bool callCheckCallbacks(const std::vector<T>& v);
 
 protected:
 	void notifyOsc();
@@ -26,6 +29,7 @@ protected:
 private:
 	std::vector<T> values;
 	std::vector<std::function<void(const std::vector<T>&, const std::vector<T>&)>> onChangeCallbacks;
+	std::vector<std::function<bool(const std::vector<T>&)>> checkCallbacks;
 };
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(extern template, OscFlatArray);
