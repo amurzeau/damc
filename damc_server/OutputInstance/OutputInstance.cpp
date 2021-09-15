@@ -28,7 +28,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
       oscType(this, "_type", (int32_t) OutputInstance::None),  // use _type to ensure it is before endpoint config
       oscName(this, "name", std::to_string(index)),
       oscDisplayName(this, "display_name", oscName.get()),
-      oscNumChannel(this, "channels", 0),
+      oscNumChannel(this, "channels", 2),
       oscSampleRate(this, "sample_rate"),
 
       oscEnablePeakUpdate(this, "enable_peak", false),
