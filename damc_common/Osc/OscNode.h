@@ -6,6 +6,24 @@
 #include <variant>
 #include <vector>
 
+template<class T> struct osc_type_name {};
+
+#define DEFINE_OSC_TYPE(type_) \
+	template<> struct osc_type_name<type_> { static constexpr const char* name = #type_; }
+
+DEFINE_OSC_TYPE(bool);
+DEFINE_OSC_TYPE(int32_t);
+DEFINE_OSC_TYPE(float);
+DEFINE_OSC_TYPE(std::string);
+
+#undef DEFINE_OSC_TYPE
+
+#define EXPLICIT_INSTANCIATE_OSC_VARIABLE(prefix_, template_name_) \
+	prefix_ class template_name_<bool>; \
+	prefix_ class template_name_<int32_t>; \
+	prefix_ class template_name_<float>; \
+	prefix_ class template_name_<std::string>;
+
 using OscArgument = std::variant<bool, int32_t, float, std::string>;
 
 template<typename T> inline constexpr bool always_false_v = false;
@@ -45,7 +63,7 @@ public:
 	OscNode& operator=(OscNode const&) = delete;
 	virtual ~OscNode();
 
-	template<typename T> static bool getArgumentAs(const OscArgument& argument, T& v);
+	template<typename T> bool getArgumentAs(const OscArgument& argument, T& v);
 
 	void setOscParent(OscContainer* parent);
 	const std::string& getFullAddress() const { return fullAddress; }
@@ -76,20 +94,7 @@ private:
 	OscContainer* parent;
 };
 
-template<typename T> bool OscNode::getArgumentAs(const OscArgument& argument, T& v) {
-	bool ret = false;
-	std::visit(
-	    [&v, &ret](auto&& arg) -> void {
-		    using U = std::decay_t<decltype(arg)>;
-		    if constexpr(std::is_same_v<U, T>) {
-			    v = arg;
-			    ret = true;
-		    } else if constexpr(!std::is_same_v<U, std::string> && !std::is_same_v<T, std::string>) {
-			    v = (T) arg;
-			    ret = true;
-		    }
-	    },
-	    argument);
-
-	return ret;
-}
+extern template bool OscNode::getArgumentAs<bool>(const OscArgument& argument, bool& v);
+extern template bool OscNode::getArgumentAs<int32_t>(const OscArgument& argument, int32_t& v);
+extern template bool OscNode::getArgumentAs<float>(const OscArgument& argument, float& v);
+extern template bool OscNode::getArgumentAs<std::string>(const OscArgument& argument, std::string& v);

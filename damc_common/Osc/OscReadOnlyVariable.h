@@ -6,12 +6,6 @@
 #include <string>
 #include <vector>
 
-#define EXPLICIT_INSTANCIATE_OSC_VARIABLE(prefix_, template_name_) \
-	prefix_ class template_name_<bool>; \
-	prefix_ class template_name_<int32_t>; \
-	prefix_ class template_name_<float>; \
-	prefix_ class template_name_<std::string>;
-
 template<typename T> class OscReadOnlyVariable : protected OscContainer {
 public:
 	using underlying_type = T;

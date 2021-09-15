@@ -43,7 +43,7 @@ int RemoteUdpOutput::init(int index, int samplerate, const char* ip, int port) {
 		return 1;
 
 	started = true;
-	printf("Sending audio %d to %s:%d\n", index, ip, port);
+	SPDLOG_INFO("Sending audio {} to {}:{}", index, ip, port);
 
 	sin_server.sin_addr.s_addr = targetIp;
 
@@ -51,7 +51,7 @@ int RemoteUdpOutput::init(int index, int samplerate, const char* ip, int port) {
 	sin_server.sin_port = htons(port);
 
 	if((sock_fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-		printf("Erreur Winsock sock");
+		SPDLOG_ERROR("Cannot create UDP socket: {} ({})", strerror(errno), errno);
 		return 2;
 	}
 
@@ -124,7 +124,7 @@ void RemoteUdpOutput::sendAudio(float* samplesLeft, float* samplesRight, size_t 
 			ret = 0;
 
 		if(ret == -1 && sock_fd > 0) {
-			printf("Socket error, errno: %d\n", errno);
+			SPDLOG_ERROR("Socket error, errno: {}", errno);
 			break;
 		}
 
@@ -154,6 +154,6 @@ void RemoteUdpOutput::sendAudioWithoutVBAN(float* samplesLeft, float* samplesRig
 		ret = 0;
 
 	if(ret == -1 && sock_fd > 0) {
-		// printf("Socket error, errno: %d\n", errno);
+		// SPDLOG_INFO("Socket error, errno: {}", errno);
 	}
 }

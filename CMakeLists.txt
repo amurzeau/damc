@@ -56,6 +56,15 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "damc")
 
+set(LOG_LEVEL_TRACE 0)
+set(LOG_LEVEL_DEBUG 1)
+set(LOG_LEVEL_INFO 2)
+set(LOG_LEVEL_WARN 3)
+set(LOG_LEVEL_ERROR 4)
+set(LOG_LEVEL_CRITICAL 5)
+set(LOG_LEVEL_OFF 6)
+add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${LOG_LEVEL_DEBUG})
+
 add_subdirectory(damc_common)
 add_subdirectory(damc_server)
 add_subdirectory(damc_gui)

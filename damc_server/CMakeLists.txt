@@ -55,6 +55,8 @@ add_executable(${TARGET_NAME}
 	ControlInterface.cpp
 	ControlInterface.h
 	json.h
+	JackUtils.cpp
+	JackUtils.h
 	KeyBinding.h
 	KeyBinding.cpp
 	OscTcpClient.h
@@ -67,7 +69,7 @@ add_executable(${TARGET_NAME}
 	OscStatePersist.cpp
 	main.cpp
 )
-target_link_libraries(${TARGET_NAME} PUBLIC uv::uv PortAudio JACK::jack damc_common Threads::Threads)
+target_link_libraries(${TARGET_NAME} PUBLIC uv::uv PortAudio JACK::jack damc_common Threads::Threads spdlog::spdlog)
 target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 if(WIN32)

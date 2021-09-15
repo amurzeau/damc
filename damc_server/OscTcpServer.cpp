@@ -1,6 +1,7 @@
 #include "OscTcpServer.h"
 #include "OscTcpClient.h"
 #include <math.h>
+#include <spdlog/spdlog.h>
 #include <string.h>
 
 OscTcpServer::OscTcpServer(OscRoot* oscRoot) : oscRoot(oscRoot) {}
@@ -12,24 +13,41 @@ void OscTcpServer::init(const char* ip, uint16_t port) {
 
 	struct sockaddr_in addr;
 
+	SPDLOG_INFO("Listening OSC over TCP on {}:{}", ip, port);
 	ret = uv_ip4_addr(ip, port, &addr);
-	if(ret < 0) {
-		printf("Can't convert ip address: %s:%u\n", ip, port);
+	if(ret != 0) {
+		SPDLOG_ERROR("Failed to convert TCP listen address {}:{}: {} ({})", ip, port, uv_strerror(ret), ret);
+		return;
 	}
 
-	uv_tcp_init_ex(loop, &server, AF_INET);
-	uv_tcp_bind(&server, (const struct sockaddr*) &addr, 0);
+	ret = uv_tcp_init_ex(loop, &server, AF_INET);
+	if(ret != 0) {
+		SPDLOG_ERROR("Failed to initialize TCP server: {} ({})", uv_strerror(ret), ret);
+		return;
+	}
+
+	ret = uv_tcp_bind(&server, (const struct sockaddr*) &addr, 0);
+	if(ret != 0) {
+		SPDLOG_ERROR("Failed to bind TCP server to address {}:{}: {} ({})", ip, port, uv_strerror(ret), ret);
+		return;
+	}
 
 	server.data = this;
-	uv_listen((uv_stream_t*) &server, 10, &onConnection);
-}
+	ret = uv_listen((uv_stream_t*) &server, 10, &onConnection);
+	if(ret != 0) {
+		SPDLOG_ERROR("Failed to start listening TCP server", uv_strerror(ret), ret);
+		return;
+	}
 
-void OscTcpServer::run() {
-	uv_run(loop, UV_RUN_DEFAULT);
+	SPDLOG_INFO("TCP server started");
 }
 
 void OscTcpServer::stop() {
+	SPDLOG_INFO("Stopping TCP server");
+
 	uv_close((uv_handle_t*) &server, nullptr);
+
+	SPDLOG_INFO("Closing {} TCP clients", clients.size());
 	for(OscTcpClient* client : clients) {
 		client->close();
 	}
@@ -44,7 +62,7 @@ void OscTcpServer::onConnection(uv_stream_t* server, int status) {
 
 	/* if status not zero there was an error */
 	if(status < 0) {
-		fprintf(stderr, "Error on listening: %s.\n", uv_strerror(status));
+		SPDLOG_ERROR("Error on listening: {} ({})", uv_strerror(status), status);
 		return;
 	}
 
@@ -53,9 +71,11 @@ void OscTcpServer::onConnection(uv_stream_t* server, int status) {
 	thisInstance->clients.push_back(client);
 
 	/* now let bind the client to the server to be used for incomings */
-	if(uv_accept(server, (uv_stream_t*) client->getHandle()) == 0) {
+	int ret = uv_accept(server, (uv_stream_t*) client->getHandle());
+	if(ret == 0) {
 		client->startRead();
 	} else {
+		SPDLOG_ERROR("Connection accept error: {} ({})", uv_strerror(ret), ret);
 		client->close();
 	}
 }

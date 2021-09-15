@@ -36,6 +36,8 @@ public:
 	void addPendingConfigNode(OscNode* node);
 	void loadNodeConfig(const std::map<std::string, std::vector<OscArgument>>& configValues);
 
+	static std::string getArgumentVectorAsString(const OscArgument* arguments, size_t number);
+
 protected:
 	void executeMessage(tosc_message_const* osc);
 	OscRoot* getRoot() override;

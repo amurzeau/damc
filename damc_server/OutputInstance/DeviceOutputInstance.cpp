@@ -1,4 +1,5 @@
 #include "DeviceOutputInstance.h"
+#include <spdlog/spdlog.h>
 #include <stdio.h>
 
 #ifdef _WIN32
@@ -101,7 +102,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	doDebug = outputDeviceIndex == 24;
 
 	if(outputDeviceIndex < 0 || outputDeviceIndex >= Pa_GetDeviceCount()) {
-		printf("Bad portaudio output device %s\n", oscDeviceName.c_str());
+		SPDLOG_ERROR("Bad portaudio output device {}", oscDeviceName.get());
 		return paInvalidDevice;
 	}
 
@@ -137,7 +138,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 		wasapiInfo.hostProcessorInput = nullptr;
 		wasapiInfo.threadPriority = eThreadPriorityNone;
 		outputParameters.hostApiSpecificStreamInfo = &wasapiInfo;
-		printf("Using exclusive mode\n");
+		SPDLOG_INFO("Using exclusive mode\n");
 	}
 #endif
 
@@ -150,19 +151,19 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	                        &renderCallback,
 	                        this);
 	if(ret != paNoError) {
-		printf("Portaudio open error: %s(%d), device: %s::%s\n",
-		       Pa_GetErrorText(ret),
-		       ret,
-		       Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDeviceIndex)->hostApi)->name,
-		       Pa_GetDeviceInfo(outputDeviceIndex)->name);
+		SPDLOG_ERROR("Portaudio open error: {}({}), device: {}::{}",
+		             Pa_GetErrorText(ret),
+		             ret,
+		             Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDeviceIndex)->hostApi)->name,
+		             Pa_GetDeviceInfo(outputDeviceIndex)->name);
 		return ret;
-	} else {
-		printf("Using output device %d %s, %s with latency %.3f\n",
-		       outputDeviceIndex,
-		       Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDeviceIndex)->hostApi)->name,
-		       Pa_GetDeviceInfo(outputDeviceIndex)->name,
-		       Pa_GetStreamInfo(stream)->outputLatency);
 	}
+
+	SPDLOG_INFO("Using output device {} {}, {} with latency {}",
+	            outputDeviceIndex,
+	            Pa_GetHostApiInfo(Pa_GetDeviceInfo(outputDeviceIndex)->hostApi)->name,
+	            Pa_GetDeviceInfo(outputDeviceIndex)->name,
+	            Pa_GetStreamInfo(stream)->outputLatency);
 
 	bufferLatencyMeasurePeriodSize = 60 * sampleRate / jackBufferSize;
 	bufferLatencyNr = 0;
@@ -171,7 +172,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	previousAverageLatency = 0;
 	clockDriftPpm = 0;
 	isPaRunning = false;
-	printf("Using buffer size %d, device sample rate: %d\n", jackBufferSize, (int) oscDeviceSampleRate);
+	SPDLOG_INFO("Using buffer size {}, device sample rate: {}", jackBufferSize, oscDeviceSampleRate.get());
 
 	Pa_StartStream(stream);
 
@@ -278,33 +279,22 @@ int DeviceOutputInstance::renderCallback(const void* input,
 }
 
 void DeviceOutputInstance::onTimer() {
-	//	static unsigned int counter;
-
-	//	if((counter % 30) == 0 && doDebug)
-	//		printf("%.6f, %.6f, %.6f, j: %.6f, b: %.6f\n",
-	//		       currentJackTime - currentPaTime,
-	//		       currentPaTime,
-	//		       currentJackTime,
-	//		       nextBufferedSampleJackTime / 48000.0,
-	//		       jack_ringbuffer_read_space(ringBuffers[0].get()) / sizeof(float) / 48000.0);
-	//	counter++;
-
 	if(overflowOccured) {
-		printf("%s: Overflow: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) overflowSize);
+		SPDLOG_WARN("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) underflowSize);
+		SPDLOG_WARN("{}: underrun: {}, {}", oscDeviceName.get(), bufferLatencyNr, underflowSize);
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
-		printf("%s: average latency: %f\n", oscDeviceName.c_str(), previousAverageLatency);
-		printf("%s: drift: %f\n", oscDeviceName.c_str(), clockDriftPpm);
+		SPDLOG_INFO("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
+		SPDLOG_INFO("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
 
 	if(!isPaRunning) {
-		printf("%s: portaudio not running !\n", oscDeviceName.c_str());
+		SPDLOG_WARN("{}: portaudio not running !", oscDeviceName.get());
 	} else {
 		isPaRunning = false;
 	}

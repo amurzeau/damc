@@ -1,6 +1,7 @@
 #include "OscFlatArray.h"
 #include "OscRoot.h"
 #include <algorithm>
+#include <spdlog/spdlog.h>
 #include <type_traits>
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscFlatArray);
@@ -49,8 +50,6 @@ template<typename T> void OscFlatArray<T>::execute(const std::vector<OscArgument
 			    T v;
 			    if(this->template getArgumentAs<T>(arg, v)) {
 				    data.push_back(v);
-			    } else {
-				    printf("Bad argument type: %d\n", (int) arg.index());
 			    }
 		    }
 	    },
@@ -73,11 +72,6 @@ template<typename T> void OscFlatArray<T>::notifyOsc() {
 }
 
 template<typename T> bool OscFlatArray<T>::checkData(const std::vector<T>& savedValues, bool fromOsc) {
-	for(auto key : values) {
-		if(std::count(values.begin(), values.end(), key) != 1) {
-			printf("Duplicate data inserted\n");
-		}
-	}
 	if(values != savedValues) {
 		for(auto& callback : onChangeCallbacks) {
 			callback(savedValues, values);

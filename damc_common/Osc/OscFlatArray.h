@@ -1,7 +1,6 @@
 #pragma once
 
 #include "OscContainer.h"
-#include "OscReadOnlyVariable.h"
 
 template<typename T> class OscFlatArray : protected OscContainer {
 public:

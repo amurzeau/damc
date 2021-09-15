@@ -1,6 +1,7 @@
 #include "OscServer.h"
 #include <Osc/OscNode.h>
 #include <math.h>
+#include <spdlog/spdlog.h>
 #include <string.h>
 #include <tinyosc.h>
 
@@ -9,30 +10,53 @@ OscServer::OscServer(OscRoot* oscRoot, OscContainer* oscParent)
 
 OscServer::~OscServer() {}
 
-void OscServer::init(const char* ip, uint16_t port) {
+void OscServer::init(const char* ip, uint16_t port, const char* targetIp, uint16_t targetPort) {
 	int ret;
 
-	uv_ip4_addr("127.0.0.1", 10000, &targetAddress);
+	SPDLOG_INFO("Target OSC UDP address: {}:{}", targetIp, targetPort);
+
+	ret = uv_ip4_addr(targetIp, targetPort, &targetAddress);
+	if(ret != 0) {
+		SPDLOG_ERROR(
+		    "Failed to convert UDP target address {}:{}, error: {} ({})", targetIp, targetPort, uv_strerror(ret), ret);
+	}
 
 	loop = uv_default_loop();
 
 	struct sockaddr_in addr;
 
+	SPDLOG_INFO("Listening OSC over UDP on {}:{}", ip, port);
 	ret = uv_ip4_addr(ip, port, &addr);
-	if(ret < 0) {
-		printf("Can't convert ip address: %s:%u\n", ip, port);
+	if(ret != 0) {
+		SPDLOG_ERROR("Failed to convert UDP listen address {}:{}: {} ({})", ip, port, uv_strerror(ret), ret);
+		return;
 	}
 
-	uv_udp_init_ex(loop, &server, AF_INET);
-	uv_udp_bind(&server, (const struct sockaddr*) &addr, 0);
+	ret = uv_udp_init_ex(loop, &server, AF_INET);
+	if(ret != 0) {
+		SPDLOG_ERROR("Failed to initialize UDP server: {} ({})", uv_strerror(ret), ret);
+		return;
+	}
+
+	ret = uv_udp_bind(&server, (const struct sockaddr*) &addr, 0);
+	if(ret != 0) {
+		SPDLOG_ERROR("Failed to bind UDP server to address {}:{}: {} ({})", ip, port, uv_strerror(ret), ret);
+		return;
+	}
 
 	server.data = this;
-	uv_udp_recv_start(&server, &onAllocData, &onReadData);
+	ret = uv_udp_recv_start(&server, &onAllocData, &onReadData);
+	if(ret != 0) {
+		SPDLOG_ERROR("Failed to start UDP server", uv_strerror(ret), ret);
+		return;
+	}
 
+	SPDLOG_INFO("UDP server started");
 	started = true;
 }
 
 void OscServer::stop() {
+	SPDLOG_INFO("Stopping UDP server");
 	uv_close((uv_handle_t*) &server, nullptr);
 }
 
@@ -75,8 +99,11 @@ void OscServer::onReadData(
 
 	/* if read bytes counter -1 there is an error or EOF */
 	if(nread < 0) {
-		if(nread != UV_EOF)
-			fprintf(stderr, "Error on reading client stream: %s.\n", uv_strerror(nread));
+		if(nread == UV_EOF) {
+			SPDLOG_INFO("Client disconnected");
+		} else {
+			SPDLOG_INFO("Error on reading client stream: {}", uv_strerror(nread));
+		}
 	} else if(nread > 0) {
 		thisInstance->onOscDataReceived((const uint8_t*) buf->base, nread);
 	}

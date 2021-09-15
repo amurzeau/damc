@@ -1,5 +1,6 @@
 #include "OscVariable.h"
 #include "OscRoot.h"
+#include <spdlog/spdlog.h>
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscVariable)
 
@@ -13,6 +14,7 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
 
 	if constexpr(std::is_same_v<T, bool>) {
 		subEndpoint.emplace_back(new OscEndpoint(this, "toggle"))->setCallback([this](auto) {
+			SPDLOG_INFO("{}: Toggling", this->getFullAddress());
 			this->setFromOsc(!this->getToOsc());
 		});
 	} else if constexpr(std::is_same_v<T, std::string>) {
@@ -27,6 +29,7 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
 				    OscNode::getArgumentAs<T>(arguments[0], amount);
 			    }
 
+			    SPDLOG_INFO("{}: Incrementing by {}", this->getFullAddress(), amount);
 			    this->setFromOsc(this->getToOsc() + amount);
 		    });
 		subEndpoint.emplace_back(new OscEndpoint(this, "decrement"))
@@ -37,6 +40,7 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
 				    OscNode::getArgumentAs<T>(arguments[0], amount);
 			    }
 
+			    SPDLOG_INFO("{}: Decrementing by {}", this->getFullAddress(), amount);
 			    this->setFromOsc(this->getToOsc() - amount);
 		    });
 	}
@@ -48,15 +52,15 @@ template<typename T> OscVariable<T>& OscVariable<T>::operator=(const OscVariable
 }
 
 template<typename T> void OscVariable<T>::execute(const std::vector<OscArgument>& arguments) {
-	if(fixedSize)
+	if(fixedSize) {
+		SPDLOG_WARN("{}: variable is fixed, ignoring OSC write", this->getFullAddress());
 		return;
+	}
 
 	if(!arguments.empty()) {
 		T v;
 		if(this->template getArgumentAs<T>(arguments[0], v)) {
 			this->setFromOsc(std::move(v));
-		} else {
-			printf("Bad argument 0 type: %d\n", (int) arguments[0].index());
 		}
 	}
 }

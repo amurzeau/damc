@@ -1,5 +1,6 @@
 #include "OscTcpClient.h"
 #include "OscTcpServer.h"
+#include <spdlog/spdlog.h>
 
 #include <math.h>
 #include <string.h>
@@ -8,13 +9,15 @@ OscTcpClient::OscTcpClient(uv_loop_t* loop, OscTcpServer* server)
     : OscConnector(server->getOscRoot(), true), server(server) {
 	uv_tcp_init(loop, &client);
 	client.data = this;
+
+	SPDLOG_INFO("New TCP client connected");
 }
 
 void OscTcpClient::startRead() {
 	/* start reading from stream */
 	int r = uv_read_start((uv_stream_t*) &client, &onAllocData, &onReadData);
 	if(r) {
-		fprintf(stderr, "Error on reading client stream: %s.\n", uv_strerror(r));
+		SPDLOG_ERROR("Error on reading client stream, closing connection: {} ({})", uv_strerror(r), r);
 		close();
 	}
 }
@@ -42,8 +45,11 @@ void OscTcpClient::onReadData(uv_stream_t* stream, ssize_t nread, const uv_buf_t
 
 	/* if read bytes counter -1 there is an error or EOF */
 	if(nread < 0) {
-		if(nread != UV_EOF)
-			fprintf(stderr, "Error on reading client stream: %s.\n", uv_strerror(nread));
+		if(nread == UV_EOF) {
+			SPDLOG_INFO("Client disconnected");
+		} else {
+			SPDLOG_INFO("Error on reading client stream, closing connection: {}", uv_strerror(nread));
+		}
 
 		thisInstance->close();
 	} else {

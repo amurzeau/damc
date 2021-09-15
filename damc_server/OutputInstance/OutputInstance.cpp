@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <jack/metadata.h>
 #include <jack/uuid.h>
+#include <spdlog/spdlog.h>
 
 #include "DeviceInputInstance.h"
 #include "DeviceOutputInstance.h"
@@ -41,7 +42,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 
 	oscType.addCheckCallback([this](int newValue) -> bool {
 		if(client) {
-			printf("Can't change type when output is enabled\n");
+			SPDLOG_ERROR("Can't change type when output is enabled");
 			return false;
 		}
 
@@ -52,7 +53,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 			break;
 
 			default:
-				printf("Bad type %d\n", newValue);
+				SPDLOG_ERROR("Bad type {}", newValue);
 				return false;
 		}
 
@@ -63,7 +64,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 
 	oscName.addCheckCallback([this](const std::string&) -> bool {
 		if(client) {
-			printf("Can't change jack name when output is enabled\n");
+			SPDLOG_ERROR("Can't change jack name when output is enabled");
 			return false;
 		}
 		return true;
@@ -73,17 +74,17 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 
 	oscNumChannel.addCheckCallback([this](int32_t newValue) {
 		if(client) {
-			printf("Can't change channel number when output is enabled\n");
+			SPDLOG_ERROR("Can't change channel number when output is enabled");
 			return false;
 		}
 
 		if(newValue > 32) {
-			printf("Too many channels: %d\n", newValue);
+			SPDLOG_ERROR("Too many channels: {}", newValue);
 			return false;
 		}
 
 		if(newValue <= 0) {
-			printf("Invalid value: %d\n", newValue);
+			SPDLOG_ERROR("Invalid value: {}", newValue);
 			return false;
 		}
 
@@ -91,7 +92,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 	});
 
 	oscNumChannel.setChangeCallback([this](int32_t newValue) {
-		printf("Changing channel number to %d\n", newValue);
+		SPDLOG_INFO("Changing channel number to {}", newValue);
 
 		levelsDb.resize(newValue, -192);
 		peaksPerChannel.resize(newValue, 0);
@@ -104,10 +105,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 	readyChecker.addVariable(&oscType);
 	readyChecker.addVariable(&oscNumChannel);
 
-	readyChecker.setCallback([this]() {
-		//
-		printf("Output instance %d ready\n", this->outputInstance);
-	});
+	readyChecker.setCallback([this]() { SPDLOG_INFO("Output instance {} ready", this->outputInstance); });
 
 	if(audioRunning) {
 		activate();
@@ -137,14 +135,14 @@ int OutputInstance::start() {
 		return 0;
 
 	std::string jackClientName = JACK_CLIENT_NAME_PREFIX + oscName.get();
-	printf("Opening jack client %s\n", jackClientName.c_str());
+	SPDLOG_INFO("Opening jack client {}", jackClientName.c_str());
 	client = jack_client_open(jackClientName.c_str(), JackNullOption, &status);
 	if(client == NULL) {
-		printf("Failed to open jack: %d.\n", status);
+		SPDLOG_ERROR("Failed to open jack: {}", status);
 		return -3;
 	}
 
-	printf("Opened jack client\n");
+	SPDLOG_INFO("Opened jack client");
 
 	jackSampleRate = jack_get_sample_rate(client);
 	filters.reset(jackSampleRate);
@@ -164,7 +162,7 @@ int OutputInstance::start() {
 		inputPorts[i] =
 		    jack_port_register(client, name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput | additionnalPortFlags, 0);
 		if(inputPorts[i] == 0) {
-			printf("cannot register input port \"%s\"!\n", name);
+			SPDLOG_ERROR("cannot register input port \"{}\"!", name);
 			jack_client_close(client);
 			client = nullptr;
 			return -4;
@@ -174,7 +172,7 @@ int OutputInstance::start() {
 		outputPorts[i] =
 		    jack_port_register(client, name, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput | additionnalPortFlags, 0);
 		if(outputPorts[i] == 0) {
-			printf("cannot register output port \"%s\"!\n", name);
+			SPDLOG_ERROR("cannot register output port \"{}\"!", name);
 			jack_client_close(client);
 			client = nullptr;
 			return -4;
@@ -185,7 +183,7 @@ int OutputInstance::start() {
 		inputPorts.push_back(jack_port_register(
 		    client, "side_channel", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput | additionnalPortFlags, 0));
 		if(inputPorts.back() == 0) {
-			printf("cannot register input port \"%s\"!\n", "side_channel");
+			SPDLOG_ERROR("cannot register input port \"{}\"!", "side_channel");
 			jack_client_close(client);
 			client = nullptr;
 			return -4;
@@ -208,16 +206,16 @@ int OutputInstance::start() {
 
 	int ret = jack_activate(client);
 	if(ret) {
-		printf("cannot activate client: %d\n", ret);
+		SPDLOG_ERROR("cannot activate client: {}", ret);
 	}
 
-	printf("Processing interface %d...\n", outputInstance);
+	SPDLOG_INFO("Processing interface {}...", outputInstance);
 
 	return 0;
 }
 
 void OutputInstance::stop() {
-	printf("Stopping jack client %s\n", oscName.c_str());
+	SPDLOG_INFO("Stopping jack client {}", oscName.get());
 
 	if(client) {
 		jack_deactivate(client);
@@ -264,7 +262,7 @@ bool OutputInstance::updateType(int newValue) {
 			break;
 
 		default:
-			printf("Bad type %d\n", newValue);
+			SPDLOG_ERROR("Bad type {}", newValue);
 			return false;
 	}
 
@@ -274,29 +272,32 @@ bool OutputInstance::updateType(int newValue) {
 }
 
 void OutputInstance::updateEnabledState(bool newValue) {
-	if(!enableAudio)
+	if(!enableAudio) {
+		SPDLOG_DEBUG("Not enabling audio yet, will do after config load");
 		return;
+	}
 
 	if(newValue && !client && endpoint && readyChecker.isVariablesReady()) {
-		printf("Starting output: %s\n", getName().c_str());
+		SPDLOG_INFO("Starting output: {}", getName());
 		start();
 	} else if(!newValue && client) {
-		printf("Stopping output: %s\n", getName().c_str());
+		SPDLOG_INFO("Stopping output: {}", getName());
 		stop();
 	}
 }
 
 void OutputInstance::updateJackDisplayName() {
-	if(clientUuid == 0)
+	if(clientUuid == 0) {
+		SPDLOG_DEBUG("Not updating jack client pretty name: no uuid");
 		return;
+	}
 
 	if(!oscDisplayName.get().empty()) {
-		::jack_set_property(client,
-		                    clientUuid,
-		                    JACK_METADATA_PRETTY_NAME,
-		                    (JACK_CLIENT_NAME_PREFIX + oscDisplayName.get()).c_str(),
-		                    NULL);
+		std::string prettyName = JACK_CLIENT_NAME_PREFIX + oscDisplayName.get();
+		SPDLOG_DEBUG("Setting {} jack display name to {}", oscName.get(), prettyName);
+		::jack_set_property(client, clientUuid, JACK_METADATA_PRETTY_NAME, prettyName.c_str(), NULL);
 	} else {
+		SPDLOG_DEBUG("Setting display name to default value {}", oscName.get());
 		oscDisplayName.forceDefault(oscName.get());
 	}
 }
@@ -319,9 +320,11 @@ void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
 					size_t prefixPos = newValue.find(JACK_CLIENT_NAME_PREFIX);
 					if(prefixPos == 0) {
 						newValue.replace(prefixPos, JACK_CLIENT_NAME_PREFIX.size(), "");
+						SPDLOG_INFO("Setting {} display name to {}", thisInstance->oscName.get(), newValue);
 						thisInstance->oscDisplayName = newValue;
 					} else {
 						// Invalid name, keep previous
+						SPDLOG_WARN("Invalid name, missing prefix {}: {}", JACK_CLIENT_NAME_PREFIX, pszValue);
 						thisInstance->displayNameUpdateRequested = true;
 					}
 					::jack_free(pszValue);
@@ -330,6 +333,8 @@ void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
 					::jack_free(pszType);
 				break;
 			case PropertyDeleted:
+				SPDLOG_DEBUG("Jack display name deleted, setting display name to default value {}",
+				             thisInstance->oscName.get());
 				thisInstance->oscDisplayName.forceDefault(thisInstance->oscName.get());
 				break;
 		}
@@ -350,7 +355,8 @@ int OutputInstance::processInputSamples(jack_nframes_t nframes) {
 	float peaks[32];
 
 	if(oscNumChannel > (int32_t)(sizeof(buffers) / sizeof(buffers[0]))) {
-		printf("Too many channels, buffer too small !!!\n");
+		SPDLOG_ERROR("Too many channels, buffer too small !!!");
+		return 0;
 	}
 
 	for(int32_t i = 0; i < oscNumChannel; i++) {
@@ -379,7 +385,8 @@ int OutputInstance::processSamples(jack_nframes_t nframes) {
 	float peaks[32];
 
 	if(oscNumChannel > (int32_t)(sizeof(outputs) / sizeof(outputs[0]))) {
-		printf("Too many channels, buffer too small !!!\n");
+		SPDLOG_ERROR("Too many channels, buffer too small !!!");
+		return 0;
 	}
 
 	for(int32_t i = 0; i < oscNumChannel; i++) {

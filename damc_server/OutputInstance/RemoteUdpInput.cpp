@@ -53,7 +53,7 @@ int RemoteUdpInput::init(int index, int samplerate, const char* ip, int port) {
 	sampleRate = 48000;
 	started = true;
 
-	printf("Receiving audio %d on %s:%d\n", index, ip, port);
+	SPDLOG_INFO("Receiving audio {} on {}:{}", index, ip, port);
 
 	if(!IN_MULTICAST(targetIp))
 		sin_server.sin_addr.s_addr = targetIp;
@@ -68,18 +68,25 @@ int RemoteUdpInput::init(int index, int samplerate, const char* ip, int port) {
 
 	sampleRing = jack_ringbuffer_create(highestPowerof2(48000));
 
-	if(uv_udp_bind(&udpSocket, (struct sockaddr*) &sin_server, 0) < 0) {
-		printf("Erreur bind on %s:%d\n", ip, port);
-		return 3;
+	int ret = uv_udp_bind(&udpSocket, (struct sockaddr*) &sin_server, 0);
+	if(ret < 0) {
+		SPDLOG_ERROR("Bind error on {}:{}: {} ({})", ip, port, uv_strerror(ret), ret);
+		return ret;
 	}
 
 	if(IN_MULTICAST(targetIp)) {
-		if(uv_udp_set_membership(&udpSocket, ip, nullptr, UV_JOIN_GROUP) < 0) {
-			printf("Failed to join multicast group %s\n", ip);
+		ret = uv_udp_set_membership(&udpSocket, ip, nullptr, UV_JOIN_GROUP);
+		if(ret < 0) {
+			SPDLOG_ERROR("Failed to join multicast group {}: {} ({})", ip, uv_strerror(ret), ret);
+			return ret;
 		}
 	}
 
-	uv_udp_recv_start(&udpSocket, &onAlloc, &onPacketReceived);
+	ret = uv_udp_recv_start(&udpSocket, &onAlloc, &onPacketReceived);
+	if(ret < 0) {
+		SPDLOG_ERROR("Failed to reading UDP: {} ({})", uv_strerror(ret), ret);
+		return ret;
+	}
 
 	return 0;
 }
@@ -112,7 +119,7 @@ void RemoteUdpInput::onPacketReceived(
 	const size_t sampleSize = sizeof(float) * 2;
 
 	if(nread <= 0) {
-		printf("Bad udp read %d\n", (int) nread);
+		SPDLOG_WARN("Bad udp read {}", nread);
 		return;
 	}
 
@@ -162,7 +169,7 @@ size_t RemoteUdpInput::receivePacket(float* samplesLeft, float* samplesRight, si
 	}
 
 	if(sampleRead != maxSamples) {
-		// printf("Short read: %d < %d\n", sampleRead, maxSamples);
+		SPDLOG_DEBUG("Short read: {} < {}", sampleRead, maxSamples);
 		std::fill(samplesLeft + sampleRead, samplesLeft + maxSamples, 0);
 		std::fill(samplesRight + sampleRead, samplesRight + maxSamples, 0);
 	}

@@ -1,5 +1,6 @@
 #include "OscStatePersist.h"
 #include "OscRoot.h"
+#include <spdlog/spdlog.h>
 #include <uv.h>
 
 #include "json.h"
@@ -136,11 +137,11 @@ void OscStatePersist::loadState(std::map<std::string, std::set<std::string>>& ou
 	std::string jsonData;
 	std::map<std::string, std::vector<OscArgument>> configValues;
 
-	printf("Loading config file %s\n", saveFileName.c_str());
+	SPDLOG_INFO("Loading config file {}", saveFileName);
 
 	file.reset(fopen(saveFileName.c_str(), "rb"));
 	if(!file) {
-		printf("Can't open config file, ignoring\n");
+		SPDLOG_INFO("Can't open config file {}, skipping config load ({} ({}))", saveFileName, strerror(errno), errno);
 		return;
 	}
 
@@ -151,26 +152,34 @@ void OscStatePersist::loadState(std::map<std::string, std::set<std::string>>& ou
 	fread(&jsonData[0], 1, jsonData.size(), file.get());
 	fclose(file.release());
 
+	SPDLOG_TRACE("Config file read: {}", jsonData);
+
 	try {
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 		recurseJson(&configValues, "", jsonConfig);
 
 		outputPortConnections = jsonConfig.value("portConnections", std::map<std::string, std::set<std::string>>{});
 
+		SPDLOG_DEBUG("Updating OSC variables");
 		oscRoot->loadNodeConfig(configValues);
+
+		SPDLOG_DEBUG("Loaded config");
 	} catch(const std::exception& e) {
-		printf("Exception while parsing config: %s\n", e.what());
-		printf("json: %s\n", jsonData.c_str());
+		SPDLOG_ERROR("Exception while parsing config: {}", e.what());
+		SPDLOG_ERROR("json: {}", jsonData);
 	} catch(...) {
-		printf("Exception while parsing config\n");
+		SPDLOG_ERROR("Exception while parsing config");
 	}
 }
 
 void OscStatePersist::saveState(const std::map<std::string, std::set<std::string>>& outputPortConnections) {
 	std::unique_ptr<FILE, int (*)(FILE*)> file(nullptr, &fclose);
-	std::string jsonData = oscRoot->getAsString();
+	std::string jsonData;
+
+	SPDLOG_INFO("Saving config");
 
 	try {
+		jsonData = oscRoot->getAsString();
 		nlohmann::json jsonConfig = nlohmann::json::parse(jsonData);
 		jsonConfig["portConnections"] = outputPortConnections;
 
@@ -178,15 +187,20 @@ void OscStatePersist::saveState(const std::map<std::string, std::set<std::string
 
 		file.reset(fopen(saveFileName.c_str(), "wb"));
 		if(!file) {
-			printf("Can't open save file %s: %s(%d)\n", saveFileName.c_str(), strerror(errno), errno);
+			SPDLOG_ERROR("Can't open config file for saving {}, error {} ({})", saveFileName, strerror(errno), errno);
 			return;
 		}
+
+		SPDLOG_TRACE("Config file to write: {}", jsonData);
+
 		fwrite(jsonData.c_str(), 1, jsonData.size(), file.get());
 		fclose(file.release());
+
+		SPDLOG_DEBUG("Saved config to {}", saveFileName);
 	} catch(const std::exception& e) {
-		printf("Exception while parsing config: %s\n", e.what());
-		printf("json: %s\n", jsonData.c_str());
+		SPDLOG_ERROR("Exception while saving config: {}", e.what());
+		SPDLOG_ERROR("json: {}", jsonData);
 	} catch(...) {
-		printf("Exception while parsing config\n");
+		SPDLOG_ERROR("Exception while saving config");
 	}
 }

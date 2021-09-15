@@ -1,5 +1,7 @@
 #include "ControlInterface.h"
+#include "JackUtils.h"
 #include <errno.h>
+#include <spdlog/spdlog.h>
 #include <stdio.h>
 #include <uv.h>
 
@@ -29,26 +31,34 @@ ControlInterface::ControlInterface()
       oscDeviceListWasapi(&oscRoot, "device_list_wasapi")
 #endif
 {
+	SPDLOG_INFO("Starting control interface");
+
 	outputs.setFactory(
 	    [this](OscContainer* parent, int name) { return new OutputInstance(parent, this, name, audioRunning); });
 
 	jack_status_t status;
 
+	SPDLOG_INFO("Initializing async Jack notification handler");
 	jackNotificationPending.data = this;
 	uv_async_init(uv_default_loop(), &jackNotificationPending, &ControlInterface::onJackNotificationStatic);
 	uv_unref((uv_handle_t*) &jackNotificationPending);
 
-	monitoringJackClient = jack_client_open(
-	    (OutputInstance::JACK_CLIENT_NAME_PREFIX + "monitoringclient").c_str(), JackNullOption, &status);
+	std::string monitoringClientName = OutputInstance::JACK_CLIENT_NAME_PREFIX + "monitoringclient";
+	SPDLOG_INFO("Opening monitoring jack client {}", monitoringClientName);
+
+	monitoringJackClient = jack_client_open(monitoringClientName.c_str(), JackNullOption, &status);
 	if(monitoringJackClient != nullptr) {
-		printf("Started monitoring client\n");
 		jack_set_port_connect_callback(monitoringJackClient, &ControlInterface::jackOnPortConnectStatic, this);
 		jack_set_graph_order_callback(monitoringJackClient, &ControlInterface::jackOnGraphReorderedStatic, this);
 		jack_set_port_registration_callback(
 		    monitoringJackClient, &ControlInterface::jackOnPortRegistrationStatic, this);
 		jack_activate(monitoringJackClient);
+		SPDLOG_INFO("Started monitoring jack client");
 	} else {
-		printf("Failed to start monitoring client: %d\n", status);
+		SPDLOG_ERROR("Failed to start monitoring jack client: {}", status);
+		JackUtils::logJackStatus(spdlog::level::err, status);
+
+		return;
 	}
 
 	oscTypeList.setReadCallback([]() {
@@ -63,13 +73,19 @@ ControlInterface::ControlInterface()
 	oscDeviceListWasapi.setReadCallback([]() { return WasapiInstance::getDeviceList(); });
 #endif
 
-	oscRoot.setOnOscValueChanged([this]() { oscNeedSaveConfig = true; });
+	oscRoot.setOnOscValueChanged([this]() {
+		if(!oscNeedSaveConfig)
+			SPDLOG_DEBUG("OSC value changed, request deferred config save");
+		oscNeedSaveConfig = true;
+	});
 
+	SPDLOG_INFO("Initializing periodic timer");
 	updateLevelTimer.reset(new uv_timer_t);
 	uv_timer_init(uv_default_loop(), updateLevelTimer.get());
 	updateLevelTimer->data = this;
 	uv_timer_start(updateLevelTimer.get(), &onTimeoutTimerStatic, 66, 66);  // 15fps
 	uv_unref((uv_handle_t*) updateLevelTimer.get());
+	SPDLOG_INFO("Started periodic update timer");
 }
 
 ControlInterface::~ControlInterface() {}
@@ -88,31 +104,41 @@ void ControlInterface::loadConfig() {
 }
 
 void ControlInterface::saveConfig() {
-	printf("Saving config\n");
 	oscStatePersister.saveState(outputPortConnections);
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
+	if(monitoringJackClient == nullptr) {
+		return -1;
+	}
+
 	loadConfig();
 
+	SPDLOG_INFO("Activating {} audio strips", outputs.size());
 	audioRunning = true;
 	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {
 		output.second->activate();
 	}
 
-	oscUdpServer.init(controlIp, controlPort + 1);
+	SPDLOG_INFO("Starting UDP server");
+	oscUdpServer.init(controlIp, controlPort + 1, "127.0.0.1", 10000);
+
+	SPDLOG_INFO("Starting TCP server");
 	oscTcpServer.init(controlIp, controlPort + 2);
 
 	return 0;
 }
 
 void ControlInterface::run() {
+	SPDLOG_INFO("Running...");
 	uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 }
 
 void ControlInterface::stop() {
+	SPDLOG_INFO("Stopping server");
+
 	if(monitoringJackClient) {
-		printf("Stopping monitoring client\n");
+		SPDLOG_INFO("Stopping monitoring client");
 		jack_deactivate(monitoringJackClient);
 		jack_client_close(monitoringJackClient);
 	}
@@ -120,6 +146,7 @@ void ControlInterface::stop() {
 	oscTcpServer.stop();
 	oscUdpServer.stop();
 
+	SPDLOG_INFO("Stopping audio strips jack clients");
 	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {
 		output.second->stop();
 	}
@@ -134,6 +161,8 @@ void ControlInterface::jackOnPortConnectStatic(jack_port_id_t a, jack_port_id_t 
 	notification.data.portConnect.b = b;
 	notification.data.portConnect.connect = connect;
 
+	SPDLOG_TRACE("jack event: port connect: {} <=> {} {}", a, b, connect ? "connected" : "disconnected");
+
 	{
 		std::lock_guard guard(thisInstance->jackNotificationMutex);
 		thisInstance->jackNotifications.push_back(notification);
@@ -146,6 +175,8 @@ int ControlInterface::jackOnGraphReorderedStatic(void* arg) {
 
 	JackNotification notification;
 	notification.type = JackNotification::GraphReordered;
+
+	SPDLOG_TRACE("jack event: graph reordered");
 
 	{
 		std::lock_guard guard(thisInstance->jackNotificationMutex);
@@ -164,6 +195,8 @@ void ControlInterface::jackOnPortRegistrationStatic(jack_port_id_t port, int is_
 	notification.data.portRegistration.port = port;
 	notification.data.portRegistration.is_registered = is_registered;
 
+	SPDLOG_TRACE("jack event: port registration: {} {}", port, is_registered ? "registered" : "unregistered");
+
 	{
 		std::lock_guard guard(thisInstance->jackNotificationMutex);
 		thisInstance->jackNotifications.push_back(notification);
@@ -179,6 +212,8 @@ void ControlInterface::onJackNotificationStatic(uv_async_t* handle) {
 		std::lock_guard guard(thisInstance->jackNotificationMutex);
 		pendingNotifications.swap(thisInstance->jackNotifications);
 	}
+
+	SPDLOG_INFO("Processing {} jack notifications", pendingNotifications.size());
 
 	for(const auto& notification : pendingNotifications) {
 		switch(notification.type) {
@@ -212,39 +247,40 @@ void ControlInterface::jackOnGraphReordered() {
 
 	pendingPortChanges.swap(portChanges);
 
+	SPDLOG_INFO("Processing {} port connection changes", portChanges.size());
+
 	for(PortConnectionStateChange& portChange : portChanges) {
 		jack_port_t* portA = jack_port_by_id(monitoringJackClient, portChange.a);
 		jack_port_t* portB = jack_port_by_id(monitoringJackClient, portChange.b);
 
 		if(portA == nullptr || portB == nullptr) {
-			// There was a disconnect because a client disconnected
-			// Don't save it
+			SPDLOG_TRACE("Port disconnected because client was disconnected (port are not available anymore)");
 			continue;
 		}
 
 		const char* aName = jack_port_name(portA);
 		const char* bName = jack_port_name(portB);
 		if(aName == nullptr || bName == nullptr) {
-			// There was a disconnect because a client disconnected
-			// Don't save it
+			SPDLOG_TRACE("Port disconnected because client was disconnected (port have no name anymore)");
 			continue;
 		}
 
 		jack_port_t* portAByName = jack_port_by_name(monitoringJackClient, aName);
 		jack_port_t* portBByName = jack_port_by_name(monitoringJackClient, bName);
 
-		// printf("port %s:\n  a = %p, name: %s, byname = %p\n  b = %p, name: %s, byname = %p\n",
-		//        portChange.connect ? "connected" : "disconnected",
-		//        portA,
-		//        aName,
-		//        portAByName,
-		//        portB,
-		//        bName,
-		//        portBByName);
+		SPDLOG_TRACE("port {}:\n  a = {}, name: {}, byname = {}\n  b = {}, name: {}, byname = {}",
+		             portChange.connect ? "connected" : "disconnected",
+		             (void*) portA,
+		             aName,
+		             portAByName,
+		             (void*) portB,
+		             bName,
+		             portBByName);
 
 		if(portAByName == nullptr || portBByName == nullptr) {
 			// There was a disconnect because a client disconnected
 			// Don't save it
+			SPDLOG_TRACE("Port disconnected because client was disconnected (can't find port by name anymore)");
 			continue;
 		}
 
@@ -261,17 +297,19 @@ void ControlInterface::jackOnGraphReordered() {
 			inputPort = aName;
 			outputPort = bName;
 		} else {
-			printf("Not a output to input connection between %s and %s, ignore\n", aName, bName);
+			SPDLOG_TRACE("Not a output to input connection between {} and {}, ignore", aName, bName);
 			continue;
 		}
 
 		if(portChange.connect) {
+			SPDLOG_DEBUG("Port connection {} <=> {}", outputPort, inputPort);
+
 			outputPortConnections[outputPort].insert(inputPort);
 			inputPortConnections[inputPort].insert(outputPort);
 			oscNeedSaveConfig = true;
-			// printf("Port connection %s to %s\n", outputPort, inputPort);
 		} else {
-			// printf("Port disconnection %s to %s\n", outputPort, inputPort);
+			SPDLOG_DEBUG("Port disconnection {} <=> {}", outputPort, inputPort);
+
 			if(outputPortConnections.count(outputPort)) {
 				outputPortConnections[outputPort].erase(inputPort);
 				if(outputPortConnections[outputPort].empty())
@@ -291,16 +329,23 @@ void ControlInterface::jackOnPortRegistration(jack_port_id_t port, int is_regist
 	if(!is_registered)
 		return;
 
+	SPDLOG_TRACE("Processing port connection update for port {}", port);
+
 	jack_port_t* portPtr = jack_port_by_id(monitoringJackClient, port);
-	if(!portPtr)
+	if(!portPtr) {
+		SPDLOG_TRACE("Port {} registered but can't open it", port);
 		return;
+	}
 
 	int portFlags = jack_port_flags(portPtr);
 
 	const char* portName = jack_port_name(portPtr);
-	if(!portName)
+	if(!portName) {
+		SPDLOG_TRACE("Port {} registered but has no name", port);
 		return;
-	// printf("Port %s registered\n", portName);
+	}
+
+	SPDLOG_TRACE("Port {} registered", portName);
 
 	std::map<std::string, std::set<std::string>>* portConnections;
 
@@ -309,23 +354,23 @@ void ControlInterface::jackOnPortRegistration(jack_port_id_t port, int is_regist
 	} else if(portFlags & JackPortIsInput) {
 		portConnections = &inputPortConnections;
 	} else {
-		printf("Port %s not an input or output\n", portName);
+		SPDLOG_TRACE("Port {} not an input or output", portName);
 		return;
 	}
 
 	auto it = portConnections->find(portName);
 
 	if(it == portConnections->end()) {
-		// printf("Port %s not in list\n", portName);
+		SPDLOG_TRACE("Port {} not in list of ports to auto-connect", portName);
 		return;
 	}
 
 	for(const auto& inputPorts : it->second) {
 		if(portConnections == &inputPortConnections) {
-			// printf("Autoconnect %s to %s\n", inputPorts.c_str(), it->first.c_str());
+			SPDLOG_DEBUG("Autoconnect {} to {}", inputPorts, it->first);
 			jack_connect(monitoringJackClient, inputPorts.c_str(), it->first.c_str());
 		} else {
-			// printf("Autoconnect %s to %s\n", it->first.c_str(), inputPorts.c_str());
+			SPDLOG_DEBUG("Autoconnect {} to {}", it->first, inputPorts);
 			jack_connect(monitoringJackClient, it->first.c_str(), inputPorts.c_str());
 		}
 	}
@@ -337,13 +382,18 @@ void ControlInterface::onTimeoutTimerStatic(uv_timer_t* handle) {
 }
 
 void ControlInterface::onTimeoutTimer() {
+	SPDLOG_TRACE("Periodic update");
+
 	for(auto& outputInstance : outputs) {
 		outputInstance.second->onTimeoutTimer();
 	}
+
 	if(oscNeedSaveConfig) {
 		oscNeedSaveConfig = false;
 		saveConfig();
 	}
+
+	SPDLOG_TRACE("Periodic update end");
 }
 
 void ControlInterface::releaseUvTimer(uv_timer_t* handle) {

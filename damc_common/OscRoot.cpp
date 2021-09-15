@@ -1,6 +1,7 @@
 #include "OscRoot.h"
 #include "tinyosc.h"
 #include <math.h>
+#include <spdlog/spdlog.h>
 #include <string.h>
 
 OscRoot::OscRoot(bool notifyAtInit) : OscContainer(nullptr, ""), doNotifyOscAtInit(notifyAtInit) {
@@ -11,7 +12,7 @@ OscRoot::OscRoot(bool notifyAtInit) : OscContainer(nullptr, ""), doNotifyOscAtIn
 OscRoot::~OscRoot() {}
 
 void OscRoot::printAllNodes() {
-	printf("Nodes:\n%s\n", getAsString().c_str());
+	SPDLOG_INFO("Nodes:\n{}", getAsString().c_str());
 }
 
 void OscRoot::sendMessage(const std::string& address, const OscArgument* arguments, size_t number) {
@@ -20,7 +21,7 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 	char* formatPtr = format + 1;
 
 	if(number > sizeof(format) - 2) {
-		printf("ERROR: Too many arguments: %d\n", (int) number);
+		SPDLOG_ERROR("Too many arguments, can't send OSC message: {}", number);
 		return;
 	}
 
@@ -46,7 +47,7 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 	*formatPtr++ = '\0';
 
 	if(tosc_writeMessageHeader(&osc, address.c_str(), format, (char*) oscOutputMessage.get(), oscOutputMaxSize) != 0) {
-		printf("failed to write message\n");
+		SPDLOG_ERROR("failed to write OSC message");
 		return;
 	}
 
@@ -71,11 +72,12 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 		    argument);
 
 		if(result != 0) {
-			printf("failed to write message\n");
+			SPDLOG_ERROR("failed to write OSC value {} in message", i);
 			return;
 		}
 	}
 
+	SPDLOG_TRACE("Sending OSC message {} {}", address, getArgumentVectorAsString(arguments, number));
 	for(OscConnector* connector : connectors) {
 		connector->sendOscMessage(oscOutputMessage.get(), tosc_getMessageLength(&osc));
 	}
@@ -83,9 +85,12 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 
 void OscRoot::loadNodeConfig(const std::map<std::string, std::vector<OscArgument>>& configValues) {
 	std::vector<OscNode*> nodesToConfigure;
+
 	do {
 		nodesToConfigure.clear();
 		nodesToConfigure.swap(nodesPendingConfig);
+
+		SPDLOG_DEBUG("Traversing {} OscNode to assign configuration values", nodesToConfigure.size());
 
 		for(auto node : nodesToConfigure) {
 			auto it = configValues.find(node->getFullAddress());
@@ -94,6 +99,19 @@ void OscRoot::loadNodeConfig(const std::map<std::string, std::vector<OscArgument
 			}
 		}
 	} while(!nodesToConfigure.empty());
+}
+
+std::string OscRoot::getArgumentVectorAsString(const OscArgument* arguments, size_t number) {
+	std::string result = "[";
+
+	for(size_t i = 0; i < number; i++) {
+		std::visit([&result](auto&& arg) -> void { result += " " + fmt::to_string(arg) + ","; }, arguments[i]);
+	}
+
+	if(result.back() == ',')
+		result.pop_back();
+
+	return result + " ]";
 }
 
 void OscRoot::onOscPacketReceived(const uint8_t* data, size_t size) {
@@ -143,34 +161,34 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 
 				// Unsupported formats
 			case 'N':
-				printf(" Unsupported format: '%c'\n", osc->format[i]);
+				SPDLOG_ERROR(" Unsupported format: {}", osc->format[i]);
 				break;
 			case 'b': {
 				const char* b = nullptr;  // will point to binary data
 				int n = 0;                // takes the length of the blob
 				tosc_getNextBlob(osc, &b, &n);
-				printf(" Unsupported format: '%c'\n", osc->format[i]);
+				SPDLOG_ERROR(" Unsupported format: {}", osc->format[i]);
 				break;
 			}
 			case 'm':
 				tosc_getNextMidi(osc);
-				printf(" Unsupported format: '%c'\n", osc->format[i]);
+				SPDLOG_ERROR(" Unsupported format: {}", osc->format[i]);
 				break;
 			case 'd':
 				tosc_getNextDouble(osc);
-				printf(" Unsupported format: '%c'\n", osc->format[i]);
+				SPDLOG_ERROR(" Unsupported format: {}", osc->format[i]);
 				break;
 			case 'h':
 				tosc_getNextInt64(osc);
-				printf(" Unsupported format: '%c'\n", osc->format[i]);
+				SPDLOG_ERROR(" Unsupported format: {}", osc->format[i]);
 				break;
 			case 't':
 				tosc_getNextTimetag(osc);
-				printf(" Unsupported format: '%c'\n", osc->format[i]);
+				SPDLOG_ERROR(" Unsupported format: {}", osc->format[i]);
 				break;
 
 			default:
-				printf(" Unsupported format: '%c'\n", osc->format[i]);
+				SPDLOG_ERROR(" Unsupported format: {}", osc->format[i]);
 				break;
 		}
 
@@ -179,7 +197,10 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 
 	if(strstr(address, "meter") == nullptr) {
 		tosc_reset(osc);
-		tosc_printMessage(osc);
+		SPDLOG_DEBUG("OSC message received: {} {} {}",
+		             address,
+		             osc->format,
+		             getArgumentVectorAsString(&arguments[0], arguments.size()));
 	}
 	execute(address + 1, std::move(arguments));
 }
@@ -198,6 +219,7 @@ void OscRoot::notifyValueChanged() {
 }
 
 void OscRoot::addPendingConfigNode(OscNode* node) {
+	SPDLOG_DEBUG("Adding node {} as pending configuration", node->getFullAddress());
 	nodesPendingConfig.push_back(node);
 }
 

@@ -1,6 +1,7 @@
 #include "KeyBinding.h"
 #include "OscRoot.h"
 #include <functional>
+#include <spdlog/spdlog.h>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -19,6 +20,8 @@ struct MessageHotkeyControlData {
 
 KeyBinding::KeyBinding(OscRoot* oscRoot, OscContainer* parent)
     : oscRoot(oscRoot), oscAddShortcutEnpoint(parent, "add"), oscRemoveShortcutEnpoint(parent, "remove") {
+	SPDLOG_INFO("Initializing hotkeys listener");
+
 	uv_async_init(uv_default_loop(), &oscTriggerAsync, &KeyBinding::onOscTriggered);
 	oscTriggerAsync.data = this;
 	uv_unref((uv_handle_t*) &oscTriggerAsync);
@@ -27,6 +30,7 @@ KeyBinding::KeyBinding(OscRoot* oscRoot, OscContainer* parent)
 	oscRemoveShortcutEnpoint.setCallback([this](auto arg) { oscRemoveShortcut(arg); });
 
 #ifdef _WIN32
+	SPDLOG_INFO("Starting hotkeys listener");
 	hotkeyListenerThread = std::make_unique<std::thread>(&KeyBinding::threadHandleShortcuts, this);
 #endif
 }
@@ -78,18 +82,21 @@ void KeyBinding::threadHandleShortcuts() {
 
 	hotkeyListenerThreadId = GetCurrentThreadId();
 
+	SPDLOG_INFO("Started hotkeys listener with {} hotkeys", registeredKeys.size());
+
 	MSG msg;
 	while(GetMessage(&msg, nullptr, 0, 0) != 0) {
 		switch(msg.message) {
 			case WM_HOTKEY: {
 				Hotkey hotkey{HIWORD(msg.lParam), LOWORD(msg.lParam)};
 
-				printf("Received hotkey %d:%d\n", hotkey.modifiers, hotkey.virtualKeyCode);
+				SPDLOG_INFO(
+				    "Received hotkey for modified {} and key virtual code {}", hotkey.modifiers, hotkey.virtualKeyCode);
 
 				auto it = registeredKeys.find(hotkey);
 
 				if(it == registeredKeys.end()) {
-					printf("Hotkey %d:%d not found\n", hotkey.modifiers, hotkey.virtualKeyCode);
+					SPDLOG_WARN("Hotkey {}:{} not found, ignoring", hotkey.modifiers, hotkey.virtualKeyCode);
 					break;
 				}
 
@@ -97,7 +104,7 @@ void KeyBinding::threadHandleShortcuts() {
 					std::lock_guard lock(pendingTriggeredOscAddressesMutex);
 
 					for(const std::string& address : it->second.oscAddress) {
-						printf("Adding pending OSC address %s\n", address.c_str());
+						SPDLOG_DEBUG("Adding pending OSC address {}", address);
 						pendingTriggeredOscAddresses.push_back(address);
 					}
 					uv_async_send(&oscTriggerAsync);
@@ -112,23 +119,23 @@ void KeyBinding::threadHandleShortcuts() {
 				auto it = registeredKeys.find(hotkey);
 
 				if(it == registeredKeys.end()) {
-					printf(
-					    "Added new hotkey %d:%d with id %d\n", hotkey.modifiers, hotkey.virtualKeyCode, next_hotkey_id);
+					SPDLOG_INFO(
+					    "Added new hotkey {}:{} with id {}", hotkey.modifiers, hotkey.virtualKeyCode, next_hotkey_id);
 					RegisterHotKey(nullptr, next_hotkey_id, hotkey.modifiers, hotkey.virtualKeyCode);
 					registeredKeys[hotkey].id = next_hotkey_id;
 					next_hotkey_id++;
 				}
 
 				if(registeredKeys[hotkey].oscAddress.insert(message->targetOscAddress).second) {
-					printf("Hotkey %d:%d added target %s\n",
-					       hotkey.modifiers,
-					       hotkey.virtualKeyCode,
-					       message->targetOscAddress.c_str());
+					SPDLOG_INFO("Hotkey {}:{} added with OSC target {}",
+					            hotkey.modifiers,
+					            hotkey.virtualKeyCode,
+					            message->targetOscAddress);
 				} else {
-					printf("Hotkey %d:%d already has target %s\n",
-					       hotkey.modifiers,
-					       hotkey.virtualKeyCode,
-					       message->targetOscAddress.c_str());
+					SPDLOG_INFO("Hotkey {}:{} already has target {}",
+					            hotkey.modifiers,
+					            hotkey.virtualKeyCode,
+					            message->targetOscAddress);
 				}
 				break;
 			}
@@ -140,27 +147,27 @@ void KeyBinding::threadHandleShortcuts() {
 				auto it = registeredKeys.find(hotkey);
 
 				if(it == registeredKeys.end()) {
-					printf("Hotkey %d:%d not found\n", hotkey.modifiers, hotkey.virtualKeyCode);
+					SPDLOG_WARN("Hotkey {}:{} not found, cannot remove it", hotkey.modifiers, hotkey.virtualKeyCode);
 					return;
 				}
 
 				if(it->second.oscAddress.erase(message->targetOscAddress) > 0) {
-					printf("Hotkey %d:%d removed target %s\n",
-					       hotkey.modifiers,
-					       hotkey.virtualKeyCode,
-					       message->targetOscAddress.c_str());
+					SPDLOG_INFO("Hotkey {}:{} removed target {}",
+					            hotkey.modifiers,
+					            hotkey.virtualKeyCode,
+					            message->targetOscAddress);
 				} else {
-					printf("Hotkey %d:%d is not associated with %s\n",
-					       hotkey.modifiers,
-					       hotkey.virtualKeyCode,
-					       message->targetOscAddress.c_str());
+					SPDLOG_WARN("Hotkey {}:{} is not associated with {}",
+					            hotkey.modifiers,
+					            hotkey.virtualKeyCode,
+					            message->targetOscAddress);
 				}
 
 				if(it->second.oscAddress.empty()) {
-					printf("No more associated hotkey with %d:%d, removing id %d\n",
-					       hotkey.modifiers,
-					       hotkey.virtualKeyCode,
-					       it->second.id);
+					SPDLOG_DEBUG("No more associated hotkey with {}:{}, removing id {}",
+					             hotkey.modifiers,
+					             hotkey.virtualKeyCode,
+					             it->second.id);
 					UnregisterHotKey(nullptr, it->second.id);
 					registeredKeys.erase(it);
 				}
@@ -181,7 +188,7 @@ void KeyBinding::onOscTriggered(uv_async_t* handle) {
 	}
 
 	for(const std::string& address : oscAddressesToTrigger) {
-		printf("Executing OSC address %s\n", address.c_str());
+		SPDLOG_INFO("Executing OSC address {}", address);
 		instance->oscRoot->triggerAddress(address);
 	}
 }

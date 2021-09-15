@@ -20,7 +20,7 @@ public:
 	OscServer(OscRoot* oscRoot, OscContainer* oscParent);
 	~OscServer();
 
-	void init(const char* ip, uint16_t port);
+	void init(const char* ip, uint16_t port, const char* targetIp, uint16_t targetPort);
 	void stop();
 
 	static void triggerAddress(const std::string& address);

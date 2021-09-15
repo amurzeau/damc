@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <spdlog/spdlog.h>
 
 template<typename T> class OscGenericArray : protected OscContainer {
 public:
@@ -61,6 +62,10 @@ OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noex
 
 		for(size_t i = 0; i < newKeys.size(); i++) {
 			int key = newKeys[i];
+
+			if(std::count(newKeys.begin(), newKeys.end(), key) != 1) {
+				SPDLOG_ERROR("{}: Duplicate key {}", this->getFullAddress(), key);
+			}
 
 			keysToKeep.insert(key);
 
@@ -133,6 +138,7 @@ void OscGenericArray<T>::execute(std::string_view address, const std::vector<Osc
 		int key = atoi(std::string(childAddress).c_str());
 
 		if(value.count(key) == 0) {
+			SPDLOG_DEBUG("{}: detect new key {} by direct access", this->getFullAddress(), key);
 			insert(key);
 		}
 	}
@@ -151,6 +157,8 @@ template<typename T> void OscGenericArray<T>::updateNextKeyToMaxKey() {
 }
 
 template<typename T> void OscGenericArray<T>::insertValue(int key) {
+	SPDLOG_INFO("{}: new item {}", this->getFullAddress(), key);
+
 	T* newValue = factoryFunction(this, key);
 
 	initializeItem(newValue);
@@ -158,6 +166,8 @@ template<typename T> void OscGenericArray<T>::insertValue(int key) {
 }
 
 template<typename T> void OscGenericArray<T>::eraseValue(int key) {
+	SPDLOG_INFO("{}: removing item {}", this->getFullAddress(), key);
+
 	for(auto it = value.begin(); it != value.end();) {
 		if(it->first == key) {
 			value.erase(it);

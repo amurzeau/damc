@@ -1,5 +1,6 @@
 #include "OscContainer.h"
 #include "Utils.h"
+#include <spdlog/spdlog.h>
 
 bool OscContainer::osc_node_comparator::operator()(const std::string& x, const std::string& y) const {
 	bool isXnumber = Utils::isNumber(x);
@@ -43,10 +44,8 @@ void OscContainer::splitAddress(std::string_view address,
 }
 
 void OscContainer::execute(std::string_view address, const std::vector<OscArgument>& arguments) {
-	// printf("Executing %s from %s\n", std::string(address).c_str(), getFullAddress().c_str());
-
 	if(address.empty() || address == "/") {
-		// printf("Executing address %s\n", getFullAddress().c_str());
+		SPDLOG_TRACE("Executing address {}", getFullAddress());
 		execute(arguments);
 	} else {
 		std::string_view childAddress;
@@ -60,8 +59,6 @@ void OscContainer::execute(std::string_view address, const std::vector<OscArgume
 		if(childAddressStr == "*") {
 			// Wildcard
 			for(auto& child : children) {
-				// printf("Child address: %s remaining: %s\n", childAddressStr.c_str(),
-				// std::string(remainingAddress).c_str());
 				child.second->execute(remainingAddress, arguments);
 			}
 		} else if(childAddressStr == "**") {
@@ -74,20 +71,15 @@ void OscContainer::execute(std::string_view address, const std::vector<OscArgume
 			execute(remainingAddress, arguments);
 
 			for(auto& child : children) {
-				// printf("Child address: %s remaining: %s\n", childAddressStr.c_str(),
-				// std::string(remainingAddress).c_str());
-
 				child.second->execute(address, arguments);
 			}
 		} else {
 			auto it = children.find(childAddressStr);
 			if(it == children.end()) {
-				// printf("Address %s not found from %s\n", childAddressStr.c_str(), getFullAddress().c_str());
+				SPDLOG_WARN("Address {} not found from {}", childAddressStr, getFullAddress());
 				return;
 			}
 
-			// printf("Child address: %s remaining: %s\n", childAddressStr.c_str(),
-			// std::string(remainingAddress).c_str());
 			it->second->execute(remainingAddress, arguments);
 		}
 	}
@@ -121,7 +113,6 @@ std::string OscContainer::getAsString() const {
 			std::string childData = child.second->getAsString();
 
 			if(childData.empty()) {
-				// printf("%s has no data\n", child.first.c_str());
 				continue;
 			}
 
@@ -148,7 +139,7 @@ std::string OscContainer::getAsString() const {
 
 void OscContainer::addChild(std::string name, OscNode* child) {
 	if(children.emplace(name, child).second == false) {
-		printf("Error adding child %s to %s, already existing\n", name.c_str(), getFullAddress().c_str());
+		SPDLOG_ERROR("Error adding child {} to {}, already existing\n", name, getFullAddress());
 	}
 }
 

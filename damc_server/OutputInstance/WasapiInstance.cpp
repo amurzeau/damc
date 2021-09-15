@@ -6,6 +6,7 @@
 #include <codecvt>
 #include <ksmedia.h>
 #include <locale>
+#include <spdlog/spdlog.h>
 #include <stdio.h>
 #include <string>
 
@@ -61,7 +62,7 @@
 
 #define EXIT_ON_ERROR(hres) \
 	if(FAILED(hres)) { \
-		printf("Failed to execute COM function at line %d: 0x%lx\n", __LINE__, (long unsigned int) hres); \
+		SPDLOG_ERROR("Failed to execute COM function at line {}: {:#x}", __LINE__, hres); \
 		goto exit; \
 	}
 #define SAFE_RELEASE(punk) \
@@ -112,7 +113,7 @@ HRESULT WasapiInstance::getDeviceByName(std::string name, IMMDevice** ppMMDevice
 
 			hr = pEndpoint->OpenPropertyStore(STGM_READ, &pProps);
 			if(FAILED(hr)) {
-				printf("IMMDevice(OpenPropertyStore) failed: hr = 0x%08lx\n", hr);
+				SPDLOG_ERROR("IMMDevice(OpenPropertyStore) failed: hr ={:#x}", hr);
 				pEndpoint->Release();
 				continue;
 			}
@@ -123,7 +124,7 @@ HRESULT WasapiInstance::getDeviceByName(std::string name, IMMDevice** ppMMDevice
 			// Get the endpoint's friendly-name property.
 			hr = pProps->GetValue(PKEY_Device_FriendlyName, &varName);
 			if(FAILED(hr)) {
-				printf("IPropertyStore(GetValue) failed: hr = 0x%08lx\n", hr);
+				SPDLOG_ERROR("IPropertyStore(GetValue) failed: hr = {:#x}", hr);
 				pProps->Release();
 				pEndpoint->Release();
 				continue;
@@ -136,7 +137,7 @@ HRESULT WasapiInstance::getDeviceByName(std::string name, IMMDevice** ppMMDevice
 			pProps->Release();
 
 			if(name == deviceName) {
-				printf("Using device %s\n", deviceName.c_str());
+				SPDLOG_INFO("Using device {}", deviceName);
 				*ppMMDevice = pEndpoint;
 				break;
 			} else {
@@ -146,7 +147,7 @@ HRESULT WasapiInstance::getDeviceByName(std::string name, IMMDevice** ppMMDevice
 	}
 
 	if(!*ppMMDevice) {
-		printf("Device %s not found\n", name.c_str());
+		SPDLOG_ERROR("Device {} not found\n", name);
 		return E_NOTFOUND;
 	}
 
@@ -194,7 +195,7 @@ std::vector<std::string> WasapiInstance::getDeviceList() {
 
 		hr = pEndpoint->OpenPropertyStore(STGM_READ, &pProps);
 		if(FAILED(hr)) {
-			printf("IMMDevice(OpenPropertyStore) failed: hr = 0x%08lx\n", hr);
+			SPDLOG_ERROR("IMMDevice(OpenPropertyStore) failed: hr = {:#x}", hr);
 			pEndpoint->Release();
 			continue;
 		}
@@ -205,7 +206,7 @@ std::vector<std::string> WasapiInstance::getDeviceList() {
 		// Get the endpoint's friendly-name property.
 		hr = pProps->GetValue(PKEY_Device_FriendlyName, &varName);
 		if(FAILED(hr)) {
-			printf("IPropertyStore(GetValue) failed: hr = 0x%08lx\n", hr);
+			SPDLOG_ERROR("IPropertyStore(GetValue) failed: hr = {:#x}", hr);
 			pProps->Release();
 			pEndpoint->Release();
 			continue;
@@ -282,7 +283,7 @@ void WasapiInstance::stop() {
 int WasapiInstance::start(int index, size_t numChannel, int sampleRate, int jackBufferSize) {
 	uint32_t hr = initializeWasapi(numChannel, sampleRate, jackBufferSize);
 	if(FAILED(hr)) {
-		printf("Failed to initialize WASAPI: 0x%x\n", hr);
+		SPDLOG_ERROR("Failed to initialize WASAPI: {:#x}", hr);
 		return hr;
 	}
 
@@ -310,7 +311,7 @@ int WasapiInstance::start(int index, size_t numChannel, int sampleRate, int jack
 	previousAverageLatency = 0;
 	clockDriftPpm = 0;
 	maxBufferSize = 0;
-	printf("Using buffer size %d, device sample rate: %d\n", jackBufferSize, (int) oscDeviceSampleRate);
+	SPDLOG_INFO("Using buffer size {}, device sample rate: {}", jackBufferSize, oscDeviceSampleRate);
 
 	hr = pAudioClient->Start();
 	EXIT_ON_ERROR(hr);
@@ -336,12 +337,12 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 	hr = findAudioConfig(pAudioClient, numChannel, &pFormat);
 	EXIT_ON_ERROR(hr);
 
-	hr = pAudioClient->GetDevicePeriod(nullptr, &duration);
+	pAudioClient->GetDevicePeriod(nullptr, &duration);
 
 	if(oscExclusiveMode)
-		printf("Using exclusive mode\n");
+		SPDLOG_INFO("Using exclusive mode");
 
-	printf("Using format:\n");
+	SPDLOG_INFO("Using format:");
 	printAudioConfig((WAVEFORMATEXTENSIBLE*) pFormat);
 
 	hr = pAudioClient->Initialize(oscExclusiveMode ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED,
@@ -371,7 +372,7 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 	hr = pAudioClient->GetBufferSize(&wasapiBufferSize);
 	EXIT_ON_ERROR(hr);
 
-	printf("Buffer size: %u\n", wasapiBufferSize);
+	SPDLOG_INFO("Buffer size: {}", wasapiBufferSize);
 
 	return 0;
 
@@ -483,7 +484,7 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 	}
 
 	if(!found) {
-		printf("Wasapi format unrecognized\n");
+		SPDLOG_ERROR("Wasapi format unrecognized");
 		hr = AUDCLNT_E_UNSUPPORTED_FORMAT;
 		goto exit;
 	}
@@ -496,30 +497,22 @@ exit:
 }
 
 void WasapiInstance::printAudioConfig(const WAVEFORMATEXTENSIBLE* pFormat) {
-	if(!pFormat)
+	if(!pFormat) {
+		SPDLOG_ERROR("Invalid wave format NULL");
 		return;
-	printf("Audio format:\n"
-	       "- Format tag: %d\n"
-	       "- Channels: %d\n"
-	       "- Sample rate: %ld\n"
-	       "- Avg bytes per sec: %ld\n"
-	       "- Block align: %d\n"
-	       "- Bits per sample: %d\n"
-	       "- cbSize: %d\n",
-	       pFormat->Format.wFormatTag,
-	       pFormat->Format.nChannels,
-	       pFormat->Format.nSamplesPerSec,
-	       pFormat->Format.nAvgBytesPerSec,
-	       pFormat->Format.nBlockAlign,
-	       pFormat->Format.wBitsPerSample,
-	       pFormat->Format.cbSize);
+	}
+	SPDLOG_INFO("- Format tag: {}", pFormat->Format.wFormatTag);
+	SPDLOG_INFO("- Channels: {}", pFormat->Format.nChannels);
+	SPDLOG_INFO("- Sample rate: %ld\n", pFormat->Format.nSamplesPerSec);
+	SPDLOG_INFO("- Avg bytes per sec: %ld\n", pFormat->Format.nAvgBytesPerSec);
+	SPDLOG_INFO("- Block align: {}", pFormat->Format.nBlockAlign);
+	SPDLOG_INFO("- Bits per sample: {}", pFormat->Format.wBitsPerSample);
+	SPDLOG_INFO("- cbSize: {}", pFormat->Format.cbSize);
+
 	if(pFormat->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
-		printf("- Valid bits per sample: %d\n"
-		       "- Channel mask: 0x%lx\n"
-		       "- Format tag guid: %ld\n",
-		       pFormat->Samples.wValidBitsPerSample,
-		       pFormat->dwChannelMask,
-		       pFormat->SubFormat.Data1);
+		SPDLOG_INFO("- Valid bits per sample: {}", pFormat->Samples.wValidBitsPerSample);
+		SPDLOG_INFO("- Channel mask: {:#x}", pFormat->dwChannelMask);
+		SPDLOG_INFO("- Format tag guid: {}", pFormat->SubFormat.Data1);
 	}
 }
 
@@ -813,25 +806,16 @@ void WasapiInstance::onTimer() {
 		return;
 
 	if(overflowOccured) {
-		printf("%s: Overflow: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) overflowSize);
+		SPDLOG_WARN("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		printf("%s: underrun: %d, %d\n", oscDeviceName.c_str(), bufferLatencyNr, (int) underflowSize);
+		SPDLOG_WARN("{}: underrun: {}, {}", oscDeviceName.get(), bufferLatencyNr, underflowSize);
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
-		printf("%s: average latency: %f\n", oscDeviceName.c_str(), previousAverageLatency);
-		printf("%s: drift: %f\n", oscDeviceName.c_str(), clockDriftPpm);
+		SPDLOG_INFO("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
+		SPDLOG_INFO("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
-
-	//	static size_t previousMaxBufferSize = 0;
-	//	if(maxBufferSize != previousMaxBufferSize) {
-	//		printf("%s: min buffer size: %u, resampling buffer size: %u\n",
-	//		       outputDevice.c_str(),
-	//		       maxBufferSize,
-	//		       resampledBuffer[0].size());
-	//		previousMaxBufferSize = maxBufferSize;
-	//	}
 }

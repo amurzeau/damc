@@ -1,5 +1,6 @@
 #include "OscReadOnlyVariable.h"
 #include "OscRoot.h"
+#include <spdlog/spdlog.h>
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(template, OscReadOnlyVariable)
 
@@ -14,6 +15,7 @@ template<typename T> void OscReadOnlyVariable<T>::set(T v, bool fromOsc) {
 	if(value != v || isDefaultValue) {
 		bool isDataValid = callCheckCallbacks(v);
 		if(isDataValid) {
+			SPDLOG_INFO("{}: set to {}", getFullAddress(), v);
 			isDefaultValue = false;
 			value = v;
 			callChangeCallbacks(v);
@@ -21,10 +23,7 @@ template<typename T> void OscReadOnlyVariable<T>::set(T v, bool fromOsc) {
 				notifyOsc();
 			getRoot()->notifyValueChanged();
 		} else {
-			if constexpr(std::is_same_v<T, std::string>)
-				printf("%s: refused value %s\n", getFullAddress().c_str(), v.c_str());
-			else
-				printf("%s: refused value %s\n", getFullAddress().c_str(), std::to_string(v).c_str());
+			SPDLOG_WARN("{}: refused invalid value {}", getFullAddress(), v);
 
 			if(fromOsc) {
 				// Ensure the client that set this is notified that the value didn't changed

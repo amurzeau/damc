@@ -1,6 +1,7 @@
 #include "ResamplingFilter.h"
 
 #include <math.h>
+#include <spdlog/spdlog.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -103,7 +104,7 @@ float ResamplingFilter::getTargetSamplingRate() {
 
 double ResamplingFilter::getLinearInterpolatedPoint(double delay) const {
 	if(delay < 0 || delay > oversamplingRatio) {
-		printf("Bad delay %f\n", delay);
+		SPDLOG_ERROR("Bad resampling subsample delay {}", delay);
 	}
 	int x = int(delay + 2) - 2;
 
