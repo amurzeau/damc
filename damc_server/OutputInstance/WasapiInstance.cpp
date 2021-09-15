@@ -315,7 +315,6 @@ int WasapiInstance::start(int index, size_t numChannel, int sampleRate, int jack
 	previousAverageLatency = 0;
 	clockDriftPpm = 0;
 	maxBufferSize = 0;
-	SPDLOG_INFO("Using buffer size {}, device sample rate: {}", jackBufferSize, oscDeviceSampleRate);
 
 	hr = pAudioClient->Start();
 	EXIT_ON_ERROR(hr);
@@ -346,7 +345,8 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 
 	// A minimum buffer size of minimum period * 3
 	bufferSize = std::max(std::max(duration * 3, timePeriod * 3),
-	                      static_cast<REFERENCE_TIME>(oscBufferSize * REFTIMES_PER_SEC / oscDeviceSampleRate));
+	                      static_cast<REFERENCE_TIME>(static_cast<REFERENCE_TIME>(oscBufferSize) * REFTIMES_PER_SEC /
+	                                                  oscDeviceSampleRate));
 	SPDLOG_INFO("Asking buffer size: {}", bufferSize * oscDeviceSampleRate / REFTIMES_PER_SEC);
 
 	if(oscExclusiveMode)
