@@ -60,24 +60,24 @@ private:
 
 	std::vector<ResamplingFilter> resamplingFilters;
 	std::vector<std::vector<float>> resampledBuffer;
-	int jackSampleRate;
+	int jackSampleRate = 0;
 	Format sampleFormat = F_Int32;
-	bool overflowOccured;
-	bool underflowOccured;
+	bool overflowOccured = false;
+	bool underflowOccured = false;
 
 	OscVariable<std::string> oscDeviceName;
 	OscVariable<int> oscDeviceSampleRate;
 	OscVariable<float> oscClockDrift;
 	OscVariable<bool> oscExclusiveMode;
 
-	uint32_t bufferLatencyNr;
+	uint32_t bufferLatencyNr = 0;
 	std::vector<uint32_t> bufferLatencyHistory;
-	size_t bufferLatencyMeasurePeriodSize;
-	double previousAverageLatency;
-	double clockDriftPpm;
+	size_t bufferLatencyMeasurePeriodSize = 0;
+	double previousAverageLatency = 0;
+	double clockDriftPpm = 0;
 
-	size_t underflowSize;
-	size_t overflowSize;
+	size_t underflowSize = 0;
+	size_t overflowSize = 0;
 
-	size_t maxBufferSize;
+	size_t maxBufferSize = 0;
 };
