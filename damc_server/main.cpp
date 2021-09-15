@@ -43,10 +43,10 @@ void initializeSpdLog() {
 	file_sink->set_level(spdlog::level::trace);
 
 	std::vector<spdlog::sink_ptr> sinks{console_sink, file_sink};
-	///*
+	/*
 	auto logger = std::make_shared<spdlog::async_logger>(
 	    "server", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::overrun_oldest);
-	//*/\
+	//*/
 	auto logger = std::make_shared<spdlog::logger>("server", sinks.begin(), sinks.end());
 	spdlog::set_default_logger(logger);
 	spdlog::set_level(spdlog::level::debug);
