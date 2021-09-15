@@ -101,7 +101,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 		filters.init(newValue);
 	});
 
-	readyChecker.addVariable(&oscEnable, true);
+	readyChecker.addVariable(&oscEnable);
 	readyChecker.addVariable(&oscType);
 	readyChecker.addVariable(&oscNumChannel);
 
@@ -125,6 +125,11 @@ OutputInstance::~OutputInstance() {
 
 void OutputInstance::activate() {
 	enableAudio = true;
+	oscEnable.addCheckCallback([this](bool newValue) {
+		if(newValue && !readyChecker.isVariablesReady())
+			return false;
+		return true;
+	});
 	oscEnable.setChangeCallback([this](bool newValue) { updateEnabledState(newValue); });
 }
 
