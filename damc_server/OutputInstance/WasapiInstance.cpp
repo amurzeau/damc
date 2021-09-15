@@ -514,8 +514,8 @@ void WasapiInstance::printAudioConfig(const WAVEFORMATEXTENSIBLE* pFormat) {
 	}
 	SPDLOG_INFO("- Format tag: {}", pFormat->Format.wFormatTag);
 	SPDLOG_INFO("- Channels: {}", pFormat->Format.nChannels);
-	SPDLOG_INFO("- Sample rate: %ld\n", pFormat->Format.nSamplesPerSec);
-	SPDLOG_INFO("- Avg bytes per sec: %ld\n", pFormat->Format.nAvgBytesPerSec);
+	SPDLOG_INFO("- Sample rate: {}", pFormat->Format.nSamplesPerSec);
+	SPDLOG_INFO("- Avg bytes per sec: {}", pFormat->Format.nAvgBytesPerSec);
 	SPDLOG_INFO("- Block align: {}", pFormat->Format.nBlockAlign);
 	SPDLOG_INFO("- Bits per sample: {}", pFormat->Format.wBitsPerSample);
 	SPDLOG_INFO("- cbSize: {}", pFormat->Format.cbSize);
@@ -620,11 +620,8 @@ int WasapiInstance::postProcessSamplesRender(float** samples, size_t numChannel,
 		return 0;
 	EXIT_ON_ERROR(hr);
 
-	if(validSize == 0) {
-		// Assume underflow
-		underflowOccured = true;
-		underflowSize = 0;
-	}
+	// If validSize is 0, we can't assume we have an underrun. It could be just that we are fast enough to refill the
+	// buffer just in time.
 
 	availableForWrite = wasapiBufferSize - validSize;
 
