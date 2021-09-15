@@ -283,14 +283,14 @@ void DeviceInputInstance::onFastTimer() {
 		SPDLOG_INFO("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
+}
 
+void DeviceInputInstance::onSlowTimer() {
 	if(!isPaRunning) {
 		SPDLOG_WARN("{}: portaudio not running !", oscDeviceName.get());
 	} else {
 		isPaRunning = false;
 	}
-}
 
-void DeviceInputInstance::onSlowTimer() {
 	deviceSampleRateMeasure.onTimeoutTimer();
 }
