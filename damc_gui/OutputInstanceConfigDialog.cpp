@@ -35,6 +35,7 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 
 	oscClockDrift.setScale(1000000);
 
+	parent->getOscEnable()->setWidget(ui->enableCheckBox);
 	oscType.setWidget(ui->typeCombo);
 	oscChannelNumber.setWidget(ui->channelsSpin);
 	oscDeviceName.setWidget(ui->deviceDeviceCombo);

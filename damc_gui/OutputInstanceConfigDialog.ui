@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>577</width>
-    <height>443</height>
+    <height>466</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,24 +29,24 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QLabel" name="typeLabel">
         <property name="text">
          <string>Type</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item row="3" column="1">
        <widget class="QComboBox" name="typeCombo"/>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="channelsLabel">
         <property name="text">
          <string>Channels</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
+      <item row="4" column="1">
        <widget class="QSpinBox" name="channelsSpin">
         <property name="suffix">
          <string> channels</string>
@@ -62,24 +62,24 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
+      <item row="1" column="0">
        <widget class="QLabel" name="nameLabel">
         <property name="text">
          <string>Name</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="displayNameLabel">
         <property name="text">
          <string>Display name</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <widget class="QLineEdit" name="displayNameEdit"/>
       </item>
-      <item row="0" column="1">
+      <item row="1" column="1">
        <widget class="QLineEdit" name="nameEdit">
         <property name="frame">
          <bool>false</bool>
@@ -89,7 +89,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="5" column="1">
        <widget class="QSpinBox" name="measuredJackSampleRateSpinBox">
         <property name="toolTip">
          <string>Measured Jack sample rate</string>
@@ -105,10 +105,20 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="measuredJackSampleRateLabel">
         <property name="text">
          <string>Jack Sample Rate</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QCheckBox" name="enableCheckBox">
+        <property name="toolTip">
+         <string>Enable audio (configure type, sample rate and device beforehand)</string>
+        </property>
+        <property name="text">
+         <string>Enable audio strip</string>
         </property>
        </widget>
       </item>
