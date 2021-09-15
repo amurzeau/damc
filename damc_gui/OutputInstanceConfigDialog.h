@@ -25,8 +25,12 @@ protected slots:
 	void updateTypeCombo();
 	void updateDeviceCombo();
 
+signals:
+	void showStateChanged(bool shown);
+
 protected:
 	void showEvent(QShowEvent*) override;
+	void hideEvent(QHideEvent*) override;
 	void updateGroupBoxes();
 
 private:

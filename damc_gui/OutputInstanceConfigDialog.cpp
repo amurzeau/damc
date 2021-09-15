@@ -99,6 +99,11 @@ void OutputInstanceConfigDialog::showEvent(QShowEvent*) {
 	updateTypeCombo();
 	updateDeviceCombo();
 	mainWindow->updateDeviceList();
+	emit showStateChanged(true);
+}
+
+void OutputInstanceConfigDialog::hideEvent(QHideEvent*) {
+	emit showStateChanged(false);
 }
 
 void OutputInstanceConfigDialog::updateGroupBoxes() {

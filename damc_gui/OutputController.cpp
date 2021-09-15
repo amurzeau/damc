@@ -55,6 +55,9 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	expanderController->getEnableMapper().setWidget(ui->expanderButton, false);
 
 	configDialog = new OutputInstanceConfigDialog(parent, this);
+	connect(configDialog, &OutputInstanceConfigDialog::showStateChanged, [this](bool shown) {
+		ui->configButton->setChecked(shown);
+	});
 
 	connect(parent, &MainWindow::showDisabledChanged, this, &OutputController::updateHiddenState);
 	connect(ui->enableCheckBox, &QCheckBox::toggled, this, &OutputController::updateHiddenState);
@@ -185,8 +188,10 @@ void OutputController::onShowBalance() {
 void OutputController::onShowConfig() {
 	if(configDialog->isHidden()) {
 		configDialog->show();
+		ui->configButton->setChecked(true);
 	} else {
 		configDialog->hide();
+		ui->configButton->setChecked(false);
 	}
 }
 
