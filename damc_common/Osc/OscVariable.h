@@ -14,6 +14,8 @@ public:
 
 	void setIncrementAmount(T amount) { incrementAmount = amount; }
 
+	std::string getAsString() const override;
+
 private:
 	T incrementAmount;
 	std::vector<std::unique_ptr<OscEndpoint>> subEndpoint;

@@ -38,8 +38,6 @@ public:
 	bool operator==(const OscReadOnlyVariable<T>& other) { return value == other.value; }
 	bool operator!=(const OscReadOnlyVariable<T>& other) { return !(*this == other); }
 
-	std::string getAsString() const override;
-
 	void setOscConverters(std::function<T(T)> convertToOsc, std::function<T(T)> convertFromOsc);
 
 	void addCheckCallback(std::function<bool(T)> onChange);

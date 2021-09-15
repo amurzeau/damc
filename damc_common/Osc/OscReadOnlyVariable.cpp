@@ -21,7 +21,6 @@ template<typename T> void OscReadOnlyVariable<T>::set(T v, bool fromOsc) {
 			callChangeCallbacks(v);
 			if(!fromOsc || getRoot()->isOscValueAuthority())
 				notifyOsc();
-			getRoot()->notifyValueChanged();
 		} else {
 			SPDLOG_WARN("{}: refused invalid value {}", getFullAddress(), v);
 
@@ -55,17 +54,6 @@ template<typename T> OscReadOnlyVariable<T>& OscReadOnlyVariable<T>::operator=(c
 template<typename T> OscReadOnlyVariable<T>& OscReadOnlyVariable<T>::operator=(const OscReadOnlyVariable<T>& v) {
 	set(v.value);
 	return *this;
-}
-
-template<typename T> std::string OscReadOnlyVariable<T>::getAsString() const {
-	if(isDefaultValue)
-		return {};
-
-	if constexpr(std::is_same_v<T, std::string>) {
-		return "\"" + getToOsc() + "\"";
-	} else {
-		return std::to_string(getToOsc());
-	}
 }
 
 template<typename T>

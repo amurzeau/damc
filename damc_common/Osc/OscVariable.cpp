@@ -12,6 +12,8 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
 
 	this->getRoot()->addPendingConfigNode(this);
 
+	this->setChangeCallback([this](T) { this->getRoot()->notifyValueChanged(); });
+
 	if constexpr(std::is_same_v<T, bool>) {
 		subEndpoint.emplace_back(new OscEndpoint(this, "toggle"))->setCallback([this](auto) {
 			SPDLOG_INFO("{}: Toggling", this->getFullAddress());
@@ -62,5 +64,16 @@ template<typename T> void OscVariable<T>::execute(const std::vector<OscArgument>
 		if(this->template getArgumentAs<T>(arguments[0], v)) {
 			this->setFromOsc(std::move(v));
 		}
+	}
+}
+
+template<typename T> std::string OscVariable<T>::getAsString() const {
+	if(this->isDefault())
+		return {};
+
+	if constexpr(std::is_same_v<T, std::string>) {
+		return "\"" + this->getToOsc() + "\"";
+	} else {
+		return std::to_string(this->getToOsc());
 	}
 }
