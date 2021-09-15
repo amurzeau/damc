@@ -3,7 +3,7 @@
 
 template<class T, class UnderlyingType>
 OscWidgetMapper<T, UnderlyingType>::OscWidgetMapper(OscContainer* parent, std::string name) noexcept
-    : OscContainer(parent, name), scale(1.0) {}
+    : OscContainer(parent, name), scale(1.0), value(UnderlyingType{}) {}
 
 template<class T, class UnderlyingType>
 void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChange) {
