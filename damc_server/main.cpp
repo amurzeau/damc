@@ -34,12 +34,12 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 void initializeSpdLog() {
 	spdlog::init_thread_pool(8192, 1);
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-	console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%5l%$] %25!: %v");
+	console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%7l%$] %25!!: %v");
 	console_sink->set_level(spdlog::level::info);
 
 	auto file_sink =
 	    std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/damc_server.log", 10 * 1024 * 1024, 3);
-	file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] %5l %t %@: %v");
+	file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] %7l %t %@: %v");
 	file_sink->set_level(spdlog::level::trace);
 
 	std::vector<spdlog::sink_ptr> sinks{console_sink, file_sink};
