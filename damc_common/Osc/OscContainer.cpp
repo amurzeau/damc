@@ -1,5 +1,6 @@
 #include "OscContainer.h"
 #include "Utils.h"
+#include <OscRoot.h>
 #include <spdlog/spdlog.h>
 
 bool OscContainer::osc_node_comparator::operator()(const std::string& x, const std::string& y) const {
@@ -143,6 +144,9 @@ void OscContainer::addChild(std::string name, OscNode* child) {
 	}
 }
 
-void OscContainer::removeChild(std::string name) {
+void OscContainer::removeChild(OscNode* node, std::string name) {
+	OscRoot* root = getRoot();
+	if(root)
+		root->nodeRemoved(node);
 	children.erase(name);
 }

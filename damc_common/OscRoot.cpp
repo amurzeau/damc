@@ -84,21 +84,18 @@ void OscRoot::sendMessage(const std::string& address, const OscArgument* argumen
 }
 
 void OscRoot::loadNodeConfig(const std::map<std::string, std::vector<OscArgument>>& configValues) {
-	std::vector<OscNode*> nodesToConfigure;
+	SPDLOG_DEBUG("Traversing OscNode to assign configuration values");
 
-	do {
-		nodesToConfigure.clear();
-		nodesToConfigure.swap(nodesPendingConfig);
+	while(!nodesPendingConfig.empty()) {
+		auto nextNodeIt = nodesPendingConfig.begin();
+		OscNode* node = *nextNodeIt;
+		nodesPendingConfig.erase(nextNodeIt);
 
-		SPDLOG_DEBUG("Traversing {} OscNode to assign configuration values", nodesToConfigure.size());
-
-		for(auto node : nodesToConfigure) {
-			auto it = configValues.find(node->getFullAddress());
-			if(it != configValues.end()) {
-				node->execute(it->second);
-			}
+		auto it = configValues.find(node->getFullAddress());
+		if(it != configValues.end()) {
+			node->execute(it->second);
 		}
-	} while(!nodesToConfigure.empty());
+	}
 }
 
 std::string OscRoot::getArgumentVectorAsString(const OscArgument* arguments, size_t number) {
@@ -220,7 +217,11 @@ void OscRoot::notifyValueChanged() {
 
 void OscRoot::addPendingConfigNode(OscNode* node) {
 	SPDLOG_DEBUG("Adding node {} as pending configuration", node->getFullAddress());
-	nodesPendingConfig.push_back(node);
+	nodesPendingConfig.insert(node);
+}
+
+void OscRoot::nodeRemoved(OscNode* node) {
+	nodesPendingConfig.erase(node);
 }
 
 void OscRoot::triggerAddress(const std::string& address) {

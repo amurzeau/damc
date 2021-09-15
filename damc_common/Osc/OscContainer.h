@@ -15,7 +15,7 @@ public:
 	~OscContainer() override;
 
 	void addChild(std::string name, OscNode* child);
-	void removeChild(std::string name);
+	void removeChild(OscNode* node, std::string name);
 
 	std::map<std::string, OscNode*, osc_node_comparator>& getChildren() { return children; }
 	const std::map<std::string, OscNode*, osc_node_comparator>& getChildren() const { return children; }

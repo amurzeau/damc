@@ -14,7 +14,7 @@ OscNode::OscNode(OscContainer* parent, std::string name) noexcept : name(name), 
 
 OscNode::~OscNode() {
 	if(parent)
-		parent->removeChild(name);
+		parent->removeChild(this, name);
 }
 
 template<typename T> bool OscNode::getArgumentAs(const OscArgument& argument, T& v) {
@@ -47,7 +47,7 @@ void OscNode::setOscParent(OscContainer* parent) {
 		return;
 
 	if(this->parent) {
-		this->parent->removeChild(name);
+		this->parent->removeChild(this, name);
 		this->parent = nullptr;
 	}
 
@@ -83,5 +83,7 @@ void OscNode::execute(std::string_view address, const std::vector<OscArgument>& 
 }
 
 OscRoot* OscNode::getRoot() {
-	return parent->getRoot();
+	if(parent)
+		return parent->getRoot();
+	return nullptr;
 }
