@@ -58,16 +58,19 @@ template<typename T>
 OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noexcept
     : OscContainer(parent, name), keys(this, "keys"), nextKey(0) {
 	keys.setChangeCallback([this](const std::vector<int>& oldKeys, const std::vector<int>& newKeys) {
-		std::set<int> keysToKeep;
+		std::vector<int> keysToKeep;
+		bool mustUpdateKeys = false;
 
 		for(size_t i = 0; i < newKeys.size(); i++) {
 			int key = newKeys[i];
 
-			if(std::count(newKeys.begin(), newKeys.end(), key) != 1) {
+			if(std::count(keysToKeep.begin(), keysToKeep.end(), key) > 0) {
 				SPDLOG_ERROR("{}: Duplicate key {}", this->getFullAddress(), key);
+				mustUpdateKeys = true;
+				continue;
 			}
 
-			keysToKeep.insert(key);
+			keysToKeep.push_back(key);
 
 			if(!Utils::vector_find(oldKeys, key)) {
 				// The item wasn't existing, add it
@@ -77,10 +80,13 @@ OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noex
 
 		std::vector<int> keyToRemove;
 		for(int key : oldKeys) {
-			if(keysToKeep.count(key) == 0) {
+			if(std::count(keysToKeep.begin(), keysToKeep.end(), key) == 0) {
 				eraseValue(key);
 			}
 		}
+
+		if(mustUpdateKeys)
+			keys.setData(keysToKeep);
 	});
 }
 
