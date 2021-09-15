@@ -16,7 +16,8 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
       oscIp(this, "ip"),
       oscPort(this, "port"),
       oscAddVbanHeader(this, "vbanFormat"),
-      oscExclusiveMode(this, "exclusiveMode") {
+      oscExclusiveMode(this, "exclusiveMode"),
+      oscDeviceRealSampleRate(this, "realSampleRate") {
 	ui->setupUi(this);
 
 	connect(ui->typeCombo, qOverload<int>(&QComboBox::activated), this, &OutputInstanceConfigDialog::updateDeviceCombo);
@@ -41,8 +42,8 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	oscPort.setWidget(ui->remotePortSpin);
 	oscAddVbanHeader.setWidget(ui->vbanCheckBox);
 	oscExclusiveMode.setWidget(ui->useExclusiveModeCheckBox);
-
-	oscClockDrift.setScale(1000000);
+	parent->getOscJackSampleRate()->setWidget(ui->measuredJackSampleRateSpinBox);
+	oscDeviceRealSampleRate.setWidget(ui->measuredDeviceSampleRateSpinBox);
 
 	oscType.setChangeCallback([this](int) { updateGroupBoxes(); });
 }

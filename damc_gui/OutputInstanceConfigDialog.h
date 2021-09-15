@@ -42,6 +42,8 @@ private:
 	OscWidgetMapper<QSpinBox> oscPort;
 	OscWidgetMapper<QAbstractButton> oscAddVbanHeader;
 	OscWidgetMapper<QAbstractButton> oscExclusiveMode;
+
+	OscWidgetMapper<QSpinBox> oscDeviceRealSampleRate;
 };
 
 #endif  // DIALOG_H

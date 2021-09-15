@@ -30,6 +30,7 @@ public:
 	void updateEqEnable();
 	OscWidgetMapper<QLineEdit>* getOscName() { return &oscName; }
 	OscWidgetMapper<QLineEdit>* getOscDisplayName() { return &oscDisplayName; }
+	OscWidgetMapper<QSpinBox>* getOscJackSampleRate() { return &oscJackSampleRate; }
 
 	int32_t getSampleRate() { return oscSampleRate.get(); }
 
@@ -75,6 +76,7 @@ private:
 	OscWidgetMapper<QLineEdit> oscDisplayName;
 
 	OscVariable<int32_t> oscSampleRate;
+	OscWidgetMapper<QSpinBox> oscJackSampleRate;
 };
 
 #endif  // OUTPUTCONTROLLER_H

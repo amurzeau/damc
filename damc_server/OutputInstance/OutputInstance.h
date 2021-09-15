@@ -3,6 +3,7 @@
 
 #include "../Filter/FilteringChain.h"
 #include "IAudioEndpoint.h"
+#include "SampleRateMeasure.h"
 #include <Osc/OscCombinedVariable.h>
 #include <Osc/OscContainer.h>
 #include <stdint.h>
@@ -52,7 +53,8 @@ public:
 	void activate();
 	int start();
 	void stop();
-	void onTimeoutTimer();
+	void onFastTimer();
+	void onSlowTimer();
 
 protected:
 	bool updateType(int newValue);
@@ -87,6 +89,7 @@ private:
 	std::string oscPeakGlobalPath;
 	std::string oscPeakPerChannelPath;
 	std::vector<OscArgument> oscPeakPerChannelArguments;
+	SampleRateMeasure jackSampleRateMeasure;
 
 	bool enableAudio;
 	OscVariable<bool> oscEnable;

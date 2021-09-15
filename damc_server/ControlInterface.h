@@ -27,6 +27,10 @@ public:
 	void saveConfig();
 
 protected:
+	void initializeTimer(std::unique_ptr<uv_timer_t, void (*)(uv_timer_t*)>& timer,
+	                     const char* name,
+	                     uint64_t period_ms,
+	                     void (*callback)(uv_timer_t*));
 	void loadConfig();
 
 	static void jackOnPortConnectStatic(jack_port_id_t a, jack_port_id_t b, int connect, void* arg);
@@ -39,8 +43,10 @@ protected:
 	void jackOnGraphReordered();
 	void jackOnPortRegistration(jack_port_id_t port, int is_registered);
 
-	static void onTimeoutTimerStatic(uv_timer_t* handle);
-	void onTimeoutTimer();
+	static void onFastTimerStatic(uv_timer_t* handle);
+	static void onSlowTimerStatic(uv_timer_t* handle);
+	void onFastTimer();
+	void onSlowTimer();
 	static void releaseUvTimer(uv_timer_t* handle);
 	static void onCloseTimer(uv_handle_t* handle);
 
@@ -53,7 +59,8 @@ private:
 	KeyBinding keyBinding;
 	jack_client_t* monitoringJackClient;
 
-	std::unique_ptr<uv_timer_t, decltype(&ControlInterface::releaseUvTimer)> updateLevelTimer;
+	std::unique_ptr<uv_timer_t, void (*)(uv_timer_t*)> fastTimer;
+	std::unique_ptr<uv_timer_t, void (*)(uv_timer_t*)> slowTimer;
 	bool oscNeedSaveConfig;
 	bool audioRunning;
 

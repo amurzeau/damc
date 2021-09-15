@@ -21,7 +21,8 @@ ControlInterface::ControlInterface()
       oscTcpServer(&oscRoot),
       outputs(&oscRoot, "strip"),
       keyBinding(&oscRoot, &oscRoot),
-      updateLevelTimer(nullptr, &ControlInterface::releaseUvTimer),
+      fastTimer(nullptr, &ControlInterface::releaseUvTimer),
+      slowTimer(nullptr, &ControlInterface::releaseUvTimer),
       oscNeedSaveConfig(false),
       audioRunning(false),
       oscTypeList(&oscRoot, "type_list"),
@@ -79,13 +80,8 @@ ControlInterface::ControlInterface()
 		oscNeedSaveConfig = true;
 	});
 
-	SPDLOG_INFO("Initializing periodic timer");
-	updateLevelTimer.reset(new uv_timer_t);
-	uv_timer_init(uv_default_loop(), updateLevelTimer.get());
-	updateLevelTimer->data = this;
-	uv_timer_start(updateLevelTimer.get(), &onTimeoutTimerStatic, 66, 66);  // 15fps
-	uv_unref((uv_handle_t*) updateLevelTimer.get());
-	SPDLOG_INFO("Started periodic update timer");
+	initializeTimer(fastTimer, "fast periodic timer", 66, &ControlInterface::onFastTimerStatic);    // 15fps
+	initializeTimer(slowTimer, "slow periodic timer", 1000, &ControlInterface::onSlowTimerStatic);  // 1fps
 }
 
 ControlInterface::~ControlInterface() {}
@@ -105,6 +101,19 @@ void ControlInterface::loadConfig() {
 
 void ControlInterface::saveConfig() {
 	oscStatePersister.saveState(outputPortConnections);
+}
+
+void ControlInterface::initializeTimer(std::unique_ptr<uv_timer_t, void (*)(uv_timer_t*)>& timer,
+                                       const char* name,
+                                       uint64_t period_ms,
+                                       void (*callback)(uv_timer_t*)) {
+	SPDLOG_INFO("Initializing {}", name);
+	timer.reset(new uv_timer_t);
+	uv_timer_init(uv_default_loop(), timer.get());
+	timer->data = this;
+	uv_timer_start(timer.get(), callback, period_ms, period_ms);
+	uv_unref((uv_handle_t*) timer.get());
+	SPDLOG_INFO("Started {}", name);
 }
 
 int ControlInterface::init(const char* controlIp, int controlPort) {
@@ -376,16 +385,27 @@ void ControlInterface::jackOnPortRegistration(jack_port_id_t port, int is_regist
 	}
 }
 
-void ControlInterface::onTimeoutTimerStatic(uv_timer_t* handle) {
+void ControlInterface::onFastTimerStatic(uv_timer_t* handle) {
 	ControlInterface* thisInstance = (ControlInterface*) handle->data;
-	thisInstance->onTimeoutTimer();
+	thisInstance->onFastTimer();
 }
 
-void ControlInterface::onTimeoutTimer() {
-	SPDLOG_TRACE("Periodic update");
+void ControlInterface::onSlowTimerStatic(uv_timer_t* handle) {
+	ControlInterface* thisInstance = (ControlInterface*) handle->data;
+	thisInstance->onSlowTimer();
+}
+
+void ControlInterface::onFastTimer() {
+	for(auto& outputInstance : outputs) {
+		outputInstance.second->onFastTimer();
+	}
+}
+
+void ControlInterface::onSlowTimer() {
+	SPDLOG_TRACE("Slow periodic update");
 
 	for(auto& outputInstance : outputs) {
-		outputInstance.second->onTimeoutTimer();
+		outputInstance.second->onSlowTimer();
 	}
 
 	if(oscNeedSaveConfig) {
@@ -393,7 +413,7 @@ void ControlInterface::onTimeoutTimer() {
 		saveConfig();
 	}
 
-	SPDLOG_TRACE("Periodic update end");
+	SPDLOG_TRACE("Slow periodic update end");
 }
 
 void ControlInterface::releaseUvTimer(uv_timer_t* handle) {

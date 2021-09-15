@@ -5,6 +5,7 @@
 #include <stdint.h>
 // Need to be after else stdint might conflict
 #include "ResamplingFilter.h"
+#include "SampleRateMeasure.h"
 #include <Osc/OscContainer.h>
 #include <Osc/OscVariable.h>
 #include <jack/jack.h>
@@ -25,7 +26,8 @@ public:
 	virtual const char* getName() override;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) override;
 	virtual void stop() override;
-	virtual void onTimer() override;
+	virtual void onFastTimer() override;
+	virtual void onSlowTimer() override;
 
 	virtual int postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) override;
 
@@ -60,6 +62,7 @@ private:
 	bool isPaRunning = false;
 	size_t underflowSize = 0;
 	size_t overflowSize = 0;
+	SampleRateMeasure deviceSampleRateMeasure;
 };
 
 #endif

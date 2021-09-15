@@ -12,7 +12,8 @@ DeviceInputInstance::DeviceInputInstance(OscContainer* parent)
       oscDeviceName(this, "deviceName", "default_in"),
       oscClockDrift(this, "clockDrift", 0.0f),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
-      oscExclusiveMode(this, "exclusiveMode", true) {
+      oscExclusiveMode(this, "exclusiveMode", true),
+      deviceSampleRateMeasure(this, "realSampleRate") {
 	direction = D_Input;
 
 	oscDeviceName.addCheckCallback([this](const std::string&) { return stream == nullptr; });
@@ -187,6 +188,7 @@ int DeviceInputInstance::renderCallbackStatic(const void* input,
 
 int DeviceInputInstance::renderCallback(const float* const* samples, size_t numChannel, uint32_t nframes) {
 	isPaRunning = true;
+	deviceSampleRateMeasure.notifySampleProcessed(nframes);
 
 	for(size_t i = 0; i < numChannel; i++) {
 		size_t dataSize;
@@ -258,7 +260,7 @@ int DeviceInputInstance::postProcessSamples(float** samples, size_t numChannel, 
 	return 0;
 }
 
-void DeviceInputInstance::onTimer() {
+void DeviceInputInstance::onFastTimer() {
 	if(overflowOccured) {
 		SPDLOG_WARN("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
 		overflowOccured = false;
@@ -278,4 +280,8 @@ void DeviceInputInstance::onTimer() {
 	} else {
 		isPaRunning = false;
 	}
+}
+
+void DeviceInputInstance::onSlowTimer() {
+	deviceSampleRateMeasure.onTimeoutTimer();
 }

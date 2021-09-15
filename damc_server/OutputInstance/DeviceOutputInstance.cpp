@@ -12,7 +12,8 @@ DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
       oscDeviceName(this, "deviceName", "default_out"),
       oscClockDrift(this, "clockDrift", 0.0f),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
-      oscExclusiveMode(this, "exclusiveMode", true) {
+      oscExclusiveMode(this, "exclusiveMode", true),
+      deviceSampleRateMeasure(this, "realSampleRate") {
 	oscDeviceName.addCheckCallback([this](const std::string&) { return stream == nullptr; });
 	oscDeviceSampleRate.addCheckCallback([this](int) { return stream == nullptr; });
 	oscExclusiveMode.addCheckCallback([this](int) { return stream == nullptr; });
@@ -99,7 +100,6 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 
 	outputDeviceIndex = getDeviceIndex(oscDeviceName);
 
-	doDebug = outputDeviceIndex == 24;
 
 	if(outputDeviceIndex < 0 || outputDeviceIndex >= Pa_GetDeviceCount()) {
 		SPDLOG_ERROR("Bad portaudio output device {}", oscDeviceName.get());
@@ -232,6 +232,7 @@ int DeviceOutputInstance::renderCallback(const void* input,
 	size_t availableData = 0;
 
 	thisInstance->isPaRunning = true;
+	thisInstance->deviceSampleRateMeasure.notifySampleProcessed(frameCount);
 
 	for(size_t i = 0; i < thisInstance->ringBuffers.size(); i++) {
 		availableData = jack_ringbuffer_read_space(thisInstance->ringBuffers[i].get());
@@ -278,7 +279,7 @@ int DeviceOutputInstance::renderCallback(const void* input,
 	return paContinue;
 }
 
-void DeviceOutputInstance::onTimer() {
+void DeviceOutputInstance::onFastTimer() {
 	if(overflowOccured) {
 		SPDLOG_WARN("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
 		overflowOccured = false;
@@ -298,4 +299,8 @@ void DeviceOutputInstance::onTimer() {
 	} else {
 		isPaRunning = false;
 	}
+}
+
+void DeviceOutputInstance::onSlowTimer() {
+	deviceSampleRateMeasure.onTimeoutTimer();
 }

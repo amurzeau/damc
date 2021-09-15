@@ -29,7 +29,8 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
       oscVolume(&oscFilterChain, "volume"),
       oscName(this, "name"),
       oscDisplayName(this, "display_name"),
-      oscSampleRate(this, "sample_rate") {
+      oscSampleRate(this, "sample_rate"),
+      oscJackSampleRate(this, "realSampleRate") {
 	ui->setupUi(this);
 
 	numChannels = 0;
@@ -40,8 +41,6 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	oscEnable.setWidget(ui->enableCheckBox);
 	oscMute.setWidget(ui->muteButton);
 	oscDelay.setWidget(ui->delaySpinBox);
-
-	oscSampleRate.setChangeCallback([this](int32_t newValue) { ui->sampleRateSpinBox->setValue(newValue); });
 
 	oscVolume.setWidget(ui->volumeSlider);
 	oscVolume.setChangeCallback([this](int32_t value) { ui->volumeLevelLabel->setText(QString::number(value)); });

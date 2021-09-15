@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>577</width>
-    <height>391</height>
+    <height>443</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -48,6 +48,9 @@
       </item>
       <item row="3" column="1">
        <widget class="QSpinBox" name="channelsSpin">
+        <property name="suffix">
+         <string> channels</string>
+        </property>
         <property name="minimum">
          <number>0</number>
         </property>
@@ -86,6 +89,29 @@
         </property>
        </widget>
       </item>
+      <item row="4" column="1">
+       <widget class="QSpinBox" name="measuredJackSampleRateSpinBox">
+        <property name="toolTip">
+         <string>Measured Jack sample rate</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> Hz</string>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="measuredJackSampleRateLabel">
+        <property name="text">
+         <string>Jack Sample Rate</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -94,7 +120,14 @@
      <property name="title">
       <string>Sample rate</string>
      </property>
-     <layout class="QFormLayout" name="formLayout_4">
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="0">
+       <widget class="QLabel" name="clockDriftLabel">
+        <property name="text">
+         <string>Clock drift</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="sampleRateLabel">
         <property name="text">
@@ -104,8 +137,14 @@
       </item>
       <item row="0" column="1">
        <widget class="QSpinBox" name="sampleRateSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="toolTip">
-         <string>Use 0 to use the same sample rate as jackd</string>
+         <string>Device's sample rate to use</string>
         </property>
         <property name="suffix">
          <string> Hz</string>
@@ -118,15 +157,33 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="clockDriftLabel">
-        <property name="text">
-         <string>Clock drift</string>
+      <item row="0" column="2">
+       <widget class="QSpinBox" name="measuredDeviceSampleRateSpinBox">
+        <property name="toolTip">
+         <string>Measured device sample rate</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> Hz</string>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item row="2" column="1" colspan="2">
        <widget class="QDoubleSpinBox" name="clockDriftSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Clock drift in PPM (part per million)</string>
+        </property>
         <property name="suffix">
          <string> ppm</string>
         </property>

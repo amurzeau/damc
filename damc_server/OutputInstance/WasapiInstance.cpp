@@ -237,7 +237,8 @@ WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
       oscDeviceName(this, "deviceName", "default"),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
       oscClockDrift(this, "clockDrift", 0.0f),
-      oscExclusiveMode(this, "exclusiveMode", true) {
+      oscExclusiveMode(this, "exclusiveMode", true),
+      deviceSampleRateMeasure(this, "realSampleRate") {
 	this->direction = direction;
 
 	// Only allow changes when stopped
@@ -628,6 +629,7 @@ int WasapiInstance::postProcessSamplesRender(float** samples, size_t numChannel,
 
 		hr = pRenderClient->ReleaseBuffer(requiredBufferSize, 0);
 		EXIT_ON_ERROR(hr);
+		deviceSampleRateMeasure.notifySampleProcessed(requiredBufferSize);
 	} else {
 		overflowOccured = true;
 		overflowSize = resampledBuffer[0].size();
@@ -765,6 +767,7 @@ int WasapiInstance::postProcessSamplesCapture(float** samples, size_t numChannel
 
 	hr = pCaptureClient->ReleaseBuffer(numFrameToRead);
 	EXIT_ON_ERROR(hr);
+	deviceSampleRateMeasure.notifySampleProcessed(numFrameToRead);
 
 	if(underflowOccured || overflowOccured) {
 		bufferLatencyHistory.clear();
@@ -801,7 +804,7 @@ exit:
 	return 0;
 }
 
-void WasapiInstance::onTimer() {
+void WasapiInstance::onFastTimer() {
 	if(!pAudioClient)
 		return;
 
@@ -818,4 +821,8 @@ void WasapiInstance::onTimer() {
 		SPDLOG_INFO("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
+}
+
+void WasapiInstance::onSlowTimer() {
+	deviceSampleRateMeasure.onTimeoutTimer();
 }

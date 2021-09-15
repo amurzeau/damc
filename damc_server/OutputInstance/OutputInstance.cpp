@@ -22,6 +22,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
       controlInterface(controlInterface),
       client(nullptr),
       filters(this),
+      jackSampleRateMeasure(this, "realSampleRate"),
 
       enableAudio(false),
       oscEnable(this, "enable", false),
@@ -349,6 +350,8 @@ void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
 int OutputInstance::processSamplesStatic(jack_nframes_t nframes, void* arg) {
 	OutputInstance* thisInstance = (OutputInstance*) arg;
 
+	thisInstance->jackSampleRateMeasure.notifySampleProcessed(nframes);
+
 	if(thisInstance->endpoint->direction == IAudioEndpoint::D_Output)
 		return thisInstance->processSamples(nframes);
 	else
@@ -424,7 +427,7 @@ int OutputInstance::processSamples(jack_nframes_t nframes) {
 	return 0;
 }
 
-void OutputInstance::onTimeoutTimer() {
+void OutputInstance::onFastTimer() {
 	if(!client)
 		return;
 
@@ -466,7 +469,7 @@ void OutputInstance::onTimeoutTimer() {
 	getRoot()->sendMessage(oscPeakPerChannelPath, oscPeakPerChannelArguments.data(), oscPeakPerChannelArguments.size());
 
 	if(endpoint)
-		endpoint->onTimer();
+		endpoint->onFastTimer();
 
 	if(displayNameUpdateRequested) {
 		displayNameUpdateRequested = false;
@@ -474,4 +477,14 @@ void OutputInstance::onTimeoutTimer() {
 		// where we can't call jack functions
 		updateJackDisplayName();
 	}
+}
+
+void OutputInstance::onSlowTimer() {
+	if(!client)
+		return;
+
+	if(endpoint)
+		endpoint->onSlowTimer();
+
+	jackSampleRateMeasure.onTimeoutTimer();
 }

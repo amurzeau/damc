@@ -12,7 +12,8 @@ public:
 	virtual const char* getName() = 0;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) { return 0; }
 	virtual void stop() {}
-	virtual void onTimer() {}
+	virtual void onFastTimer() {}
+	virtual void onSlowTimer() {}
 
 	virtual int postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) = 0;
 

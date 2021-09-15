@@ -42,6 +42,8 @@ add_executable(${TARGET_NAME}
 	OutputInstance/DeviceInputInstance.h
 	OutputInstance/DeviceOutputInstance.cpp
 	OutputInstance/DeviceOutputInstance.h
+	OutputInstance/SampleRateMeasure.cpp
+	OutputInstance/SampleRateMeasure.h
 	OutputInstance/RemoteUdpOutput.cpp
 	OutputInstance/RemoteUdpOutput.h
 	OutputInstance/RemoteUdpInput.cpp
