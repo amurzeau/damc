@@ -68,6 +68,8 @@ private:
 	bool underflowOccured = false;
 
 	OscVariable<std::string> oscDeviceName;
+	OscVariable<int32_t> oscBufferSize;
+	OscReadOnlyVariable<int32_t> oscActualBufferSize;
 	OscVariable<int> oscDeviceSampleRate;
 	OscVariable<float> oscClockDrift;
 	OscVariable<bool> oscExclusiveMode;

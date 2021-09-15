@@ -11,6 +11,8 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
       oscType(parent, "_type"),
       oscChannelNumber(parent, "channels"),
       oscDeviceName(this, "deviceName"),
+      oscBufferSize(this, "bufferSize"),
+      oscActualBufferSize(this, "actualBufferSize"),
       oscClockDrift(this, "clockDrift"),
       oscDeviceSampleRate(this, "deviceSampleRate"),
       oscIp(this, "ip"),
@@ -36,6 +38,8 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	oscType.setWidget(ui->typeCombo);
 	oscChannelNumber.setWidget(ui->channelsSpin);
 	oscDeviceName.setWidget(ui->deviceDeviceCombo);
+	oscBufferSize.setWidget(ui->bufferSizeSpinBox);
+	oscActualBufferSize.setWidget(ui->actualBufferSize);
 	oscClockDrift.setWidget(ui->clockDriftSpinBox);
 	oscDeviceSampleRate.setWidget(ui->sampleRateSpinBox);
 	oscIp.setWidget(ui->remoteIpEdit);

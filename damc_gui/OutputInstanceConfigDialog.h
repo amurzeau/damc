@@ -36,6 +36,8 @@ private:
 	OscWidgetMapper<QComboBox> oscType;
 	OscWidgetMapper<QSpinBox> oscChannelNumber;
 	OscWidgetMapper<QComboBox, std::string> oscDeviceName;
+	OscWidgetMapper<QSpinBox> oscBufferSize;
+	OscWidgetMapper<QSpinBox> oscActualBufferSize;
 	OscWidgetMapper<QDoubleSpinBox> oscClockDrift;
 	OscWidgetMapper<QSpinBox> oscDeviceSampleRate;
 	OscWidgetMapper<QLineEdit> oscIp;

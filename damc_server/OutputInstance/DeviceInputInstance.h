@@ -50,6 +50,8 @@ private:
 
 	OscVariable<std::string> oscDeviceName;
 	OscVariable<float> oscClockDrift;
+	OscVariable<int32_t> oscBufferSize;
+	OscReadOnlyVariable<int32_t> oscActualBufferSize;
 	OscVariable<int32_t> oscDeviceSampleRate;
 	OscVariable<bool> oscExclusiveMode;
 

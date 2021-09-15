@@ -11,10 +11,14 @@ DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
       stream(nullptr),
       oscDeviceName(this, "deviceName", "default_out"),
       oscClockDrift(this, "clockDrift", 0.0f),
+      oscBufferSize(this, "bufferSize", 0),
+      oscActualBufferSize(this, "actualBufferSize", 0),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
       oscExclusiveMode(this, "exclusiveMode", true),
       deviceSampleRateMeasure(this, "realSampleRate") {
 	oscDeviceName.addCheckCallback([this](const std::string&) { return stream == nullptr; });
+	oscBufferSize.addCheckCallback([this](int newValue) { return stream == nullptr && newValue >= 0; });
+	oscDeviceSampleRate.addCheckCallback([this](int newValue) { return stream == nullptr && newValue > 0; });
 	oscDeviceSampleRate.addCheckCallback([this](int) { return stream == nullptr; });
 	oscExclusiveMode.addCheckCallback([this](int) { return stream == nullptr; });
 
@@ -100,18 +104,22 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 
 	outputDeviceIndex = getDeviceIndex(oscDeviceName);
 
-
 	if(outputDeviceIndex < 0 || outputDeviceIndex >= Pa_GetDeviceCount()) {
 		SPDLOG_ERROR("Bad portaudio output device {}", oscDeviceName.get());
 		return paInvalidDevice;
 	}
+
+	int32_t bufferSize = (oscBufferSize.get() > 0)
+	                         ? oscBufferSize
+	                         : Pa_GetDeviceInfo(outputDeviceIndex)->defaultLowOutputLatency * oscDeviceSampleRate + 0.5;
 
 	resampledBuffer.reserve(sampleRate);
 	resamplingFilters.resize(numChannel);
 	ringBuffers.clear();
 	for(size_t i = 0; i < numChannel; i++) {
 		std::unique_ptr<jack_ringbuffer_t, void (*)(jack_ringbuffer_t*)> buffer(nullptr, &jack_ringbuffer_free);
-		buffer.reset(jack_ringbuffer_create(jackBufferSize * 10 * sizeof(jack_default_audio_sample_t)));
+		buffer.reset(jack_ringbuffer_create((jackBufferSize + bufferSize * sampleRate / oscDeviceSampleRate) * 3 *
+		                                    sizeof(jack_default_audio_sample_t)));
 		ringBuffers.emplace_back(std::move(buffer));
 
 		resamplingFilters[i].reset(sampleRate);
@@ -122,7 +130,7 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	outputParameters.device = outputDeviceIndex;
 	outputParameters.channelCount = numChannel;
 	outputParameters.sampleFormat = paFloat32 | paNonInterleaved;  // 32 bit floating point output
-	outputParameters.suggestedLatency = jackBufferSize * 1.0f / sampleRate;
+	outputParameters.suggestedLatency = 1.0 * bufferSize / oscDeviceSampleRate;
 	outputParameters.hostApiSpecificStreamInfo = NULL;
 
 #ifdef _WIN32
@@ -172,7 +180,8 @@ int DeviceOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	previousAverageLatency = 0;
 	clockDriftPpm = 0;
 	isPaRunning = false;
-	SPDLOG_INFO("Using buffer size {}, device sample rate: {}", jackBufferSize, oscDeviceSampleRate.get());
+	oscActualBufferSize = Pa_GetStreamInfo(stream)->outputLatency * oscDeviceSampleRate + 0.5;
+	SPDLOG_INFO("Using buffer size {}, device sample rate: {}", oscActualBufferSize.get(), oscDeviceSampleRate.get());
 
 	Pa_StartStream(stream);
 

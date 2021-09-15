@@ -121,6 +121,13 @@
       <string>Sample rate</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="0">
+       <widget class="QLabel" name="bufferSizeLabel">
+        <property name="text">
+         <string>Buffer Size</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="clockDriftLabel">
         <property name="text">
@@ -132,6 +139,47 @@
        <widget class="QLabel" name="sampleRateLabel">
         <property name="text">
          <string>Sample rate</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="bufferSizeSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Buffer size to ask for use</string>
+        </property>
+        <property name="suffix">
+         <string> samples</string>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QSpinBox" name="actualBufferSize">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Actual used buffer size</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> samples</string>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
         </property>
        </widget>
       </item>

@@ -235,6 +235,8 @@ exit:
 WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
     : OscContainer(parent, "device"),
       oscDeviceName(this, "deviceName", "default"),
+      oscBufferSize(this, "bufferSize", 0),
+      oscActualBufferSize(this, "actualBufferSize", 0),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
       oscClockDrift(this, "clockDrift", 0.0f),
       oscExclusiveMode(this, "exclusiveMode", true),
@@ -243,7 +245,8 @@ WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
 
 	// Only allow changes when stopped
 	oscDeviceName.addCheckCallback([this](const std::string&) { return pDevice == nullptr; });
-	oscDeviceSampleRate.addCheckCallback([this](int) { return pDevice == nullptr; });
+	oscBufferSize.addCheckCallback([this](int newValue) { return pDevice == nullptr && newValue >= 0; });
+	oscDeviceSampleRate.addCheckCallback([this](int newValue) { return pDevice == nullptr && newValue > 0; });
 	oscExclusiveMode.addCheckCallback([this](int) { return pDevice == nullptr; });
 
 	oscClockDrift.setChangeCallback([this](float newValue) {
@@ -326,8 +329,9 @@ exit:
 uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate, int jackBufferSize) {
 	HRESULT hr;
 	WAVEFORMATEX* pFormat = nullptr;
-	uint64_t timePeriod = (uint64_t) jackBufferSize * REFTIMES_PER_SEC / jackSampleRate + 1;
+	REFERENCE_TIME timePeriod = (uint64_t) jackBufferSize * REFTIMES_PER_SEC / jackSampleRate + 1;
 	REFERENCE_TIME duration;
+	REFERENCE_TIME bufferSize;
 
 	hr = getDeviceByName(oscDeviceName, &pDevice);
 	EXIT_ON_ERROR(hr);
@@ -340,6 +344,11 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 
 	pAudioClient->GetDevicePeriod(nullptr, &duration);
 
+	// A minimum buffer size of minimum period * 3
+	bufferSize = std::max(std::max(duration * 3, timePeriod * 3),
+	                      static_cast<REFERENCE_TIME>(oscBufferSize * REFTIMES_PER_SEC / oscDeviceSampleRate));
+	SPDLOG_INFO("Asking buffer size: {}", bufferSize * oscDeviceSampleRate / REFTIMES_PER_SEC);
+
 	if(oscExclusiveMode)
 		SPDLOG_INFO("Using exclusive mode");
 
@@ -349,7 +358,7 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 	hr = pAudioClient->Initialize(oscExclusiveMode ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED,
 	                              // useExclusiveMode ? AUDCLNT_STREAMFLAGS_EVENTCALLBACK : 0,
 	                              0,
-	                              timePeriod,
+	                              bufferSize,
 	                              oscExclusiveMode ? timePeriod : 0,
 	                              pFormat,
 	                              NULL);
@@ -373,7 +382,8 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 	hr = pAudioClient->GetBufferSize(&wasapiBufferSize);
 	EXIT_ON_ERROR(hr);
 
-	SPDLOG_INFO("Buffer size: {}", wasapiBufferSize);
+	oscActualBufferSize = wasapiBufferSize;
+	SPDLOG_INFO("Using buffer size: {}", wasapiBufferSize);
 
 	return 0;
 
