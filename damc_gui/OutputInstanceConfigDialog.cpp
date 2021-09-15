@@ -30,6 +30,8 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	parent->getOscName()->setWidget(ui->nameEdit);
 	parent->getOscDisplayName()->setWidget(ui->displayNameEdit);
 
+	oscClockDrift.setScale(1000000);
+
 	oscType.setWidget(ui->typeCombo);
 	oscChannelNumber.setWidget(ui->channelsSpin);
 	oscDeviceName.setWidget(ui->deviceDeviceCombo);
