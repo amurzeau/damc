@@ -421,8 +421,11 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 
 		for(const WaveFormat& format : WAVE_FORMATS) {
 			pWaveFormat->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-			pWaveFormat->Format.wBitsPerSample = format.bitPerSample;
+			pWaveFormat->Format.nChannels = numChannel;
+			pWaveFormat->Format.nSamplesPerSec = oscDeviceSampleRate;
 			pWaveFormat->Format.nBlockAlign = pWaveFormat->Format.nChannels * format.sampleSize;
+			pWaveFormat->Format.nAvgBytesPerSec = pWaveFormat->Format.nBlockAlign * pWaveFormat->Format.nSamplesPerSec;
+			pWaveFormat->Format.wBitsPerSample = format.bitPerSample;
 			pWaveFormat->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
 			pWaveFormat->Samples.wValidBitsPerSample = format.bitPerSample;
 			switch(numChannel) {
@@ -457,9 +460,6 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 
 			INIT_WAVEFORMATEX_GUID(&pWaveFormat->SubFormat, format.formatTag);
 
-			pWaveFormat->Format.nChannels = numChannel;
-			pWaveFormat->Format.nSamplesPerSec = oscDeviceSampleRate;
-			pWaveFormat->Format.nAvgBytesPerSec = pWaveFormat->Format.nBlockAlign * pWaveFormat->Format.nSamplesPerSec;
 
 			hr = pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, &pWaveFormat->Format, nullptr);
 			if(hr == S_OK) {
