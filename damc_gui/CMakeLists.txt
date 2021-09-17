@@ -95,6 +95,8 @@ if(TARGET QtDependencies)
 		get_filename_component(_qt_bin_dir "${_qt_qmake_location}" DIRECTORY)
 		set(QT_WINDEPLOYQT "${_qt_bin_dir}/windeployqt.exe")
 
+		message(STATUS "Install of Qt's DLLs enabled")
+
 		if(EXISTS ${QT_WINDEPLOYQT})
 			if (QT_VERSION_MAJOR MATCHES "5")
 				# These options are not available with Qt6
