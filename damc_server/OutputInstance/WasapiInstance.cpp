@@ -411,6 +411,7 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 	    {F_Float, WAVE_FORMAT_IEEE_FLOAT, 32, 4},
 	    {F_Int32, WAVE_FORMAT_PCM, 32, 4},
 	    {F_Int24, WAVE_FORMAT_PCM, 24, 3},
+	    {F_Int32, WAVE_FORMAT_PCM, 24, 4},
 	    {F_Int16, WAVE_FORMAT_PCM, 16, 2},
 	};
 
