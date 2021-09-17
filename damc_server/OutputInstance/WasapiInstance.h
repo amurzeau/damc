@@ -11,6 +11,7 @@
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
 #include <memory.h>
+#include <spdlog/spdlog.h>
 #include <vector>
 
 #include <windows.h>
@@ -39,7 +40,7 @@ public:
 private:
 	uint32_t initializeWasapi(size_t numChannel, int sampleRate, int bufferSize);
 	HRESULT findAudioConfig(IAudioClient* pAudioClient, size_t numChannel, WAVEFORMATEX** pFormat);
-	void printAudioConfig(const WAVEFORMATEXTENSIBLE* pFormat);
+	void printAudioConfig(spdlog::level::level_enum level, const WAVEFORMATEXTENSIBLE* pFormat);
 
 	HRESULT getDeviceByName(std::string name, IMMDevice** ppMMDevice);
 

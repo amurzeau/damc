@@ -2,6 +2,7 @@
 
 #include "WasapiInstance.h"
 #include <FunctionDiscoveryKeys_devpkey.h>
+#include <Utils.h>
 #include <algorithm>
 #include <codecvt>
 #include <ksmedia.h>
@@ -353,7 +354,7 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 		SPDLOG_INFO("Using exclusive mode");
 
 	SPDLOG_INFO("Using format:");
-	printAudioConfig((WAVEFORMATEXTENSIBLE*) pFormat);
+	printAudioConfig(spdlog::level::info, (WAVEFORMATEXTENSIBLE*) pFormat);
 
 	hr = pAudioClient->Initialize(oscExclusiveMode ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED,
 	                              // useExclusiveMode ? AUDCLNT_STREAMFLAGS_EVENTCALLBACK : 0,
@@ -461,6 +462,8 @@ HRESULT WasapiInstance::findAudioConfig(IAudioClient* pAudioClient, size_t numCh
 
 			INIT_WAVEFORMATEX_GUID(&pWaveFormat->SubFormat, format.formatTag);
 
+			SPDLOG_DEBUG("Trying device format:");
+			printAudioConfig(spdlog::level::debug, pWaveFormat);
 
 			hr = pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, &pWaveFormat->Format, nullptr);
 			if(hr == S_OK) {
@@ -508,23 +511,23 @@ exit:
 	return hr;
 }
 
-void WasapiInstance::printAudioConfig(const WAVEFORMATEXTENSIBLE* pFormat) {
+void WasapiInstance::printAudioConfig(spdlog::level::level_enum level, const WAVEFORMATEXTENSIBLE* pFormat) {
 	if(!pFormat) {
 		SPDLOG_ERROR("Invalid wave format NULL");
 		return;
 	}
-	SPDLOG_INFO("- Format tag: {}", pFormat->Format.wFormatTag);
-	SPDLOG_INFO("- Channels: {}", pFormat->Format.nChannels);
-	SPDLOG_INFO("- Sample rate: {}", pFormat->Format.nSamplesPerSec);
-	SPDLOG_INFO("- Avg bytes per sec: {}", pFormat->Format.nAvgBytesPerSec);
-	SPDLOG_INFO("- Block align: {}", pFormat->Format.nBlockAlign);
-	SPDLOG_INFO("- Bits per sample: {}", pFormat->Format.wBitsPerSample);
-	SPDLOG_INFO("- cbSize: {}", pFormat->Format.cbSize);
+	SPDLOG_LOG_WITH_LEVEL(level, "- Format tag: {}", pFormat->Format.wFormatTag);
+	SPDLOG_LOG_WITH_LEVEL(level, "- Channels: {}", pFormat->Format.nChannels);
+	SPDLOG_LOG_WITH_LEVEL(level, "- Sample rate: {}", pFormat->Format.nSamplesPerSec);
+	SPDLOG_LOG_WITH_LEVEL(level, "- Avg bytes per sec: {}", pFormat->Format.nAvgBytesPerSec);
+	SPDLOG_LOG_WITH_LEVEL(level, "- Block align: {}", pFormat->Format.nBlockAlign);
+	SPDLOG_LOG_WITH_LEVEL(level, "- Bits per sample: {}", pFormat->Format.wBitsPerSample);
+	SPDLOG_LOG_WITH_LEVEL(level, "- cbSize: {}", pFormat->Format.cbSize);
 
 	if(pFormat->Format.wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
-		SPDLOG_INFO("- Valid bits per sample: {}", pFormat->Samples.wValidBitsPerSample);
-		SPDLOG_INFO("- Channel mask: {:#x}", pFormat->dwChannelMask);
-		SPDLOG_INFO("- Format tag guid: {}", pFormat->SubFormat.Data1);
+		SPDLOG_LOG_WITH_LEVEL(level, "- Valid bits per sample: {}", pFormat->Samples.wValidBitsPerSample);
+		SPDLOG_LOG_WITH_LEVEL(level, "- Channel mask: {:#x}", (uint32_t) pFormat->dwChannelMask);
+		SPDLOG_LOG_WITH_LEVEL(level, "- Format tag guid: {}", pFormat->SubFormat.Data1);
 	}
 }
 

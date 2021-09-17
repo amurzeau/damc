@@ -7,6 +7,8 @@ namespace Utils {
 
 bool isNumber(std::string_view s);
 
+#define SPDLOG_LOG_WITH_LEVEL(level, ...) SPDLOG_LOGGER_CALL(spdlog::default_logger_raw(), level, __VA_ARGS__)
+
 template<typename T> bool vector_find(const std::vector<T>& keys, const T& key) {
 	for(const auto& existingKey : keys) {
 		if(existingKey == key) {
