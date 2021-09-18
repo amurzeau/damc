@@ -94,12 +94,8 @@ jobs:
           pip install --pre aqtinstall
           pip show aqtinstall
           
-          if ( ${{ matrix.config.arch }} -eq 64 ) {
-            $qt_latest_version = python3 -m aqt list-qt windows desktop --latest-version
-          } else {
-            # Latest 32 bits version of qt is 5.x branch as 6.x dropped 32 bits versions
-            $qt_latest_version = python3 -m aqt list-qt windows desktop --spec 5 --latest-version
-          }
+          # Latest Windows 7 and 32 bits version of qt is 5.x branch as 6.x dropped Windows 7 and 32 bits versions
+          $qt_latest_version = python3 -m aqt list-qt windows desktop --spec 5 --latest-version
           
           $qt_path="$QT_ROOT\$qt_latest_version\mingw81_${{ matrix.config.arch }}"
           $mingw_path="$QT_ROOT\Tools\mingw810_${{ matrix.config.arch }}"
