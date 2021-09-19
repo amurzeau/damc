@@ -51,7 +51,7 @@ int RemoteUdpInput::init(int index, const char* ip, int port) {
 	if(started)
 		return 1;
 
-	sampleRate = 48000;
+	this->sampleRate = 0;
 	started = true;
 
 	SPDLOG_INFO("Receiving audio {} on {}:{}", index, ip, port);
@@ -118,7 +118,6 @@ void RemoteUdpInput::onPacketReceived(
 	RemoteUdpInput* thisInstance = (RemoteUdpInput*) handle->data;
 	float buffer[16384];
 	size_t sampleCount;
-	size_t sampleRate;
 	size_t channelCount;
 	const int16_t* inputSamples;
 	const size_t sampleSize = sizeof(float) * 2;
@@ -129,14 +128,14 @@ void RemoteUdpInput::onPacketReceived(
 	}
 
 	if(memcmp(&thisInstance->dataBuffer.header.vban, "VBAN", 4) == 0) {
-		channelCount = thisInstance->dataBuffer.header.format_nbc;
+		channelCount = thisInstance->dataBuffer.header.format_nbc + 1;
 		sampleCount = (int) thisInstance->dataBuffer.header.format_nbs + 1;
-		sampleRate = VBAN_SRList[thisInstance->dataBuffer.header.format_SR];
+		thisInstance->sampleRate = VBAN_SRList[thisInstance->dataBuffer.header.format_SR];
 		inputSamples = thisInstance->dataBuffer.data;
 	} else {
 		channelCount = 2;
 		sampleCount = nread / sizeof(int16_t) / channelCount;
-		sampleRate = 48000;
+		thisInstance->sampleRate = 0;
 		inputSamples = (int16_t*) &thisInstance->dataBuffer;
 	}
 
@@ -144,7 +143,6 @@ void RemoteUdpInput::onPacketReceived(
 		buffer[i * 2] = inputSamples[i * channelCount] / 32768.0;
 		buffer[i * 2 + 1] = inputSamples[i * channelCount + 1] / 32768.0;
 	}
-	thisInstance->sampleRate = sampleRate;
 
 	sampleCount = std::min(sampleCount, jack_ringbuffer_write_space(thisInstance->sampleRing) / sampleSize);
 
@@ -173,12 +171,6 @@ size_t RemoteUdpInput::receivePacket(float* samplesLeft, float* samplesRight, si
 	for(size_t i = 0; i < sampleRead; i++) {
 		samplesLeft[i] = buffer[i * 2];
 		samplesRight[i] = buffer[i * 2 + 1];
-	}
-
-	if(sampleRead != maxSamples) {
-		SPDLOG_DEBUG("Short read: {} < {}", sampleRead, maxSamples);
-		std::fill(samplesLeft + sampleRead, samplesLeft + maxSamples, 0);
-		std::fill(samplesRight + sampleRead, samplesRight + maxSamples, 0);
 	}
 
 	return sampleRead;

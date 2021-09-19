@@ -14,6 +14,8 @@ public:
 	bool isStarted();
 	void onSlowTimer();
 
+	void setSampleRate(uint32_t sampleRate);
+
 	void sendAudio(float* samplesLeft, float* samplesRight, size_t samplesCount);
 	void sendAudioWithoutVBAN(float* samplesLeft, float* samplesRight, size_t samplesCount);
 

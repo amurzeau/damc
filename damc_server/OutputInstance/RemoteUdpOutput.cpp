@@ -11,8 +11,8 @@
 #include <string.h>
 #include <string>
 
-static long VBAN_SRList[] = {6000,   12000,  24000,  48000, 96000, 192000, 384000, 8000,   16000,  32000, 64000,
-                             128000, 256000, 512000, 11025, 22050, 44100,  88200,  176400, 352800, 705600};
+static uint32_t VBAN_SRList[] = {6000,   12000,  24000,  48000, 96000, 192000, 384000, 8000,   16000,  32000, 64000,
+                                 128000, 256000, 512000, 11025, 22050, 44100,  88200,  176400, 352800, 705600};
 #define VBAN_PROTOCOL_AUDIO 0x00
 #define VBAN_PROTOCOL_SERIAL 0x20
 #define VBAN_PROTOCOL_TXT 0x40
@@ -68,12 +68,7 @@ int RemoteUdpOutput::init(int index, int samplerate, const char* ip, int port) {
 #endif
 
 	dataBuffer.header.vban = 0x4e414256;  // "VBAN"
-	for(size_t i = 0; i < sizeof(VBAN_SRList) / sizeof(VBAN_SRList[0]); i++) {
-		if(VBAN_SRList[i] == samplerate) {
-			dataBuffer.header.format_SR = i;
-			break;
-		}
-	}
+	setSampleRate(samplerate);
 	dataBuffer.header.format_nbc = 2 - 1;                // numChannels - 1 channel
 	dataBuffer.header.format_bit = VBAN_DATATYPE_INT16;  // INT16 PCM
 	strncpy(dataBuffer.header.streamname, streamName.c_str(), sizeof(dataBuffer.header.streamname) - 1);
@@ -101,6 +96,15 @@ bool RemoteUdpOutput::isStarted() {
 
 void RemoteUdpOutput::onSlowTimer() {
 	sampleRateMeasure.onTimeoutTimer();
+}
+
+void RemoteUdpOutput::setSampleRate(uint32_t sampleRate) {
+	for(size_t i = 0; i < sizeof(VBAN_SRList) / sizeof(VBAN_SRList[0]); i++) {
+		if(VBAN_SRList[i] == sampleRate) {
+			dataBuffer.header.format_SR = i;
+			break;
+		}
+	}
 }
 
 void RemoteUdpOutput::sendAudio(float* samplesLeft, float* samplesRight, size_t samplesCount) {

@@ -5,6 +5,8 @@ void RemoteInputInstance::stop() {
 }
 
 void RemoteInputInstance::onSlowTimer() {
+	if(oscAddVbanHeader && vbanSampleRate != 0)
+		oscDeviceSampleRate = vbanSampleRate;
 	remoteUdpInput.onSlowTimer();
 }
 
@@ -13,8 +15,9 @@ RemoteInputInstance::RemoteInputInstance(OscContainer* parent)
       remoteUdpInput(this, "realSampleRate"),
       oscIp(this, "ip", "127.0.0.1"),
       oscPort(this, "port", 2305),
-      oscClockDrift(this, "clockDrift", 0.0f) {
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
+      oscClockDrift(this, "clockDrift", 0.0f),
+      oscAddVbanHeader(this, "vbanFormat") {
 	direction = D_Input;
 
 	oscIp.addCheckCallback([this](auto) { return !remoteUdpInput.isStarted(); });
@@ -32,6 +35,12 @@ RemoteInputInstance::RemoteInputInstance(OscContainer* parent)
 			resamplingFilter.setSourceSamplingRate(newValue);
 		}
 	});
+
+	oscAddVbanHeader.setChangeCallback([this](bool newValue) {
+		if(!newValue) {
+			vbanSampleRate = 0;
+		}
+	});
 }
 
 RemoteInputInstance::~RemoteInputInstance() {
@@ -44,6 +53,7 @@ const char* RemoteInputInstance::getName() {
 
 int RemoteInputInstance::start(int index, size_t numChannel, int sampleRate, int jackBufferSize) {
 	this->jackSampleRate = sampleRate;
+	this->vbanSampleRate = 0;
 	resamplingFilters.resize(2);
 	resampledBuffer[0].resize(sampleRate);
 	resampledBuffer[1].resize(sampleRate);
@@ -58,6 +68,18 @@ int RemoteInputInstance::start(int index, size_t numChannel, int sampleRate, int
 }
 
 int RemoteInputInstance::postProcessSamples(float** samples, size_t numChannel, jack_nframes_t nframes) {
+	if(oscAddVbanHeader) {
+		int32_t inputSampleRate = remoteUdpInput.getSampleRate();
+
+		if(inputSampleRate != 0 && inputSampleRate != vbanSampleRate) {
+			vbanSampleRate = inputSampleRate;
+			for(ResamplingFilter& resamplingFilter : resamplingFilters) {
+				resamplingFilter.setSourceSamplingRate(vbanSampleRate);
+				resamplingFilter.setTargetSamplingRate(jackSampleRate);
+				resamplingFilter.setClockDrift(this->oscClockDrift);
+			}
+		}
+	}
 
 	size_t readSize =
 	    remoteUdpInput.receivePacket(resampledBuffer[0].data(), resampledBuffer[1].data(), resampledBuffer[0].size());

@@ -29,11 +29,13 @@ private:
 	std::vector<float> resampledBuffer[2];
 	std::vector<float> inBuffers[2];
 	std::vector<ResamplingFilter> resamplingFilters;
+	int32_t vbanSampleRate;
 
 	OscVariable<std::string> oscIp;
 	OscVariable<int> oscPort;
 	OscVariable<int32_t> oscDeviceSampleRate;
 	OscVariable<float> oscClockDrift;
+	OscVariable<bool> oscAddVbanHeader;
 };
 
 #endif
