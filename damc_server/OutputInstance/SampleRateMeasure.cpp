@@ -36,7 +36,9 @@ void SampleRateMeasure::onTimeoutTimer() {
 	runningData.exchange(dataPtr);
 
 	if(!data.firstSampleTime) {
-		SPDLOG_WARN("Jack not running !");
+		SPDLOG_WARN("{}: No audio running !", oscRealSampleRate.getFullAddress());
+		OscArgument arg = 0;
+		oscRealSampleRate.sendMessage(&arg, 1);
 	} else {
 		int64_t period = data.lastSampleTime - data.firstSampleTime;
 
