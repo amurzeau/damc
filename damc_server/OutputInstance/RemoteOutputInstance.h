@@ -19,6 +19,7 @@ public:
 	virtual const char* getName() override;
 	virtual int start(int index, size_t numChannel, int sampleRate, int jackBufferSize) override;
 	virtual void stop() override;
+	virtual void onSlowTimer() override;
 
 	virtual int postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) override;
 
@@ -30,6 +31,7 @@ private:
 
 	OscVariable<std::string> oscIp;
 	OscVariable<int> oscPort;
+	OscVariable<int32_t> oscDeviceSampleRate;
 	OscVariable<float> oscClockDrift;
 	OscVariable<bool> oscAddVbanHeader;
 };

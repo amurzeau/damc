@@ -26,7 +26,8 @@ static long VBAN_SRList[] = {6000,   12000,  24000,  48000, 96000, 192000, 38400
 
 #define VBAN_CODEC_PCM 0x00
 
-RemoteUdpInput::RemoteUdpInput() : started(false) {}
+RemoteUdpInput::RemoteUdpInput(OscContainer* oscParent, const char* name)
+    : sampleRate(0), started(false), sampleRateMeasure(oscParent, name) {}
 
 RemoteUdpInput::~RemoteUdpInput() {
 	stop();
@@ -42,7 +43,7 @@ static unsigned int highestPowerof2(unsigned int n) {
 	return res;
 }
 
-int RemoteUdpInput::init(int index, int samplerate, const char* ip, int port) {
+int RemoteUdpInput::init(int index, const char* ip, int port) {
 	std::string streamName = OutputInstance::JACK_CLIENT_NAME_PREFIX + std::to_string(index);
 	uint32_t targetIp = inet_addr(ip);
 	struct sockaddr_in sin_server;
@@ -102,6 +103,10 @@ bool RemoteUdpInput::isStarted() {
 	return started;
 }
 
+void RemoteUdpInput::onSlowTimer() {
+	sampleRateMeasure.onTimeoutTimer();
+}
+
 void RemoteUdpInput::onAlloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
 	RemoteUdpInput* thisInstance = (RemoteUdpInput*) handle->data;
 	buf->base = (char*) &thisInstance->dataBuffer;
@@ -145,6 +150,8 @@ void RemoteUdpInput::onPacketReceived(
 
 	if(sampleCount > 0)
 		jack_ringbuffer_write(thisInstance->sampleRing, (const char*) buffer, sampleCount * sampleSize);
+
+	thisInstance->sampleRateMeasure.notifySampleProcessed(sampleCount);
 }
 
 size_t RemoteUdpInput::receivePacket(float* samplesLeft, float* samplesRight, size_t maxSamples) {

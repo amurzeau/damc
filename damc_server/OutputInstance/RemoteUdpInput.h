@@ -1,18 +1,20 @@
 #ifndef REMOTEUDPINPUT_H
 #define REMOTEUDPINPUT_H
 
+#include "SampleRateMeasure.h"
 #include <atomic>
 #include <jack/ringbuffer.h>
 #include <uv.h>
 
 class RemoteUdpInput {
 public:
-	RemoteUdpInput();
+	RemoteUdpInput(OscContainer* oscParent, const char* name);
 	~RemoteUdpInput();
 
-	int init(int index, int samplerate, const char* ip, int port);
+	int init(int index, const char* ip, int port);
 	void stop();
 	bool isStarted();
+	void onSlowTimer();
 
 	size_t receivePacket(float* samplesLeft, float* samplesRight, size_t maxSamples);
 	int getSampleRate() { return sampleRate; }
@@ -45,6 +47,8 @@ private:
 	jack_ringbuffer_t* sampleRing;
 	std::atomic<int> sampleRate;
 	bool started;
+
+	SampleRateMeasure sampleRateMeasure;
 };
 
 #endif

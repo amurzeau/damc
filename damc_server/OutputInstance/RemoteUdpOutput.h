@@ -1,16 +1,18 @@
 #ifndef REMOTEUDPOUTPUT_H
 #define REMOTEUDPOUTPUT_H
 
+#include "SampleRateMeasure.h"
 #include <uv.h>
 
 class RemoteUdpOutput {
 public:
-	RemoteUdpOutput();
+	RemoteUdpOutput(OscContainer* oscParent, const char* name);
 	~RemoteUdpOutput();
 
 	int init(int index, int samplerate, const char* ip, int port);
 	void stop();
 	bool isStarted();
+	void onSlowTimer();
 
 	void sendAudio(float* samplesLeft, float* samplesRight, size_t samplesCount);
 	void sendAudioWithoutVBAN(float* samplesLeft, float* samplesRight, size_t samplesCount);
@@ -37,6 +39,8 @@ private:
 	int sock_fd;
 	VbanBuffer dataBuffer;
 	bool started;
+
+	SampleRateMeasure sampleRateMeasure;
 };
 
 #endif

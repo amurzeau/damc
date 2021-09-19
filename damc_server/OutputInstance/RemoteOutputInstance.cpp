@@ -1,24 +1,29 @@
 #include "RemoteOutputInstance.h"
 
-void RemoteOutputInstance::stop() {
-	remoteUdpOutput.stop();
-}
-
 RemoteOutputInstance::RemoteOutputInstance(OscContainer* parent)
     : OscContainer(parent, "device"),
+      remoteUdpOutput(this, "realSampleRate"),
       oscIp(this, "ip", "127.0.0.1"),
       oscPort(this, "port", 2305),
+      oscDeviceSampleRate(this, "deviceSampleRate", 48000),
       oscClockDrift(this, "clockDrift", 0.0f),
       oscAddVbanHeader(this, "vbanFormat") {
 	resamplingFilters.resize(2);
 
 	oscIp.addCheckCallback([this](auto) { return !remoteUdpOutput.isStarted(); });
 	oscPort.addCheckCallback([this](auto) { return !remoteUdpOutput.isStarted(); });
+	oscDeviceSampleRate.addCheckCallback([](int32_t newValue) { return newValue > 0; });
 
 	oscClockDrift.setChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);
 		}
+	});
+	oscDeviceSampleRate.setChangeCallback([this](int32_t newValue) {
+		for(auto& resamplingFilter : resamplingFilters) {
+			resamplingFilter.setTargetSamplingRate(newValue);
+		}
+		remoteUdpOutput.setSampleRate(newValue);
 	});
 }
 
@@ -35,8 +40,18 @@ int RemoteOutputInstance::start(int index, size_t numChannel, int sampleRate, in
 	outBuffers[1].resize(jackBufferSize);
 	for(ResamplingFilter& resamplingFilter : resamplingFilters) {
 		resamplingFilter.reset(sampleRate);
+		resamplingFilter.setTargetSamplingRate(oscDeviceSampleRate);
+		resamplingFilter.setClockDrift(oscClockDrift);
 	}
-	return remoteUdpOutput.init(index, sampleRate, oscIp.c_str(), oscPort);
+	return remoteUdpOutput.init(index, oscDeviceSampleRate, oscIp.c_str(), oscPort);
+}
+
+void RemoteOutputInstance::stop() {
+	remoteUdpOutput.stop();
+}
+
+void RemoteOutputInstance::onSlowTimer() {
+	remoteUdpOutput.onSlowTimer();
 }
 
 int RemoteOutputInstance::postProcessSamples(float** samples, size_t numChannel, jack_nframes_t nframes) {

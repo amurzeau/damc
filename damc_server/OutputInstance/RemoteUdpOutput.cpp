@@ -29,7 +29,8 @@ static long VBAN_SRList[] = {6000,   12000,  24000,  48000, 96000, 192000, 38400
 
 #define VBAN_CODEC_PCM 0x00
 
-RemoteUdpOutput::RemoteUdpOutput() : started(false) {}
+RemoteUdpOutput::RemoteUdpOutput(OscContainer* oscParent, const char* name)
+    : started(false), sampleRateMeasure(oscParent, name) {}
 
 RemoteUdpOutput::~RemoteUdpOutput() {
 	stop();
@@ -98,6 +99,10 @@ bool RemoteUdpOutput::isStarted() {
 	return started;
 }
 
+void RemoteUdpOutput::onSlowTimer() {
+	sampleRateMeasure.onTimeoutTimer();
+}
+
 void RemoteUdpOutput::sendAudio(float* samplesLeft, float* samplesRight, size_t samplesCount) {
 	if(sock_fd <= 0)
 		return;
@@ -131,6 +136,8 @@ void RemoteUdpOutput::sendAudio(float* samplesLeft, float* samplesRight, size_t 
 		samplesSent += samplesToSend;
 		dataBuffer.header.nuFrame++;
 	}
+
+	sampleRateMeasure.notifySampleProcessed(samplesCount);
 }
 
 void RemoteUdpOutput::sendAudioWithoutVBAN(float* samplesLeft, float* samplesRight, size_t samplesCount) {
@@ -156,4 +163,6 @@ void RemoteUdpOutput::sendAudioWithoutVBAN(float* samplesLeft, float* samplesRig
 	if(ret == -1 && sock_fd > 0) {
 		// SPDLOG_INFO("Socket error, errno: {}", errno);
 	}
+
+	sampleRateMeasure.notifySampleProcessed(samplesCount);
 }
