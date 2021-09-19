@@ -42,7 +42,14 @@ static inline uint64_t HTONLL(uint64_t l) {
 #endif
 
 #if _WIN32
-#define tosc_strncpy(_dst, _src, _len) strncpy_s(_dst, _len, _src, _TRUNCATE)
+static void tosc_strncpy(char* strDest, const char* strSource, size_t count) {
+	while(*strSource && count > 1) {
+		*strDest++ = *strSource++;
+		count--;
+	}
+	if(count > 0)
+		*strDest = '\0';
+}
 #else
 #include <netinet/in.h>
 #define tosc_strncpy(_dst, _src, _len) strncpy(_dst, _src, _len)
