@@ -12,7 +12,6 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "mysofa_export.h"
 
 #define MYSOFA_DEFAULT_NEIGH_STEP_ANGLE 0.5
 #define MYSOFA_DEFAULT_NEIGH_STEP_RADIUS 0.01
@@ -93,39 +92,39 @@ extern "C" {
 		MYSOFA_READ_ERROR
 	};
 
-	MYSOFA_EXPORT struct MYSOFA_HRTF* mysofa_load(const char *filename, int *err);
+	struct MYSOFA_HRTF* mysofa_load(const char *filename, int *err);
 
-	MYSOFA_EXPORT int mysofa_check(struct MYSOFA_HRTF *hrtf);
-	MYSOFA_EXPORT char* mysofa_getAttribute(struct MYSOFA_ATTRIBUTE *attr, char *name);
-	MYSOFA_EXPORT void mysofa_tospherical(struct MYSOFA_HRTF *hrtf);
-	MYSOFA_EXPORT void mysofa_tocartesian(struct MYSOFA_HRTF *hrtf);
-	MYSOFA_EXPORT void mysofa_free(struct MYSOFA_HRTF *hrtf);
+	int mysofa_check(struct MYSOFA_HRTF *hrtf);
+	char* mysofa_getAttribute(struct MYSOFA_ATTRIBUTE *attr, char *name);
+	void mysofa_tospherical(struct MYSOFA_HRTF *hrtf);
+	void mysofa_tocartesian(struct MYSOFA_HRTF *hrtf);
+	void mysofa_free(struct MYSOFA_HRTF *hrtf);
 
-	MYSOFA_EXPORT struct MYSOFA_LOOKUP* mysofa_lookup_init(struct MYSOFA_HRTF *hrtf);
-	MYSOFA_EXPORT int mysofa_lookup(struct MYSOFA_LOOKUP *lookup, float *coordinate);
-	MYSOFA_EXPORT void mysofa_lookup_free(struct MYSOFA_LOOKUP *lookup);
+	struct MYSOFA_LOOKUP* mysofa_lookup_init(struct MYSOFA_HRTF *hrtf);
+	int mysofa_lookup(struct MYSOFA_LOOKUP *lookup, float *coordinate);
+	void mysofa_lookup_free(struct MYSOFA_LOOKUP *lookup);
 
-	MYSOFA_EXPORT struct MYSOFA_NEIGHBORHOOD *mysofa_neighborhood_init(struct MYSOFA_HRTF *hrtf,
+	struct MYSOFA_NEIGHBORHOOD *mysofa_neighborhood_init(struct MYSOFA_HRTF *hrtf,
 							     struct MYSOFA_LOOKUP *lookup);
-	MYSOFA_EXPORT struct MYSOFA_NEIGHBORHOOD *mysofa_neighborhood_init_withstepdefine(struct MYSOFA_HRTF *hrtf,
+	struct MYSOFA_NEIGHBORHOOD *mysofa_neighborhood_init_withstepdefine(struct MYSOFA_HRTF *hrtf,
 							     struct MYSOFA_LOOKUP *lookup,float neighbor_angle_step,float neighbor_radius_step);
-	MYSOFA_EXPORT int* mysofa_neighborhood(struct MYSOFA_NEIGHBORHOOD *neighborhood, int pos);
-	MYSOFA_EXPORT void mysofa_neighborhood_free(struct MYSOFA_NEIGHBORHOOD *neighborhood);
+	int* mysofa_neighborhood(struct MYSOFA_NEIGHBORHOOD *neighborhood, int pos);
+	void mysofa_neighborhood_free(struct MYSOFA_NEIGHBORHOOD *neighborhood);
 
-	MYSOFA_EXPORT float* mysofa_interpolate(struct MYSOFA_HRTF *hrtf, float *cordinate,
+	float* mysofa_interpolate(struct MYSOFA_HRTF *hrtf, float *cordinate,
 				  int nearest, int *neighborhood, float *fir, float *delays);
 
-	MYSOFA_EXPORT int mysofa_resample(struct MYSOFA_HRTF *hrtf, float samplerate);
-	MYSOFA_EXPORT float mysofa_loudness(struct MYSOFA_HRTF *hrtf);
-	MYSOFA_EXPORT int mysofa_minphase(struct MYSOFA_HRTF *hrtf, float threshold);
+	int mysofa_resample(struct MYSOFA_HRTF *hrtf, float samplerate);
+	float mysofa_loudness(struct MYSOFA_HRTF *hrtf);
+	int mysofa_minphase(struct MYSOFA_HRTF *hrtf, float threshold);
 
-	MYSOFA_EXPORT struct MYSOFA_EASY *mysofa_cache_lookup(const char *filename, float samplerate);
-	MYSOFA_EXPORT struct MYSOFA_EASY *mysofa_cache_store(struct MYSOFA_EASY *, const char *filename, float samplerate);
-	MYSOFA_EXPORT void mysofa_cache_release(struct MYSOFA_EASY *);
-	MYSOFA_EXPORT void mysofa_cache_release_all(void);
+	struct MYSOFA_EASY *mysofa_cache_lookup(const char *filename, float samplerate);
+	struct MYSOFA_EASY *mysofa_cache_store(struct MYSOFA_EASY *, const char *filename, float samplerate);
+	void mysofa_cache_release(struct MYSOFA_EASY *);
+	void mysofa_cache_release_all(void);
 
-	MYSOFA_EXPORT void mysofa_c2s(float *values);
-	MYSOFA_EXPORT void mysofa_s2c(float *values);
+	void mysofa_c2s(float *values);
+	void mysofa_s2c(float *values);
 
 	struct MYSOFA_EASY {
 		struct MYSOFA_HRTF *hrtf;
@@ -134,20 +133,20 @@ extern "C" {
 		float *fir;
 	};
 
-	MYSOFA_EXPORT struct MYSOFA_EASY* mysofa_open(const char *filename, float samplerate, int *filterlength, int *err);
-	MYSOFA_EXPORT struct MYSOFA_EASY* mysofa_open_no_norm(const char *filename, float samplerate, int *filterlength, int *err);
-	MYSOFA_EXPORT struct MYSOFA_EASY* mysofa_open_advanced(const char *filename, float samplerate, int *filterlength, int *err, bool norm, float neighbor_angle_step, float neighbor_radius_step);
-	MYSOFA_EXPORT struct MYSOFA_EASY* mysofa_open_cached(const char *filename, float samplerate, int *filterlength, int *err);
-	MYSOFA_EXPORT void mysofa_getfilter_short(struct MYSOFA_EASY* easy, float x, float y, float z,
+	struct MYSOFA_EASY* mysofa_open(const char *filename, float samplerate, int *filterlength, int *err);
+	struct MYSOFA_EASY* mysofa_open_no_norm(const char *filename, float samplerate, int *filterlength, int *err);
+	struct MYSOFA_EASY* mysofa_open_advanced(const char *filename, float samplerate, int *filterlength, int *err, bool norm, float neighbor_angle_step, float neighbor_radius_step);
+	struct MYSOFA_EASY* mysofa_open_cached(const char *filename, float samplerate, int *filterlength, int *err);
+	void mysofa_getfilter_short(struct MYSOFA_EASY* easy, float x, float y, float z,
 				    short *IRleft, short *IRright,
 				    int *delayLeft, int *delayRight);
-	MYSOFA_EXPORT void mysofa_getfilter_float(struct MYSOFA_EASY* easy, float x, float y, float z,
+	void mysofa_getfilter_float(struct MYSOFA_EASY* easy, float x, float y, float z,
 				    float *IRleft, float *IRright,
 				    float *delayLeft, float *delayRight);
-	MYSOFA_EXPORT void mysofa_close(struct MYSOFA_EASY* easy);
-	MYSOFA_EXPORT void mysofa_close_cached(struct MYSOFA_EASY* easy);
+	void mysofa_close(struct MYSOFA_EASY* easy);
+	void mysofa_close_cached(struct MYSOFA_EASY* easy);
 
-	MYSOFA_EXPORT void mysofa_getversion(int *major, int *minor, int *patch);
+	void mysofa_getversion(int *major, int *minor, int *patch);
 
 #ifdef __cplusplus
 }
