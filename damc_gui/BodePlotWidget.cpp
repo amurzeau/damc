@@ -2,6 +2,7 @@
 #include <QPainter>
 #include <QStaticText>
 #include <math.h>
+#include <tuple>
 
 BodePlotWidget::BodePlotWidget(QWidget* parent) : QWidget(parent) {
 	setAutoFillBackground(true);
