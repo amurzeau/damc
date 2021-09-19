@@ -102,12 +102,6 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 		filters.init(newValue);
 	});
 
-	readyChecker.addVariable(&oscEnable);
-	readyChecker.addVariable(&oscType);
-	readyChecker.addVariable(&oscNumChannel);
-
-	readyChecker.setCallback([this]() { SPDLOG_INFO("Output instance {} ready", this->outputInstance); });
-
 	if(audioRunning) {
 		activate();
 	}
@@ -127,8 +121,19 @@ OutputInstance::~OutputInstance() {
 void OutputInstance::activate() {
 	enableAudio = true;
 	oscEnable.addCheckCallback([this](bool newValue) {
-		if(newValue && !readyChecker.isVariablesReady())
-			return false;
+		if(newValue) {
+			if(!endpoint) {
+				SPDLOG_ERROR("Can't enable {} ({}): type is None", oscDisplayName.get(), oscName.get());
+				return false;
+			}
+			if(oscNumChannel <= 0) {
+				SPDLOG_ERROR("Can't enable {} ({}): channel number is <= 0: {}",
+				             oscDisplayName.get(),
+				             oscName.get(),
+				             oscNumChannel.get());
+				return false;
+			}
+		}
 		return true;
 	});
 	oscEnable.setChangeCallback([this](bool newValue) { updateEnabledState(newValue); });
@@ -283,7 +288,7 @@ void OutputInstance::updateEnabledState(bool newValue) {
 		return;
 	}
 
-	if(newValue && !client && endpoint && readyChecker.isVariablesReady()) {
+	if(newValue && !client && endpoint) {
 		SPDLOG_INFO("Starting output: {}", getName());
 		start();
 	} else if(!newValue && client) {

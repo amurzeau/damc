@@ -102,8 +102,6 @@ private:
 	OscVariable<bool> oscEnablePeakUpdate;
 	OscVariable<bool> oscEnablePeakJsonUpdate;
 
-	OscCombinedVariable readyChecker;
-
 	bool displayNameUpdateRequested;
 };
 
