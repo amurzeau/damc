@@ -57,18 +57,17 @@ macro(find_qt OUTPUT_VARIABLE)
 		add_library(${OUTPUT_VARIABLE} INTERFACE)
 		target_link_libraries(${OUTPUT_VARIABLE} INTERFACE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network)
 	else()
-		find_package(Qt5 QUIET COMPONENTS Core Gui Widgets Network)
+		find_package(Qt5 QUIET REQUIRED COMPONENTS Core Gui Widgets Network)
 		if(Qt5_FOUND)
 			add_library(${OUTPUT_VARIABLE} INTERFACE)
 			target_link_libraries(${OUTPUT_VARIABLE} INTERFACE Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network)
-		else()
-			find_package(Qt4 COMPONENTS Core Gui Network)
-			if(Qt4_FOUND)
-				add_library(${OUTPUT_VARIABLE} INTERFACE)
-				target_link_libraries(${OUTPUT_VARIABLE} INTERFACE Qt4::QtCore Qt4::QtGui Qt4::QtNetwork)
-				target_compile_options(${OUTPUT_VARIABLE} INTERFACE -Zc:wchar_t-)
+			if(NOT DEFINED QT_VERSION_MAJOR)
+				set(QT_VERSION_MAJOR 5)
 			endif()
 		endif()
+	endif()
+	if(DEFINED QT_VERSION_MAJOR AND NOT DEFINED QT_VERSION)
+		set(QT_VERSION ${Qt${QT_VERSION_MAJOR}Widgets_VERSION})
 	endif()
 endmacro()
 
@@ -98,10 +97,24 @@ if(TARGET QtDependencies)
 		message(STATUS "Install of Qt's DLLs enabled")
 
 		if(EXISTS ${QT_WINDEPLOYQT})
-			if (QT_VERSION_MAJOR MATCHES "5")
-				# These options are not available with Qt6
-				set (WINDEPLOYQT_EXTRA_OPTIONS --no-webkit2 --no-angle)
-			endif ()
+			set(WINDEPLOYQT_EXTRA_OPTIONS)
+			if (QT_VERSION VERSION_LESS 6.0.0)
+				# These options are not available with Qt 6
+				set (WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --no-webkit2 --no-angle)
+			endif()
+
+			if(QT_VERSION VERSION_GREATER_EQUAL 5.14.0)
+				# --no-virtualkeyboard was introduced in Qt 5.14
+				set (WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --no-virtualkeyboard)
+			endif()
+
+			if(QT_VERSION VERSION_LESS 5.14.0)
+				if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+					set (WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --debug)
+				else()
+					set (WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --release)
+				endif()
+			endif()
 
 			# execute windeployqt in a tmp directory after build
 			add_custom_command(TARGET ${TARGET_NAME}
@@ -114,7 +127,6 @@ if(TARGET QtDependencies)
 					--no-translations
 					--no-compiler-runtime
 					--no-opengl-sw
-					--no-virtualkeyboard
 					--no-svg
 					${WINDEPLOYQT_EXTRA_OPTIONS}
 					"$<TARGET_FILE:${TARGET_NAME}>"

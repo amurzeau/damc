@@ -1,4 +1,5 @@
 #include "OscWidgetMapper.h"
+#include "QtUtils.h"
 #include <type_traits>
 
 template<class T, class UnderlyingType>

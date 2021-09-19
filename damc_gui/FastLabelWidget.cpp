@@ -9,7 +9,11 @@ void FastLabelWidget::setTextSize(int numCharacter, int flags) {
 	for(int i = 0; i < numCharacter; i++)
 		data.append('0');
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
 	setMinimumWidth(fontMetrics().horizontalAdvance(data));
+#else
+	setMinimumWidth(fontMetrics().width(data));
+#endif
 	setMinimumHeight(fontMetrics().height());
 	setMaximumSize(minimumSize());
 	setAutoFillBackground(true);

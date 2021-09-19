@@ -1,6 +1,7 @@
 #include "OutputInstanceConfigDialog.h"
 #include "MainWindow.h"
 #include "OutputController.h"
+#include "QtUtils.h"
 #include "ui_OutputInstanceConfigDialog.h"
 
 OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, OutputController* parent)

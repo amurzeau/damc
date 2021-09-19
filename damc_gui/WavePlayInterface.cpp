@@ -1,6 +1,5 @@
 #include "WavePlayInterface.h"
 #include <QMessageBox>
-#include <QNetworkDatagram>
 
 WavePlayInterface::WavePlayInterface(OscRoot* oscRoot) : OscConnector(oscRoot, true) {
 	connect(&oscSocket, &QIODevice::readyRead, this, &WavePlayInterface::onOscDataReceived);
