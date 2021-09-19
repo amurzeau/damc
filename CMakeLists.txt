@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(damc VERSION 1.1)
+project(damc VERSION 1.2)
 
 # option() honors normal variables
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
