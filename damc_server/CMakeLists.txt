@@ -73,6 +73,7 @@ add_executable(${TARGET_NAME}
 )
 target_link_libraries(${TARGET_NAME} PUBLIC uv::uv PortAudio JACK::jack damc_common Threads::Threads spdlog::spdlog)
 target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
+target_compile_definitions(${TARGET_NAME} PRIVATE DAMC_VERSION=\"${PROJECT_VERSION}\")
 
 if(WIN32)
 	target_link_libraries(${TARGET_NAME} PUBLIC avrt ksuser)

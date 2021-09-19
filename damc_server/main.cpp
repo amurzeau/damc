@@ -75,6 +75,8 @@ int main() {
 
 	initializeSpdLog();
 
+	SPDLOG_INFO("Start damc_server version {}", DAMC_VERSION);
+
 	SPDLOG_INFO("Initializing portaudio");
 
 	PaUtil_SetDebugPrintFunction(&portAudioLogger);
