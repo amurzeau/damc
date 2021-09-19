@@ -15,6 +15,7 @@
 #endif
 
 const std::string OutputInstance::JACK_CLIENT_NAME_PREFIX = "damc-";
+const std::string OutputInstance::JACK_CLIENT_DISPLAYNAME_PREFIX = "damc: ";
 
 OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning)
     : OscContainer(parent, std::to_string(index)),
@@ -304,11 +305,12 @@ void OutputInstance::updateJackDisplayName() {
 	}
 
 	if(!oscDisplayName.get().empty()) {
-		std::string prettyName = JACK_CLIENT_NAME_PREFIX + oscDisplayName.get();
+		std::string prettyName = JACK_CLIENT_DISPLAYNAME_PREFIX + oscDisplayName.get();
 		SPDLOG_DEBUG("Setting {} jack display name to {}", oscName.get(), prettyName);
 		::jack_set_property(client, clientUuid, JACK_METADATA_PRETTY_NAME, prettyName.c_str(), NULL);
 	} else {
 		SPDLOG_DEBUG("Setting display name to default value {}", oscName.get());
+		// This will trigger updateJackDisplayName again with the new value updated
 		oscDisplayName.forceDefault(oscName.get());
 	}
 }
@@ -328,14 +330,14 @@ void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
 				::jack_get_property(thisInstance->clientUuid, JACK_METADATA_PRETTY_NAME, &pszValue, &pszType);
 				if(pszValue) {
 					std::string newValue = pszValue;
-					size_t prefixPos = newValue.find(JACK_CLIENT_NAME_PREFIX);
+					size_t prefixPos = newValue.find(JACK_CLIENT_DISPLAYNAME_PREFIX);
 					if(prefixPos == 0) {
-						newValue.replace(prefixPos, JACK_CLIENT_NAME_PREFIX.size(), "");
+						newValue.replace(prefixPos, JACK_CLIENT_DISPLAYNAME_PREFIX.size(), "");
 						SPDLOG_INFO("Setting {} display name to {}", thisInstance->oscName.get(), newValue);
 						thisInstance->oscDisplayName = newValue;
 					} else {
 						// Invalid name, keep previous
-						SPDLOG_WARN("Invalid name, missing prefix {}: {}", JACK_CLIENT_NAME_PREFIX, pszValue);
+						SPDLOG_WARN("Invalid name, missing prefix {}: {}", JACK_CLIENT_DISPLAYNAME_PREFIX, pszValue);
 						thisInstance->displayNameUpdateRequested = true;
 					}
 					::jack_free(pszValue);

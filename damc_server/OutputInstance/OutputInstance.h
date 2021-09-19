@@ -45,6 +45,7 @@ public:
 	};
 
 	static const std::string JACK_CLIENT_NAME_PREFIX;
+	static const std::string JACK_CLIENT_DISPLAYNAME_PREFIX;
 
 public:
 	OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning);
