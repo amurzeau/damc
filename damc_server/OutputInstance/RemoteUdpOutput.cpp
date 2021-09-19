@@ -145,27 +145,33 @@ void RemoteUdpOutput::sendAudio(float* samplesLeft, float* samplesRight, size_t 
 }
 
 void RemoteUdpOutput::sendAudioWithoutVBAN(float* samplesLeft, float* samplesRight, size_t samplesCount) {
-	size_t samplesToSend = samplesCount;
-
 	if(sock_fd <= 0)
 		return;
 
-	for(size_t i = 0; i < samplesToSend; i++) {
-		dataBuffer.data[i * 2] = samplesLeft[i] * 32768;
-		dataBuffer.data[i * 2 + 1] = samplesRight[i] * 32768;
-	}
+	for(size_t samplesSent = 0; samplesSent < samplesCount;) {
+		size_t samplesToSend = samplesCount - samplesSent;
+		if(samplesToSend > sizeof(dataBuffer.data))
+			samplesToSend = sizeof(dataBuffer.data);
 
-	int ret = sendto(sock_fd,
-	                 (char*) dataBuffer.data,
-	                 samplesToSend * 2 * sizeof(dataBuffer.data[0]),
-	                 0,
-	                 (const struct sockaddr*) &sin_server,
-	                 sizeof(sin_server));
-	if(ret == -1 && errno == EWOULDBLOCK)
-		ret = 0;
+		for(size_t i = 0; i < samplesToSend; i++) {
+			dataBuffer.data[i * 2] = samplesLeft[i + samplesSent] * 32768;
+			dataBuffer.data[i * 2 + 1] = samplesRight[i + samplesSent] * 32768;
+		}
 
-	if(ret == -1 && sock_fd > 0) {
-		// SPDLOG_INFO("Socket error, errno: {}", errno);
+		int ret = sendto(sock_fd,
+		                 (char*) dataBuffer.data,
+		                 samplesToSend * 2 * sizeof(dataBuffer.data[0]),
+		                 0,
+		                 (const struct sockaddr*) &sin_server,
+		                 sizeof(sin_server));
+		if(ret == -1 && errno == EWOULDBLOCK)
+			ret = 0;
+
+		if(ret == -1 && sock_fd > 0) {
+			// SPDLOG_INFO("Socket error, errno: {}", errno);
+		}
+
+		samplesSent += samplesToSend;
 	}
 
 	sampleRateMeasure.notifySampleProcessed(samplesCount);
