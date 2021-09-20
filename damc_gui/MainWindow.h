@@ -10,6 +10,8 @@ namespace Ui {
 class MainWindow;
 }
 
+class GlobalConfigDialog;
+
 class MainWindow : public QWidget {
 	Q_OBJECT
 
@@ -27,6 +29,7 @@ public:
 	const std::vector<std::string>& getDeviceWasapiList() { return oscWasapiDeviceArray.getData(); }
 
 protected slots:
+	void onShowGlobalConfig();
 	void onAddInstance();
 	void onRemoveInstance();
 
@@ -41,6 +44,8 @@ private:
 	OscRoot oscRoot;
 	WavePlayInterface wavePlayInterface;
 	OscWidgetArray outputInterfaces;
+
+	GlobalConfigDialog* globalConfigDialog;
 
 	OscFlatArray<std::string> oscTypeArray;
 	OscFlatArray<std::string> oscPortaudioDeviceArray;

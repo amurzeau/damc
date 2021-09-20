@@ -57,6 +57,8 @@ add_executable(${TARGET_NAME}
 	ControlInterface.cpp
 	ControlInterface.h
 	json.h
+	JackPortAutoConnect.cpp
+	JackPortAutoConnect.h
 	JackUtils.cpp
 	JackUtils.h
 	KeyBinding.h

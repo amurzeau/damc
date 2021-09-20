@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "GlobalConfigDialog.h"
 #include "OutputController.h"
 #include "ui_MainWindow.h"
 #include <QInputDialog>
@@ -14,11 +15,17 @@ MainWindow::MainWindow(QWidget* parent)
       oscWasapiDeviceArray(&oscRoot, "device_list_wasapi") {
 	ui->setupUi(this);
 
+	globalConfigDialog = new GlobalConfigDialog(this, &oscRoot);
+	connect(globalConfigDialog, &GlobalConfigDialog::showStateChanged, [this](bool shown) {
+		ui->globalConfigButton->setChecked(shown);
+	});
+
 	outputInterfaces.setWidget(
 	    this, ui->horizontalLayout, [this](QWidget*, OscContainer* oscParent, int name) -> QWidget* {
 		    return new OutputController(this, oscParent, std::to_string(name));
 	    });
 
+	connect(ui->globalConfigButton, &QAbstractButton::clicked, this, &MainWindow::onShowGlobalConfig);
 	connect(ui->addButton, &QAbstractButton::clicked, this, &MainWindow::onAddInstance);
 	connect(ui->removeButton, &QAbstractButton::clicked, this, &MainWindow::onRemoveInstance);
 	connect(ui->showDisabledCheckBox, &QCheckBox::toggled, this, &MainWindow::showDisabledChanged);
@@ -32,6 +39,16 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow() {
 	delete ui;
+}
+
+void MainWindow::onShowGlobalConfig() {
+	if(globalConfigDialog->isHidden()) {
+		globalConfigDialog->show();
+		ui->globalConfigButton->setChecked(true);
+	} else {
+		globalConfigDialog->hide();
+		ui->globalConfigButton->setChecked(false);
+	}
 }
 
 void MainWindow::onAddInstance() {

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GlobalConfigDialog</class>
+ <widget class="QDialog" name="GlobalConfigDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>296</width>
+    <height>58</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Global Configuration</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QCheckBox" name="autoConnectJackClients">
+     <property name="toolTip">
+      <string>If enabled, jack clients connections will be restored from save</string>
+     </property>
+     <property name="text">
+      <string>Autoconnect jack clients based on saved connections</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="monitorConnections">
+     <property name="toolTip">
+      <string>If enabled, monitor connections and save them in case autoconnect is enabled</string>
+     </property>
+     <property name="text">
+      <string>Monitor and save connections</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
