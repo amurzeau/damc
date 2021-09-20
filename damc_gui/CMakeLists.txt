@@ -52,23 +52,16 @@ set(SOURCES
 )
 
 macro(find_qt OUTPUT_VARIABLE)
-	find_package(Qt6 QUIET COMPONENTS Core Gui Widgets Network)
-	if(Qt6_FOUND)
-		add_library(${OUTPUT_VARIABLE} INTERFACE)
-		target_link_libraries(${OUTPUT_VARIABLE} INTERFACE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network)
-	else()
-		find_package(Qt5 QUIET REQUIRED COMPONENTS Core Gui Widgets Network)
-		if(Qt5_FOUND)
-			add_library(${OUTPUT_VARIABLE} INTERFACE)
-			target_link_libraries(${OUTPUT_VARIABLE} INTERFACE Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network)
-			if(NOT DEFINED QT_VERSION_MAJOR)
-				set(QT_VERSION_MAJOR 5)
-			endif()
-		endif()
-	endif()
-	if(DEFINED QT_VERSION_MAJOR AND NOT DEFINED QT_VERSION)
-		set(QT_VERSION ${Qt${QT_VERSION_MAJOR}Widgets_VERSION})
-	endif()
+	find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
+	find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS Core Gui Widgets Network REQUIRED)
+
+	add_library(${OUTPUT_VARIABLE} INTERFACE)
+	target_link_libraries(${OUTPUT_VARIABLE} INTERFACE
+		Qt${QT_VERSION_MAJOR}::Core
+		Qt${QT_VERSION_MAJOR}::Gui
+		Qt${QT_VERSION_MAJOR}::Widgets
+		Qt${QT_VERSION_MAJOR}::Network
+	)
 endmacro()
 
 find_qt(QtDependencies)
@@ -76,6 +69,8 @@ find_qt(QtDependencies)
 if(TARGET QtDependencies)
 	set(CMAKE_AUTOMOC ON)
 	set(CMAKE_AUTOUIC ON)
+
+	message(STATUS "Using Qt ${QT_VERSION}")
 
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 		add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS} ${FORMS})
