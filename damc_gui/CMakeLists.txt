@@ -2,54 +2,9 @@ cmake_minimum_required(VERSION 3.1)
 
 set(TARGET_NAME damc_gui)
 
-set(FORMS
-	Balance.ui
-	BalanceController.ui
-	CompressorController.ui
-	Equalizer.ui
-	EqualizerFilters.ui
-	EqualizersController.ui
-	MainWindow.ui
-	OutputInstanceConfigDialog.ui
-	OutputController.ui
-)
-
-set(HEADERS
-	Balance.h
-	BalanceController.h
-	BodePlot.h
-	BodePlotWidget.h
-	CompressorController.h
-	Equalizer.h
-	EqualizersController.h
-	FastLabelWidget.h
-	LevelMeterWidget.h
-	MainWindow.h
-	OutputInstanceConfigDialog.h
-	OscWidgetArray.h
-	OscWidgetMapper.h
-	OutputController.h
-	WavePlayInterface.h
-)
-
-set(SOURCES
-	Balance.cpp
-	BalanceController.cpp
-	BodePlot.cpp
-	BodePlotWidget.cpp
-	CompressorController.cpp
-	Equalizer.cpp
-	EqualizersController.cpp
-	FastLabelWidget.cpp
-	LevelMeterWidget.cpp
-	MainWindow.cpp
-	OutputInstanceConfigDialog.cpp
-	OscWidgetArray.cpp
-	OscWidgetMapper.cpp
-	OutputController.cpp
-	WavePlayInterface.cpp
-	main.cpp
-)
+file(GLOB FORMS *.ui)
+file(GLOB HEADERS *.h)
+file(GLOB SOURCES *.cpp)
 
 macro(find_qt OUTPUT_VARIABLE)
 	find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
