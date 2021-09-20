@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include "OscWidgetArray.h"
 #include "WavePlayInterface.h"
@@ -47,5 +46,3 @@ private:
 	OscFlatArray<std::string> oscPortaudioDeviceArray;
 	OscFlatArray<std::string> oscWasapiDeviceArray;
 };
-
-#endif  // MAINWINDOW_H

@@ -1,5 +1,4 @@
-#ifndef EQFILTER_H
-#define EQFILTER_H
+#pragma once
 
 #include "BiquadFilter.h"
 #include <Osc/OscContainer.h>
@@ -32,5 +31,3 @@ private:
 
 	void computeFilter();
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef BALANCE_H
-#define BALANCE_H
+#pragma once
 
 #include "OscWidgetMapper.h"
 #include <QWidget>
@@ -16,5 +15,3 @@ public:
 private:
 	Ui::Balance* ui;
 };
-
-#endif  // BALANCE_H

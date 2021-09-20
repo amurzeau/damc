@@ -1,5 +1,4 @@
-#ifndef LEVELMETERWIDGET_H
-#define LEVELMETERWIDGET_H
+#pragma once
 
 #include <QElapsedTimer>
 #include <QTimer>
@@ -49,5 +48,3 @@ private:
 	const QBrush peakBrush;
 	const QBrush overLevelBrush;
 };
-
-#endif  // LEVELMETERWIDGET_H

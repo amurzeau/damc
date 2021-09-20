@@ -1,5 +1,4 @@
-#ifndef REVERB_H
-#define REVERB_H
+#pragma once
 
 #include <QDialog>
 
@@ -27,5 +26,3 @@ private:
 	std::vector<Reverb*> innerReverbs;
 	QRect savedGeometry;
 };
-
-#endif  // REVERB_H

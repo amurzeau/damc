@@ -1,5 +1,4 @@
-#ifndef REMOTEOUTPUTJACKINSTANCE_H
-#define REMOTEOUTPUTJACKINSTANCE_H
+#pragma once
 
 #include "IAudioEndpoint.h"
 #include <stdint.h>
@@ -35,5 +34,3 @@ private:
 	OscVariable<float> oscClockDrift;
 	OscVariable<bool> oscAddVbanHeader;
 };
-
-#endif

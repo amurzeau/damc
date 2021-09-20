@@ -1,5 +1,4 @@
-#ifndef CONTROLINTERFACE_H
-#define CONTROLINTERFACE_H
+#pragma once
 
 #include "KeyBinding.h"
 #include "OscRoot.h"
@@ -100,5 +99,3 @@ private:
 	OscDynamicVariable<std::string> oscDeviceListWasapi;
 #endif
 };
-
-#endif

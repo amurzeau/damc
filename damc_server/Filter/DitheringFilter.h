@@ -1,5 +1,4 @@
-#ifndef DITHERINGFILTER_H
-#define DITHERINGFILTER_H
+#pragma once
 
 #include <random>
 #include <stddef.h>
@@ -28,5 +27,3 @@ private:
 	std::uniform_real_distribution<double> dither2;
 	std::mt19937_64 randGenerator;
 };
-
-#endif

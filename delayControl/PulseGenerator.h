@@ -1,4 +1,4 @@
-#ifndef PULSEGENERATOR_H
+#pragma once
 
 #include <atomic>
 #include <stdint.h>
@@ -39,5 +39,3 @@ private:
 
 	int previousBigDelayError[3];
 };
-
-#endif

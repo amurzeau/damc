@@ -1,5 +1,4 @@
-#ifndef COMPRESSORCONTROLLER_H
-#define COMPRESSORCONTROLLER_H
+#pragma once
 
 #include "OscWidgetMapper.h"
 #include <Osc/OscContainer.h>
@@ -35,5 +34,3 @@ private:
 	OscWidgetMapper<QDoubleSpinBox> oscKneeWidth;
 	OscWidgetMapper<QAbstractButton> oscMovingMax;
 };
-
-#endif  // COMPRESSORCONTROLLER_H

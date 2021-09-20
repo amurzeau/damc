@@ -1,4 +1,4 @@
-#ifndef DELAYMEASURE_H
+#pragma once
 
 #include "PulseData.h"
 #include "PulseGenerator.h"
@@ -38,5 +38,3 @@ private:
 	int samplesBetweenPulses;
 	float sampleRate;
 };
-
-#endif

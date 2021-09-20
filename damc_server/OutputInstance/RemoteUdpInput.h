@@ -1,5 +1,4 @@
-#ifndef REMOTEUDPINPUT_H
-#define REMOTEUDPINPUT_H
+#pragma once
 
 #include "SampleRateMeasure.h"
 #include <atomic>
@@ -50,5 +49,3 @@ private:
 
 	SampleRateMeasure sampleRateMeasure;
 };
-
-#endif

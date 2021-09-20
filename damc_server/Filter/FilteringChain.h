@@ -1,5 +1,4 @@
-#ifndef FILTERINGCHAIN_H
-#define FILTERINGCHAIN_H
+#pragma once
 
 #include "CompressorFilter.h"
 #include "DelayFilter.h"
@@ -33,5 +32,3 @@ private:
 	ExpanderFilter expanderFilter;
 	OscVariable<bool> mute;
 };
-
-#endif

@@ -1,4 +1,4 @@
-#ifndef BINAURALSPACIALIZER_H
+#pragma once
 
 #include <atomic>
 #include <memory>
@@ -47,5 +47,3 @@ private:
 
 	float sampleRate;
 };
-
-#endif

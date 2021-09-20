@@ -1,5 +1,4 @@
-#ifndef RESAMPLINGFILTER_H
-#define RESAMPLINGFILTER_H
+#pragma once
 
 #include <array>
 #include <stddef.h>
@@ -48,5 +47,3 @@ private:
 	static constexpr unsigned int oversamplingRatio = 128;
 	static constexpr unsigned int tapPerSample = (unsigned int) coefs.size() / oversamplingRatio;
 };
-
-#endif

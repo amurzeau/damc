@@ -1,5 +1,4 @@
-#ifndef COMPRESSORFILTER_H
-#define COMPRESSORFILTER_H
+#pragma once
 
 #include <Osc/OscContainer.h>
 #include <Osc/OscVariable.h>
@@ -54,5 +53,3 @@ private:
 
 	static const float LOG10_VALUE_DIV_20;
 };
-
-#endif

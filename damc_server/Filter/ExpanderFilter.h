@@ -1,5 +1,4 @@
-#ifndef EXPANDERFILTER_H
-#define EXPANDERFILTER_H
+#pragma once
 
 #include <Osc/OscContainer.h>
 #include <Osc/OscVariable.h>
@@ -35,5 +34,3 @@ private:
 	float gainDiffRatio = 0;
 	OscVariable<float> kneeWidth;
 };
-
-#endif

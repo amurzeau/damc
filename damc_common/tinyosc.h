@@ -14,8 +14,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _TINY_OSC_
-#define _TINY_OSC_
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -208,5 +207,3 @@ void tosc_printMessage(tosc_message_const* o);
 #ifdef __cplusplus
 }
 #endif
-
-#endif  // _TINY_OSC_

@@ -1,4 +1,4 @@
-#ifndef PULSEDATA_H
+#pragma once
 
 #include "ResamplingFilter.h"
 #include <array>
@@ -66,5 +66,3 @@ private:
 	uv_mutex_t detectedPulsesMutex;
 	std::vector<uint64_t> detectedPulses;
 };
-
-#endif

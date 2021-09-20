@@ -1,5 +1,4 @@
-#ifndef BALANCECONTROLLER_H
-#define BALANCECONTROLLER_H
+#pragma once
 
 #include "OscWidgetArray.h"
 #include <QDialog>
@@ -30,5 +29,3 @@ private:
 	OscWidgetArray oscBalances;
 	QRect savedGeometry;
 };
-
-#endif  // BALANCECONTROLLER_H

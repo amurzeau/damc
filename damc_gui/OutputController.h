@@ -1,5 +1,4 @@
-#ifndef OUTPUTCONTROLLER_H
-#define OUTPUTCONTROLLER_H
+#pragma once
 
 #include "BiquadFilter.h"
 #include "OscWidgetMapper.h"
@@ -79,5 +78,3 @@ private:
 	OscVariable<int32_t> oscSampleRate;
 	OscWidgetMapper<QSpinBox> oscJackSampleRate;
 };
-
-#endif  // OUTPUTCONTROLLER_H

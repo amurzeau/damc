@@ -1,5 +1,4 @@
-#ifndef OUTPUTJACKINSTANCE_H
-#define OUTPUTJACKINSTANCE_H
+#pragma once
 
 #include "../Filter/FilteringChain.h"
 #include "IAudioEndpoint.h"
@@ -105,5 +104,3 @@ private:
 
 	bool displayNameUpdateRequested;
 };
-
-#endif

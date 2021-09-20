@@ -1,5 +1,4 @@
-#ifndef LOOPBACKOUTPUTJACKINSTANCE_H
-#define LOOPBACKOUTPUTJACKINSTANCE_H
+#pragma once
 
 #include "IAudioEndpoint.h"
 #include <stdint.h>
@@ -11,5 +10,3 @@ public:
 	virtual const char* getName() override;
 	virtual int postProcessSamples(float** samples, size_t numChannel, uint32_t nframes) override;
 };
-
-#endif

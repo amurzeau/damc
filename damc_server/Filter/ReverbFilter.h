@@ -1,5 +1,4 @@
-#ifndef REVERBFILTER_H
-#define REVERBFILTER_H
+#pragma once
 
 #include "DelayFilter.h"
 #include <Osc/OscContainer.h>
@@ -24,5 +23,3 @@ private:
 
 	float previousDelayOutput = 0.0f;
 };
-
-#endif

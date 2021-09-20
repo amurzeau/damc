@@ -1,4 +1,4 @@
-#ifndef CONVOLVER_H
+#pragma once
 
 #include <array>
 #include <vector>
@@ -18,5 +18,3 @@ private:
 	std::array<float, 8192> history;
 	size_t currentHistoryPos;
 };
-
-#endif

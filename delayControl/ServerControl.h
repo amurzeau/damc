@@ -1,4 +1,4 @@
-#ifndef SERVERCONTROL_H
+#pragma once
 
 #include "uv.h"
 #include <OscRoot.h>
@@ -40,5 +40,3 @@ private:
 	std::unordered_map<int, int> assignedDelayPerOutputInstance;
 	std::unordered_map<int, int> configuredDelayPerOutputInstance;
 };
-
-#endif

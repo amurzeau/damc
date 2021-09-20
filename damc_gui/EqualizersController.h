@@ -1,5 +1,4 @@
-#ifndef EQUALIZERSCONTROLLER_H
-#define EQUALIZERSCONTROLLER_H
+#pragma once
 
 #include "OscWidgetArray.h"
 #include <QDialog>
@@ -30,5 +29,3 @@ private:
 	QRect savedGeometry;
 	OscWidgetArray oscEqualizers;
 };
-
-#endif  // EQUALIZERSCONTROLLER_H

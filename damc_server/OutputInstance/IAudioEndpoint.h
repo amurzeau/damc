@@ -1,5 +1,4 @@
-#ifndef AUDIOENDPOINT_H
-#define AUDIOENDPOINT_H
+#pragma once
 
 #include <stdint.h>
 #include <uv.h>
@@ -19,5 +18,3 @@ public:
 
 	Direction direction = D_Output;
 };
-
-#endif

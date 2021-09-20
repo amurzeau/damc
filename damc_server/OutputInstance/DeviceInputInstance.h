@@ -1,5 +1,4 @@
-#ifndef DEVICEINPUTJACKINSTANCE_H
-#define DEVICEINPUTJACKINSTANCE_H
+#pragma once
 
 #include "IAudioEndpoint.h"
 #include <stdint.h>
@@ -66,5 +65,3 @@ private:
 	size_t overflowSize = 0;
 	SampleRateMeasure deviceSampleRateMeasure;
 };
-
-#endif

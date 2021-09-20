@@ -1,5 +1,4 @@
-#ifndef REMOTEUDPOUTPUT_H
-#define REMOTEUDPOUTPUT_H
+#pragma once
 
 #include "SampleRateMeasure.h"
 #include <uv.h>
@@ -44,5 +43,3 @@ private:
 
 	SampleRateMeasure sampleRateMeasure;
 };
-
-#endif

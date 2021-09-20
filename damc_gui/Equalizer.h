@@ -1,5 +1,4 @@
-#ifndef EQUALIZER_H
-#define EQUALIZER_H
+#pragma once
 
 #include "OscWidgetArray.h"
 #include "OscWidgetMapper.h"
@@ -45,5 +44,3 @@ private:
 
 	double fs;
 };
-
-#endif  // EQUALIZER_H

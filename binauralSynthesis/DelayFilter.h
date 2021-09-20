@@ -1,5 +1,4 @@
-#ifndef DELAYFILTER_H
-#define DELAYFILTER_H
+#pragma once
 
 #include <stddef.h>
 #include <vector>
@@ -20,5 +19,3 @@ private:
 	size_t outputIndex;
 	size_t power2Size;
 };
-
-#endif

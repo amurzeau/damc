@@ -1,5 +1,4 @@
-#ifndef DIALOG_H
-#define DIALOG_H
+#pragma once
 
 #include "OscWidgetMapper.h"
 #include <Osc/OscContainer.h>
@@ -51,5 +50,3 @@ private:
 
 	OscWidgetMapper<QSpinBox> oscDeviceRealSampleRate;
 };
-
-#endif  // DIALOG_H

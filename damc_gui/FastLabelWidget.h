@@ -1,5 +1,4 @@
-#ifndef FASTLABELWIDGET_H
-#define FASTLABELWIDGET_H
+#pragma once
 
 #include <QWidget>
 
@@ -17,5 +16,3 @@ private:
 	QString text;
 	int flags;
 };
-
-#endif  // FASTLABELWIDGET_H

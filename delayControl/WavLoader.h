@@ -1,4 +1,4 @@
-#ifndef WAVLOADER_H
+#pragma once
 
 #include <stdint.h>
 #include <string>
@@ -10,5 +10,3 @@ class WavLoader {
 public:
 	static int load(const std::string& filename, std::vector<WAVESAMPLE>& out, unsigned int& sampleRate);
 };
-
-#endif

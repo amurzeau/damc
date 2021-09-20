@@ -1,5 +1,4 @@
-#ifndef WAVEPLAYINTERFACE_H
-#define WAVEPLAYINTERFACE_H
+#pragma once
 
 #include <OscRoot.h>
 #include <QObject>
@@ -26,5 +25,3 @@ private:
 	QTcpSocket oscSocket;
 	QTimer oscReconnectTimer;
 };
-
-#endif  // WAVEPLAYINTERFACE_H

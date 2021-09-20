@@ -1,5 +1,4 @@
-#ifndef BODEPLOT_H
-#define BODEPLOT_H
+#pragma once
 
 #include "BiquadFilter.h"
 #include "BodePlotWidget.h"
@@ -27,5 +26,3 @@ private:
 
 	std::set<Equalizer*> eqFilters;
 };
-
-#endif  // BODEPLOT_H

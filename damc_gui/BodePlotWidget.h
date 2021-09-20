@@ -1,5 +1,4 @@
-#ifndef BODEPLOTWIDGET_H
-#define BODEPLOTWIDGET_H
+#pragma once
 
 #include <QPen>
 #include <QWidget>
@@ -45,5 +44,3 @@ protected:
 	PlotAxis yRightAxis;
 	std::vector<PlotCurve*> curves;
 };
-
-#endif  // BODEPLOTWIDGET_H
