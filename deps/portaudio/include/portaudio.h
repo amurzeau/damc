@@ -287,7 +287,8 @@ typedef enum PaHostApiTypeId
     paWDMKS=11,
     paJACK=12,
     paWASAPI=13,
-    paAudioScienceHPI=14
+    paAudioScienceHPI=14,
+    paAudioIO=15
 } PaHostApiTypeId;
 
 
@@ -916,7 +917,7 @@ PaError Pa_OpenStream( PaStream** stream,
  @param numOutputChannels The number of channels of sound to be delivered to the
  stream callback or passed to Pa_WriteStream. It can range from 1 to the value
  of maxOutputChannels in the PaDeviceInfo record for the default output device.
- If 0 the stream is opened as an output-only stream.
+ If 0 the stream is opened as an input-only stream.
 
  @param sampleFormat The sample format of both the input and output buffers
  provided to the callback or passed to and from Pa_ReadStream and Pa_WriteStream.
