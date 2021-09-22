@@ -11,11 +11,6 @@ JackPortAutoConnect::JackPortAutoConnect(OscContainer* oscParent)
       oscEnableConnectMonitoring(oscParent, "enableConnectionMonitoring", true) {
 	jack_status_t status;
 
-	SPDLOG_INFO("Initializing async Jack notification handler");
-	jackNotificationPending.data = this;
-	uv_async_init(uv_default_loop(), &jackNotificationPending, &JackPortAutoConnect::onJackNotificationStatic);
-	uv_unref((uv_handle_t*) &jackNotificationPending);
-
 	std::string monitoringClientName = OutputInstance::JACK_CLIENT_NAME_PREFIX + "monitoringclient";
 	SPDLOG_INFO("Opening monitoring jack client {}", monitoringClientName);
 
@@ -81,6 +76,10 @@ void JackPortAutoConnect::stop() {
 	}
 }
 
+void JackPortAutoConnect::onSlowTimer() {
+	processJackNotifications();
+}
+
 void JackPortAutoConnect::jackOnPortConnectStatic(jack_port_id_t a, jack_port_id_t b, int connect, void* arg) {
 	JackPortAutoConnect* thisInstance = (JackPortAutoConnect*) arg;
 
@@ -90,13 +89,12 @@ void JackPortAutoConnect::jackOnPortConnectStatic(jack_port_id_t a, jack_port_id
 	notification.data.portConnect.b = b;
 	notification.data.portConnect.connect = connect;
 
-	SPDLOG_TRACE("jack event: port connect: {} <=> {} {}", a, b, connect ? "connected" : "disconnected");
+	SPDLOG_DEBUG("jack event: port connect: {} <=> {} {}", a, b, connect ? "connected" : "disconnected");
 
 	{
 		std::lock_guard guard(thisInstance->jackNotificationMutex);
 		thisInstance->jackNotifications.push_back(notification);
 	}
-	uv_async_send(&thisInstance->jackNotificationPending);
 }
 
 int JackPortAutoConnect::jackOnGraphReorderedStatic(void* arg) {
@@ -105,13 +103,12 @@ int JackPortAutoConnect::jackOnGraphReorderedStatic(void* arg) {
 	JackNotification notification;
 	notification.type = JackNotification::GraphReordered;
 
-	SPDLOG_TRACE("jack event: graph reordered");
+	SPDLOG_DEBUG("jack event: graph reordered");
 
 	{
 		std::lock_guard guard(thisInstance->jackNotificationMutex);
 		thisInstance->jackNotifications.push_back(notification);
 	}
-	uv_async_send(&thisInstance->jackNotificationPending);
 
 	return 0;
 }
@@ -124,39 +121,43 @@ void JackPortAutoConnect::jackOnPortRegistrationStatic(jack_port_id_t port, int 
 	notification.data.portRegistration.port = port;
 	notification.data.portRegistration.is_registered = is_registered;
 
-	SPDLOG_TRACE("jack event: port registration: {} {}", port, is_registered ? "registered" : "unregistered");
+	SPDLOG_DEBUG("jack event: port registration: {} {}", port, is_registered ? "registered" : "unregistered");
 
 	{
 		std::lock_guard guard(thisInstance->jackNotificationMutex);
 		thisInstance->jackNotifications.push_back(notification);
 	}
-	uv_async_send(&thisInstance->jackNotificationPending);
 }
 
-void JackPortAutoConnect::onJackNotificationStatic(uv_async_t* handle) {
-	JackPortAutoConnect* thisInstance = (JackPortAutoConnect*) handle->data;
+void JackPortAutoConnect::processJackNotifications() {
 	std::vector<JackNotification> pendingNotifications;
 
 	{
-		std::lock_guard guard(thisInstance->jackNotificationMutex);
-		pendingNotifications.swap(thisInstance->jackNotifications);
+		std::lock_guard guard(jackNotificationMutex);
+		if(previousNotificationCount != jackNotifications.size())
+			previousNotificationCount = jackNotifications.size();
+		else if(previousNotificationCount > 0)
+			pendingNotifications.swap(jackNotifications);
 	}
+
+	if(pendingNotifications.empty())
+		return;
 
 	SPDLOG_INFO("Processing {} jack notifications", pendingNotifications.size());
 
 	for(const auto& notification : pendingNotifications) {
 		switch(notification.type) {
 			case JackNotification::PortConnect:
-				thisInstance->jackOnPortConnect(notification.data.portConnect.a,
-				                                notification.data.portConnect.b,
-				                                notification.data.portConnect.connect);
+				jackOnPortConnect(notification.data.portConnect.a,
+				                  notification.data.portConnect.b,
+				                  notification.data.portConnect.connect);
 				break;
 			case JackNotification::GraphReordered:
-				thisInstance->jackOnGraphReordered();
+				jackOnGraphReordered();
 				break;
 			case JackNotification::PortRegistration:
-				thisInstance->jackOnPortRegistration(notification.data.portRegistration.port,
-				                                     notification.data.portRegistration.is_registered);
+				jackOnPortRegistration(notification.data.portRegistration.port,
+				                       notification.data.portRegistration.is_registered);
 				break;
 		}
 	}
@@ -183,14 +184,14 @@ void JackPortAutoConnect::jackOnGraphReordered() {
 		jack_port_t* portB = jack_port_by_id(monitoringJackClient, portChange.b);
 
 		if(portA == nullptr || portB == nullptr) {
-			SPDLOG_TRACE("Port disconnected because client was disconnected (port are not available anymore)");
+			SPDLOG_DEBUG("Port disconnected because client was disconnected (port are not available anymore)");
 			continue;
 		}
 
 		const char* aName = jack_port_name(portA);
 		const char* bName = jack_port_name(portB);
 		if(aName == nullptr || bName == nullptr) {
-			SPDLOG_TRACE("Port disconnected because client was disconnected (port have no name anymore)");
+			SPDLOG_DEBUG("Port disconnected because client was disconnected (port have no name anymore)");
 			continue;
 		}
 
@@ -202,21 +203,21 @@ void JackPortAutoConnect::jackOnPortRegistration(jack_port_id_t port, int is_reg
 	if(!is_registered)
 		return;
 
-	SPDLOG_TRACE("Processing port connection update for port {}", port);
+	SPDLOG_DEBUG("Processing port connection update for port {}", port);
 
 	jack_port_t* portPtr = jack_port_by_id(monitoringJackClient, port);
 	if(!portPtr) {
-		SPDLOG_TRACE("Port {} registered but can't open it", port);
+		SPDLOG_DEBUG("Port {} registered but can't open it", port);
 		return;
 	}
 
 	const char* portName = jack_port_name(portPtr);
 	if(!portName) {
-		SPDLOG_TRACE("Port {} registered but has no name", port);
+		SPDLOG_DEBUG("Port {} registered but has no name", port);
 		return;
 	}
 
-	SPDLOG_TRACE("Port {} registered", portName);
+	SPDLOG_DEBUG("Port {} registered", portName);
 	autoConnectPort(portName);
 }
 
@@ -271,19 +272,12 @@ void JackPortAutoConnect::savePortConnection(const char* aName, const char* bNam
 	jack_port_t* portAByName = jack_port_by_name(monitoringJackClient, aName);
 	jack_port_t* portBByName = jack_port_by_name(monitoringJackClient, bName);
 
-	SPDLOG_TRACE("port {}:\n  a = {}, name: {}, byname = {}\n  b = {}, name: {}, byname = {}",
-	             portChange.connect ? "connected" : "disconnected",
-	             (void*) portA,
-	             aName,
-	             portAByName,
-	             (void*) portB,
-	             bName,
-	             portBByName);
+	SPDLOG_DEBUG("port {} <=> {}  {}", connect ? "connected" : "disconnected", aName, bName);
 
 	if(portAByName == nullptr || portBByName == nullptr) {
 		// There was a disconnect because a client disconnected
 		// Don't save it
-		SPDLOG_TRACE("Port disconnected because client was disconnected (can't find port by name anymore)");
+		SPDLOG_DEBUG("Port disconnected because client was disconnected (can't find port by name anymore)");
 		return;
 	}
 
@@ -300,7 +294,7 @@ void JackPortAutoConnect::savePortConnection(const char* aName, const char* bNam
 		inputPort = aName;
 		outputPort = bName;
 	} else {
-		SPDLOG_TRACE("Not a output to input connection between {} and {}, ignore", aName, bName);
+		SPDLOG_DEBUG("Not a output to input connection between {} and {}, ignore", aName, bName);
 		return;
 	}
 
@@ -332,13 +326,13 @@ void JackPortAutoConnect::autoConnectPort(const char* portName) {
 	std::map<std::string, std::set<std::string>>* portConnections;
 
 	if(!oscEnableAutoConnect) {
-		SPDLOG_TRACE("Autoconnection disabled, not connecting {}", port);
+		SPDLOG_DEBUG("Autoconnection disabled, not connecting {}", portName);
 		return;
 	}
 
 	jack_port_t* port = jack_port_by_name(monitoringJackClient, portName);
 	if(!port) {
-		SPDLOG_TRACE("Port {} registered but can't open it", port);
+		SPDLOG_DEBUG("Port {} registered but can't open it", portName);
 		return;
 	}
 
@@ -349,14 +343,14 @@ void JackPortAutoConnect::autoConnectPort(const char* portName) {
 	} else if(portFlags & JackPortIsInput) {
 		portConnections = &inputPortConnections;
 	} else {
-		SPDLOG_TRACE("Port {} not an input or output", portName);
+		SPDLOG_DEBUG("Port {} not an input or output", portName);
 		return;
 	}
 
 	auto it = portConnections->find(portName);
 
 	if(it == portConnections->end()) {
-		SPDLOG_TRACE("Port {} not in list of ports to auto-connect", portName);
+		SPDLOG_DEBUG("Port {} not in list of ports to auto-connect", portName);
 		return;
 	}
 

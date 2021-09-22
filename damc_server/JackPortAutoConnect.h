@@ -7,7 +7,6 @@
 #include <mutex>
 #include <set>
 #include <string>
-#include <uv.h>
 #include <vector>
 
 class JackPortAutoConnect {
@@ -17,6 +16,7 @@ public:
 
 	void start(std::map<std::string, std::set<std::string>> outputPortConnections);
 	void stop();
+	void onSlowTimer();
 
 	const std::map<std::string, std::set<std::string>>& getOutputPortConnections() { return outputPortConnections; }
 
@@ -25,7 +25,7 @@ protected:
 	static int jackOnGraphReorderedStatic(void* arg);
 	static void jackOnPortRegistrationStatic(jack_port_id_t port, int is_registered, void* arg);
 
-	static void onJackNotificationStatic(uv_async_t* handle);
+	void processJackNotifications();
 
 	void jackOnPortConnect(jack_port_id_t a, jack_port_id_t b, int connect);
 	void jackOnGraphReordered();
@@ -66,9 +66,9 @@ private:
 	OscVariable<bool> oscEnableAutoConnect;
 	OscVariable<bool> oscEnableConnectMonitoring;
 
-	uv_async_t jackNotificationPending;
 	std::mutex jackNotificationMutex;
 	std::vector<JackNotification> jackNotifications;
+	size_t previousNotificationCount = 0;
 
 	std::vector<PortConnectionStateChange> pendingPortChanges;
 	std::map<std::string, std::set<std::string>> outputPortConnections;  // outputs to inputs

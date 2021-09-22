@@ -151,6 +151,8 @@ void ControlInterface::onSlowTimer() {
 		saveConfig();
 	}
 
+	jackPortAutoConnect.onSlowTimer();
+
 	SPDLOG_TRACE("Slow periodic update end");
 }
 
