@@ -6,7 +6,7 @@
 #include "OscServer.h"
 #include "OscStatePersist.h"
 #include "OscTcpServer.h"
-#include "OutputInstance/OutputInstance.h"
+#include "ChannelStrip/ChannelStrip.h"
 #include <Osc/OscContainerArray.h>
 #include <Osc/OscDynamicVariable.h>
 #include <jack/jack.h>
@@ -45,7 +45,7 @@ private:
 	OscStatePersist oscStatePersister;
 	OscServer oscUdpServer;
 	OscTcpServer oscTcpServer;
-	OscContainerArray<OutputInstance> outputs;
+	OscContainerArray<ChannelStrip> outputs;
 	KeyBinding keyBinding;
 	JackPortAutoConnect jackPortAutoConnect;
 

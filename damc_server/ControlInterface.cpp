@@ -9,9 +9,9 @@
 #include <set>
 #include <string.h>
 
-#include "OutputInstance/DeviceOutputInstance.h"
+#include "ChannelStrip/DeviceOutputInstance.h"
 #ifdef _WIN32
-#include "OutputInstance/WasapiInstance.h"
+#include "ChannelStrip/WasapiInstance.h"
 #endif
 
 ControlInterface::ControlInterface()
@@ -36,7 +36,7 @@ ControlInterface::ControlInterface()
 	SPDLOG_INFO("Starting control interface");
 
 	outputs.setFactory(
-	    [this](OscContainer* parent, int name) { return new OutputInstance(parent, this, name, audioRunning); });
+	    [this](OscContainer* parent, int name) { return new ChannelStrip(parent, this, name, audioRunning); });
 
 	oscTypeList.setReadCallback([]() {
 		return std::vector<std::string>{{
@@ -91,7 +91,7 @@ int ControlInterface::init(const char* controlIp, int controlPort) {
 
 	SPDLOG_INFO("Activating {} audio strips", outputs.size());
 	audioRunning = true;
-	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {
+	for(std::pair<const int, std::unique_ptr<ChannelStrip>>& output : outputs) {
 		output.second->activate();
 	}
 
@@ -118,7 +118,7 @@ void ControlInterface::stop() {
 	oscUdpServer.stop();
 
 	SPDLOG_INFO("Stopping audio strips jack clients");
-	for(std::pair<const int, std::unique_ptr<OutputInstance>>& output : outputs) {
+	for(std::pair<const int, std::unique_ptr<ChannelStrip>>& output : outputs) {
 		output.second->stop();
 	}
 }

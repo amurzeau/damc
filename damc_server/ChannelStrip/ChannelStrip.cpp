@@ -1,4 +1,4 @@
-#include "OutputInstance.h"
+#include "ChannelStrip.h"
 #include "../ControlInterface.h"
 #include <algorithm>
 #include <jack/metadata.h>
@@ -14,10 +14,10 @@
 #include "WasapiInstance.h"
 #endif
 
-const std::string OutputInstance::JACK_CLIENT_NAME_PREFIX = "damc-";
-const std::string OutputInstance::JACK_CLIENT_DISPLAYNAME_PREFIX = "damc: ";
+const std::string ChannelStrip::JACK_CLIENT_NAME_PREFIX = "damc-";
+const std::string ChannelStrip::JACK_CLIENT_DISPLAYNAME_PREFIX = "damc: ";
 
-OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning)
+ChannelStrip::ChannelStrip(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning)
     : OscContainer(parent, std::to_string(index)),
       outputInstance(index),
       controlInterface(controlInterface),
@@ -27,7 +27,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 
       enableAudio(false),
       oscEnable(this, "enable", false),
-      oscType(this, "_type", (int32_t) OutputInstance::None),  // use _type to ensure it is before endpoint config
+      oscType(this, "_type", (int32_t) ChannelStrip::None),  // use _type to ensure it is before endpoint config
       oscName(this, "name", std::to_string(index)),
       oscDisplayName(this, "display_name", oscName.get()),
       oscNumChannel(this, "channels", 2),
@@ -49,7 +49,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 		}
 
 		switch(newValue) {
-#define ENUM_ITEM(item) case OutputInstance::item:
+#define ENUM_ITEM(item) case ChannelStrip::item:
 			OUTPUT_INSTANCE_TYPES(ENUM_ITEM)
 #undef ENUM_ITEM
 			break;
@@ -108,7 +108,7 @@ OutputInstance::OutputInstance(OscContainer* parent, ControlInterface* controlIn
 	}
 }
 
-OutputInstance::~OutputInstance() {
+ChannelStrip::~ChannelStrip() {
 	if(client) {
 		jack_deactivate(client);
 		jack_client_close(client);
@@ -119,7 +119,7 @@ OutputInstance::~OutputInstance() {
 	uv_mutex_destroy(&filtersMutex);
 }
 
-void OutputInstance::activate() {
+void ChannelStrip::activate() {
 	enableAudio = true;
 	oscEnable.addCheckCallback([this](bool newValue) {
 		if(newValue) {
@@ -140,7 +140,7 @@ void OutputInstance::activate() {
 	oscEnable.setChangeCallback([this](bool newValue) { updateEnabledState(newValue); });
 }
 
-int OutputInstance::start() {
+int ChannelStrip::start() {
 	jack_status_t status;
 
 	if(client || !endpoint)
@@ -214,7 +214,7 @@ int OutputInstance::start() {
 		clientUuid = 0;
 	}
 	updateJackDisplayName();
-	jack_set_property_change_callback(client, &OutputInstance::onJackPropertyChangeCallback, this);
+	jack_set_property_change_callback(client, &ChannelStrip::onJackPropertyChangeCallback, this);
 
 	int ret = jack_activate(client);
 	if(ret) {
@@ -226,7 +226,7 @@ int OutputInstance::start() {
 	return 0;
 }
 
-void OutputInstance::stop() {
+void ChannelStrip::stop() {
 	SPDLOG_INFO("Stopping jack client {}", oscName.get());
 
 	if(client) {
@@ -239,37 +239,37 @@ void OutputInstance::stop() {
 	}
 }
 
-bool OutputInstance::updateType(int newValue) {
+bool ChannelStrip::updateType(int newValue) {
 	IAudioEndpoint* newEndpoint = nullptr;
 
 	// Reset before to avoid having duplicate OSC addresses
 	this->endpoint.reset(nullptr);
 
 	switch(newValue) {
-		case OutputInstance::Loopback:
+		case ChannelStrip::Loopback:
 			newEndpoint = new LoopbackOutputInstance();
 			break;
-		case OutputInstance::RemoteOutput:
+		case ChannelStrip::RemoteOutput:
 			newEndpoint = new RemoteOutputInstance(this);
 			break;
-		case OutputInstance::RemoteInput:
+		case ChannelStrip::RemoteInput:
 			newEndpoint = new RemoteInputInstance(this);
 			break;
-		case OutputInstance::DeviceOutput:
+		case ChannelStrip::DeviceOutput:
 			newEndpoint = new DeviceOutputInstance(this);
 			break;
-		case OutputInstance::DeviceInput:
+		case ChannelStrip::DeviceInput:
 			newEndpoint = new DeviceInputInstance(this);
 			break;
 #ifdef _WIN32
-		case OutputInstance::WasapiDeviceOutput:
+		case ChannelStrip::WasapiDeviceOutput:
 			newEndpoint = new WasapiInstance(this, WasapiInstance::D_Output);
 			break;
-		case OutputInstance::WasapiDeviceInput:
+		case ChannelStrip::WasapiDeviceInput:
 			newEndpoint = new WasapiInstance(this, WasapiInstance::D_Input);
 			break;
 #endif
-		case OutputInstance::None:
+		case ChannelStrip::None:
 			newEndpoint = nullptr;
 			break;
 
@@ -283,7 +283,7 @@ bool OutputInstance::updateType(int newValue) {
 	return true;
 }
 
-void OutputInstance::updateEnabledState(bool newValue) {
+void ChannelStrip::updateEnabledState(bool newValue) {
 	if(!enableAudio) {
 		SPDLOG_DEBUG("Not enabling audio yet, will do after config load");
 		return;
@@ -298,7 +298,7 @@ void OutputInstance::updateEnabledState(bool newValue) {
 	}
 }
 
-void OutputInstance::updateJackDisplayName() {
+void ChannelStrip::updateJackDisplayName() {
 	if(clientUuid == 0) {
 		SPDLOG_DEBUG("Not updating jack client pretty name: no uuid");
 		return;
@@ -315,11 +315,11 @@ void OutputInstance::updateJackDisplayName() {
 	}
 }
 
-void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
+void ChannelStrip::onJackPropertyChangeCallback(jack_uuid_t subject,
                                                   const char* key,
                                                   jack_property_change_t change,
                                                   void* arg) {
-	OutputInstance* thisInstance = (OutputInstance*) arg;
+	ChannelStrip* thisInstance = (ChannelStrip*) arg;
 	char* pszValue = nullptr;
 	char* pszType = nullptr;
 
@@ -354,8 +354,8 @@ void OutputInstance::onJackPropertyChangeCallback(jack_uuid_t subject,
 	}
 }
 
-int OutputInstance::processSamplesStatic(jack_nframes_t nframes, void* arg) {
-	OutputInstance* thisInstance = (OutputInstance*) arg;
+int ChannelStrip::processSamplesStatic(jack_nframes_t nframes, void* arg) {
+	ChannelStrip* thisInstance = (ChannelStrip*) arg;
 
 	thisInstance->jackSampleRateMeasure.notifySampleProcessed(nframes);
 
@@ -365,7 +365,7 @@ int OutputInstance::processSamplesStatic(jack_nframes_t nframes, void* arg) {
 		return thisInstance->processInputSamples(nframes);
 }
 
-int OutputInstance::processInputSamples(jack_nframes_t nframes) {
+int ChannelStrip::processInputSamples(jack_nframes_t nframes) {
 	float* buffers[32];
 	float peaks[32];
 
@@ -394,7 +394,7 @@ int OutputInstance::processInputSamples(jack_nframes_t nframes) {
 	return 0;
 }
 
-int OutputInstance::processSamples(jack_nframes_t nframes) {
+int ChannelStrip::processSamples(jack_nframes_t nframes) {
 	float* outputs[32];
 	const float* inputs[32];
 	float peaks[32];
@@ -434,7 +434,7 @@ int OutputInstance::processSamples(jack_nframes_t nframes) {
 	return 0;
 }
 
-void OutputInstance::onFastTimer() {
+void ChannelStrip::onFastTimer() {
 	if(!client)
 		return;
 
@@ -486,7 +486,7 @@ void OutputInstance::onFastTimer() {
 	}
 }
 
-void OutputInstance::onSlowTimer() {
+void ChannelStrip::onSlowTimer() {
 	if(!client)
 		return;
 

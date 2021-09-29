@@ -1,6 +1,6 @@
 #include "JackPortAutoConnect.h"
 #include "JackUtils.h"
-#include "OutputInstance/OutputInstance.h"
+#include "ChannelStrip/ChannelStrip.h"
 #include <OscRoot.h>
 #include <jack/jack.h>
 #include <spdlog/spdlog.h>
@@ -11,7 +11,7 @@ JackPortAutoConnect::JackPortAutoConnect(OscContainer* oscParent)
       oscEnableConnectMonitoring(oscParent, "enableConnectionMonitoring", true) {
 	jack_status_t status;
 
-	std::string monitoringClientName = OutputInstance::JACK_CLIENT_NAME_PREFIX + "monitoringclient";
+	std::string monitoringClientName = ChannelStrip::JACK_CLIENT_NAME_PREFIX + "monitoringclient";
 	SPDLOG_INFO("Opening monitoring jack client {}", monitoringClientName);
 
 	monitoringJackClient = jack_client_open(monitoringClientName.c_str(), JackNullOption, &status);

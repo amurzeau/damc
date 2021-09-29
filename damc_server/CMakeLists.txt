@@ -6,8 +6,8 @@ find_package(Threads REQUIRED)
 
 if(WIN32)
 	set(SOURCES
-		OutputInstance/WasapiInstance.cpp
-		OutputInstance/WasapiInstance.h
+		ChannelStrip/WasapiInstance.cpp
+		ChannelStrip/WasapiInstance.h
 	)
 else()
 	set(SOURCES)
@@ -29,28 +29,28 @@ add_executable(${TARGET_NAME}
 	Filter/ExpanderFilter.h
 	Filter/ExpanderFilter.cpp
 
-	OutputInstance/IAudioEndpoint.h
-	OutputInstance/OutputInstance.cpp
-	OutputInstance/OutputInstance.h
-	OutputInstance/LoopbackOutputInstance.cpp
-	OutputInstance/LoopbackOutputInstance.h
-	OutputInstance/RemoteOutputInstance.cpp
-	OutputInstance/RemoteOutputInstance.h
-	OutputInstance/RemoteInputInstance.cpp
-	OutputInstance/RemoteInputInstance.h
-	OutputInstance/DeviceInputInstance.cpp
-	OutputInstance/DeviceInputInstance.h
-	OutputInstance/DeviceOutputInstance.cpp
-	OutputInstance/DeviceOutputInstance.h
-	OutputInstance/SampleRateMeasure.cpp
-	OutputInstance/SampleRateMeasure.h
-	OutputInstance/RemoteUdpOutput.cpp
-	OutputInstance/RemoteUdpOutput.h
-	OutputInstance/RemoteUdpInput.cpp
-	OutputInstance/RemoteUdpInput.h
-	OutputInstance/ResamplingFilter.cpp
-	OutputInstance/ResamplingFilter_coefs.cpp
-	OutputInstance/ResamplingFilter.h
+	ChannelStrip/IAudioEndpoint.h
+	ChannelStrip/ChannelStrip.cpp
+	ChannelStrip/ChannelStrip.h
+	ChannelStrip/LoopbackOutputInstance.cpp
+	ChannelStrip/LoopbackOutputInstance.h
+	ChannelStrip/RemoteOutputInstance.cpp
+	ChannelStrip/RemoteOutputInstance.h
+	ChannelStrip/RemoteInputInstance.cpp
+	ChannelStrip/RemoteInputInstance.h
+	ChannelStrip/DeviceInputInstance.cpp
+	ChannelStrip/DeviceInputInstance.h
+	ChannelStrip/DeviceOutputInstance.cpp
+	ChannelStrip/DeviceOutputInstance.h
+	ChannelStrip/SampleRateMeasure.cpp
+	ChannelStrip/SampleRateMeasure.h
+	ChannelStrip/RemoteUdpOutput.cpp
+	ChannelStrip/RemoteUdpOutput.h
+	ChannelStrip/RemoteUdpInput.cpp
+	ChannelStrip/RemoteUdpInput.h
+	ChannelStrip/ResamplingFilter.cpp
+	ChannelStrip/ResamplingFilter_coefs.cpp
+	ChannelStrip/ResamplingFilter.h
 
 	${SOURCES}
 

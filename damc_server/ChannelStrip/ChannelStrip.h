@@ -14,7 +14,7 @@
 
 class ControlInterface;
 
-class OutputInstance : public OscContainer {
+class ChannelStrip : public OscContainer {
 public:
 #ifdef _WIN32
 #define WASAPI_TYPES(_) \
@@ -47,8 +47,8 @@ public:
 	static const std::string JACK_CLIENT_DISPLAYNAME_PREFIX;
 
 public:
-	OutputInstance(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning);
-	virtual ~OutputInstance();
+	ChannelStrip(OscContainer* parent, ControlInterface* controlInterface, int index, bool audioRunning);
+	virtual ~ChannelStrip();
 
 	void activate();
 	int start();
