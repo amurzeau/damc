@@ -77,18 +77,9 @@ private:
 	jack_client_t* client;
 	jack_uuid_t clientUuid;
 	int jackSampleRate;
-	FilterChain filters;
 	std::vector<jack_port_t*> inputPorts;
 	std::vector<jack_port_t*> outputPorts;
-	uv_mutex_t filtersMutex;
 
-	std::vector<float> levelsDb;
-	uv_mutex_t peakMutex;
-	int samplesInPeaks;
-	std::vector<float> peaksPerChannel;
-	std::string oscPeakGlobalPath;
-	std::string oscPeakPerChannelPath;
-	std::vector<OscArgument> oscPeakPerChannelArguments;
 	SampleRateMeasure jackSampleRateMeasure;
 
 	bool enableAudio;
@@ -99,8 +90,7 @@ private:
 	OscVariable<int32_t> oscNumChannel;
 	OscReadOnlyVariable<int32_t> oscSampleRate;
 
-	OscVariable<bool> oscEnablePeakUpdate;
-	OscVariable<bool> oscEnablePeakJsonUpdate;
+	FilterChain filters;
 
 	bool displayNameUpdateRequested;
 };

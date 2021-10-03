@@ -28,6 +28,8 @@ add_executable(${TARGET_NAME}
 	Filter/CompressorFilter.cpp
 	Filter/ExpanderFilter.h
 	Filter/ExpanderFilter.cpp
+	Filter/PeakMeter.cpp
+	Filter/PeakMeter.h
 
 	ChannelStrip/IAudioEndpoint.h
 	ChannelStrip/ChannelStrip.cpp

@@ -1,6 +1,7 @@
 #include "JackPortAutoConnect.h"
-#include "JackUtils.h"
 #include "ChannelStrip/ChannelStrip.h"
+#include "JackUtils.h"
+#include <Osc/OscContainer.h>
 #include <OscRoot.h>
 #include <jack/jack.h>
 #include <spdlog/spdlog.h>

@@ -9,7 +9,6 @@
 #include "ChannelStrip/ChannelStrip.h"
 #include <Osc/OscContainerArray.h>
 #include <Osc/OscDynamicVariable.h>
-#include <jack/jack.h>
 #include <map>
 #include <memory>
 #include <uv.h>

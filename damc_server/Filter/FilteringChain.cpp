@@ -10,15 +10,18 @@ float LogScaleToOsc(float value) {
 	return 20.0 * log10(value);
 }
 
-FilterChain::FilterChain(OscContainer* parent)
+FilterChain::FilterChain(OscContainer* parent,
+                         OscReadOnlyVariable<int32_t>* oscNumChannel,
+                         OscReadOnlyVariable<int32_t>* oscSampleRate)
     : OscContainer(parent, "filterChain"),
       reverbFilters(this, "reverbFilter"),
       eqFilters(this, "eqFilters"),
+      compressorFilter(this),
+      expanderFilter(this),
+      peakMeter(parent, oscNumChannel, oscSampleRate),
       delay(this, "delay", 0),
       volume(this, "balance", 1.0f),
       masterVolume(this, "volume", 1.0f),
-      compressorFilter(this),
-      expanderFilter(this),
       mute(this, "mute", false) {
 	reverbFilters.setFactory(
 	    [](OscContainer* parent, int name) { return new ReverbFilter(parent, std::to_string(name)); });
@@ -31,9 +34,14 @@ FilterChain::FilterChain(OscContainer* parent)
 	});
 	volume.setOscConverters(&LogScaleToOsc, &LogScaleFromOsc);
 	masterVolume.setOscConverters(&LogScaleToOsc, &LogScaleFromOsc);
+
+	oscNumChannel->setChangeCallback([this](int32_t newValue) {
+		if(newValue > 0)
+			updateNumChannels(newValue);
+	});
 }
 
-void FilterChain::init(size_t numChannel) {
+void FilterChain::updateNumChannels(size_t numChannel) {
 	delayFilters.resize(numChannel + 1);  // +1 for side channel
 	reverbFilters.resize(numChannel);
 	volume.resize(numChannel);
@@ -64,9 +72,9 @@ void FilterChain::reset(double fs) {
 	expanderFilter.reset(fs);
 }
 
-void FilterChain::processSamples(
-    float* peakOutput, float** output, const float** input, size_t numChannel, size_t count) {
+void FilterChain::processSamples(float** output, const float** input, size_t numChannel, size_t count) {
 	float masterVolume = this->masterVolume.get();
+	float peaks[numChannel];
 
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
 		delayFilters[channel].processSamples(output[channel], input[channel], count);
@@ -88,11 +96,12 @@ void FilterChain::processSamples(
 		float peak = 0;
 		for(size_t i = 0; i < count; i++) {
 			output[channel][i] *= volume;
-			if(fabsf(output[channel][i]) >= peak)
-				peak = fabsf(output[channel][i]);
+			peak = fmaxf(peak, fabsf(output[channel][i]));
 		}
-		peakOutput[channel] = peak;
+		peaks[channel] = peak;
 	}
+
+	peakMeter.processSamples(peaks, numChannel, count);
 
 	if(mute) {
 		for(uint32_t channel = 0; channel < numChannel; channel++) {
@@ -103,4 +112,8 @@ void FilterChain::processSamples(
 
 float FilterChain::processSideChannelSample(float input) {
 	return delayFilters.back().processOneSample(input);
+}
+
+void FilterChain::onFastTimer() {
+	peakMeter.onFastTimer();
 }

@@ -5,6 +5,7 @@
 #include "DitheringFilter.h"
 #include "EqFilter.h"
 #include "ExpanderFilter.h"
+#include "PeakMeter.h"
 #include "ReverbFilter.h"
 #include <Osc/OscArray.h>
 #include <Osc/OscContainer.h>
@@ -14,21 +15,29 @@
 
 class FilterChain : public OscContainer {
 public:
-	FilterChain(OscContainer* parent);
+	FilterChain(OscContainer* parent,
+	            OscReadOnlyVariable<int32_t>* oscNumChannel,
+	            OscReadOnlyVariable<int32_t>* oscSampleRate);
 
-	void init(size_t numChannel);
 	void reset(double fs);
-	void processSamples(float* peakOutput, float** output, const float** input, size_t numChannel, size_t count);
+	void processSamples(float** output, const float** input, size_t numChannel, size_t count);
 	float processSideChannelSample(float input);
+
+	void onFastTimer();
+
+protected:
+	void updateNumChannels(size_t numChannel);
 
 private:
 	std::vector<DelayFilter> delayFilters;
 	OscContainerArray<ReverbFilter> reverbFilters;
 	OscContainerArray<EqFilter> eqFilters;
+	CompressorFilter compressorFilter;
+	ExpanderFilter expanderFilter;
+	PeakMeter peakMeter;
+
 	OscVariable<int32_t> delay;
 	OscArray<float> volume;
 	OscVariable<float> masterVolume;
-	CompressorFilter compressorFilter;
-	ExpanderFilter expanderFilter;
 	OscVariable<bool> mute;
 };

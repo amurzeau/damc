@@ -1,13 +1,14 @@
 #pragma once
 
-#include <Osc/OscContainer.h>
 #include <Osc/OscVariable.h>
-#include <jack/jack.h>
+#include <jack/types.h>
 #include <map>
 #include <mutex>
 #include <set>
 #include <string>
 #include <vector>
+
+class OscContainer;
 
 class JackPortAutoConnect {
 public:

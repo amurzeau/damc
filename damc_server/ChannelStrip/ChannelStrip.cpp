@@ -22,7 +22,6 @@ ChannelStrip::ChannelStrip(OscContainer* parent, ControlInterface* controlInterf
       outputInstance(index),
       controlInterface(controlInterface),
       client(nullptr),
-      filters(this),
       jackSampleRateMeasure(this, "realSampleRate"),
 
       enableAudio(false),
@@ -33,15 +32,8 @@ ChannelStrip::ChannelStrip(OscContainer* parent, ControlInterface* controlInterf
       oscNumChannel(this, "channels", 2),
       oscSampleRate(this, "sample_rate"),
 
-      oscEnablePeakUpdate(this, "enable_peak", false),
-      oscEnablePeakJsonUpdate(this, "enable_peak_json", true),
+      filters(this, &oscNumChannel, &oscSampleRate),
       displayNameUpdateRequested(false) {
-	uv_mutex_init(&filtersMutex);
-	uv_mutex_init(&peakMutex);
-
-	oscPeakGlobalPath = getFullAddress() + "/meter";
-	oscPeakPerChannelPath = getFullAddress() + "/meter_per_channel";
-
 	oscType.addCheckCallback([this](int newValue) -> bool {
 		if(client) {
 			SPDLOG_ERROR("Can't change type when output is enabled");
@@ -93,15 +85,7 @@ ChannelStrip::ChannelStrip(OscContainer* parent, ControlInterface* controlInterf
 		return true;
 	});
 
-	oscNumChannel.setChangeCallback([this](int32_t newValue) {
-		SPDLOG_INFO("Changing channel number to {}", newValue);
-
-		levelsDb.resize(newValue, -192);
-		peaksPerChannel.resize(newValue, 0);
-		samplesInPeaks = 0;
-
-		filters.init(newValue);
-	});
+	oscNumChannel.setChangeCallback([](int32_t newValue) { SPDLOG_INFO("Changing channel number to {}", newValue); });
 
 	if(audioRunning) {
 		activate();
@@ -114,9 +98,6 @@ ChannelStrip::~ChannelStrip() {
 		jack_client_close(client);
 		client = nullptr;
 	}
-
-	uv_mutex_destroy(&peakMutex);
-	uv_mutex_destroy(&filtersMutex);
 }
 
 void ChannelStrip::activate() {
@@ -367,7 +348,6 @@ int ChannelStrip::processSamplesStatic(jack_nframes_t nframes, void* arg) {
 
 int ChannelStrip::processInputSamples(jack_nframes_t nframes) {
 	float* buffers[32];
-	float peaks[32];
 
 	if(oscNumChannel > (int32_t)(sizeof(buffers) / sizeof(buffers[0]))) {
 		SPDLOG_ERROR("Too many channels, buffer too small !!!");
@@ -380,16 +360,7 @@ int ChannelStrip::processInputSamples(jack_nframes_t nframes) {
 
 	endpoint->postProcessSamples(buffers, oscNumChannel, nframes);
 
-	uv_mutex_lock(&filtersMutex);
-	filters.processSamples(peaks, buffers, const_cast<const float**>(buffers), oscNumChannel, nframes);
-	uv_mutex_unlock(&filtersMutex);
-
-	uv_mutex_lock(&peakMutex);
-	this->samplesInPeaks += nframes;
-	for(int32_t i = 0; i < oscNumChannel; i++) {
-		this->peaksPerChannel[i] = std::max(peaks[i], this->peaksPerChannel[i]);
-	}
-	uv_mutex_unlock(&peakMutex);
+	filters.processSamples(buffers, const_cast<const float**>(buffers), oscNumChannel, nframes);
 
 	return 0;
 }
@@ -397,7 +368,6 @@ int ChannelStrip::processInputSamples(jack_nframes_t nframes) {
 int ChannelStrip::processSamples(jack_nframes_t nframes) {
 	float* outputs[32];
 	const float* inputs[32];
-	float peaks[32];
 
 	if(oscNumChannel > (int32_t)(sizeof(outputs) / sizeof(outputs[0]))) {
 		SPDLOG_ERROR("Too many channels, buffer too small !!!");
@@ -409,9 +379,7 @@ int ChannelStrip::processSamples(jack_nframes_t nframes) {
 		outputs[i] = (jack_default_audio_sample_t*) jack_port_get_buffer(outputPorts[i], nframes);
 	}
 
-	uv_mutex_lock(&filtersMutex);
-	filters.processSamples(peaks, outputs, inputs, oscNumChannel, nframes);
-	uv_mutex_unlock(&filtersMutex);
+	filters.processSamples(outputs, inputs, oscNumChannel, nframes);
 
 	// add side channel on channel 0
 	if(oscNumChannel < (int32_t) inputPorts.size()) {
@@ -422,13 +390,6 @@ int ChannelStrip::processSamples(jack_nframes_t nframes) {
 		}
 	}
 
-	uv_mutex_lock(&peakMutex);
-	this->samplesInPeaks += nframes;
-	for(int32_t i = 0; i < oscNumChannel; i++) {
-		this->peaksPerChannel[i] = std::max(peaks[i], this->peaksPerChannel[i]);
-	}
-	uv_mutex_unlock(&peakMutex);
-
 	endpoint->postProcessSamples(outputs, oscNumChannel, nframes);
 
 	return 0;
@@ -438,42 +399,7 @@ void ChannelStrip::onFastTimer() {
 	if(!client)
 		return;
 
-	int samples;
-	std::vector<float> peaks(this->peaksPerChannel.size(), 0);
-
-	uv_mutex_lock(&peakMutex);
-	samples = this->samplesInPeaks;
-	peaks.swap(this->peaksPerChannel);
-	this->samplesInPeaks = 0;
-	uv_mutex_unlock(&peakMutex);
-
-	if(oscSampleRate == 0)
-		return;
-
-	float deltaT = (float) samples / this->oscSampleRate;
-	float maxLevel = 0;
-
-	for(size_t channel = 0; channel < peaks.size(); channel++) {
-		float peakDb = peaks[channel] != 0 ? 20.0 * log10(peaks[channel]) : -INFINITY;
-
-		float decayAmount = 11.76470588235294 * deltaT;  // -20dB / 1.7s
-		float levelDb = std::max(levelsDb[channel] - decayAmount, peakDb);
-		levelsDb[channel] = levelDb > -192 ? levelDb : -192;
-		if(channel == 0 || levelsDb[channel] > maxLevel)
-			maxLevel = levelsDb[channel];
-	}
-
-	if(oscEnablePeakUpdate.get()) {
-		OscArgument argument = maxLevel;
-		getRoot()->sendMessage(oscPeakGlobalPath, &argument, 1);
-	}
-
-	oscPeakPerChannelArguments.clear();
-	oscPeakPerChannelArguments.reserve(levelsDb.size());
-	for(auto v : levelsDb) {
-		oscPeakPerChannelArguments.emplace_back(v);
-	}
-	getRoot()->sendMessage(oscPeakPerChannelPath, oscPeakPerChannelArguments.data(), oscPeakPerChannelArguments.size());
+	filters.onFastTimer();
 
 	if(endpoint)
 		endpoint->onFastTimer();
