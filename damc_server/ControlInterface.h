@@ -1,12 +1,12 @@
 #pragma once
 
+#include "ChannelStrip/ChannelStrip.h"
 #include "JackPortAutoConnect.h"
 #include "KeyBinding.h"
 #include "OscRoot.h"
 #include "OscServer.h"
 #include "OscStatePersist.h"
 #include "OscTcpServer.h"
-#include "ChannelStrip/ChannelStrip.h"
 #include <Osc/OscContainerArray.h>
 #include <Osc/OscDynamicVariable.h>
 #include <map>

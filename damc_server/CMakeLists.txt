@@ -24,10 +24,10 @@ add_executable(${TARGET_NAME}
 	Filter/DelayFilter.h
 	Filter/ReverbFilter.cpp
 	Filter/ReverbFilter.h
-	Filter/CompressorFilter.h
 	Filter/CompressorFilter.cpp
-	Filter/ExpanderFilter.h
+	Filter/CompressorFilter.h
 	Filter/ExpanderFilter.cpp
+	Filter/ExpanderFilter.h
 	Filter/PeakMeter.cpp
 	Filter/PeakMeter.h
 
@@ -63,16 +63,16 @@ add_executable(${TARGET_NAME}
 	JackPortAutoConnect.h
 	JackUtils.cpp
 	JackUtils.h
-	KeyBinding.h
 	KeyBinding.cpp
-	OscTcpClient.h
+	KeyBinding.h
 	OscTcpClient.cpp
-	OscTcpServer.h
+	OscTcpClient.h
 	OscTcpServer.cpp
-	OscServer.h
+	OscTcpServer.h
 	OscServer.cpp
-	OscStatePersist.h
+	OscServer.h
 	OscStatePersist.cpp
+	OscStatePersist.h
 	main.cpp
 )
 target_link_libraries(${TARGET_NAME} PUBLIC uv::uv PortAudio JACK::jack damc_common Threads::Threads spdlog::spdlog)

@@ -406,7 +406,7 @@ void ChannelStrip::onFastTimer() {
 
 	if(displayNameUpdateRequested) {
 		displayNameUpdateRequested = false;
-		// Don't call that function directly as displayName can be update in Jack notification thread
+		// Don't call that function directly as displayName can be updated in Jack notification thread
 		// where we can't call jack functions
 		updateJackDisplayName();
 	}
