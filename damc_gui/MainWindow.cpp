@@ -30,11 +30,11 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(ui->removeButton, &QAbstractButton::clicked, this, &MainWindow::onRemoveInstance);
 	connect(ui->showDisabledCheckBox, &QCheckBox::toggled, this, &MainWindow::showDisabledChanged);
 
-	oscTypeArray.setChangeCallback([this](const auto&, const auto&) { emit typeListChanged(); });
+	oscTypeArray.addChangeCallback([this](const auto&, const auto&) { emit typeListChanged(); });
 
-	oscPortaudioDeviceArray.setChangeCallback([this](const auto&, const auto&) { emit deviceListChanged(); });
+	oscPortaudioDeviceArray.addChangeCallback([this](const auto&, const auto&) { emit deviceListChanged(); });
 
-	oscWasapiDeviceArray.setChangeCallback([this](const auto&, const auto&) { emit deviceListChanged(); });
+	oscWasapiDeviceArray.addChangeCallback([this](const auto&, const auto&) { emit deviceListChanged(); });
 }
 
 MainWindow::~MainWindow() {

@@ -41,7 +41,7 @@ public:
 	void setOscConverters(std::function<T(T)> convertToOsc, std::function<T(T)> convertFromOsc);
 
 	void addCheckCallback(std::function<bool(T)> onChange);
-	void setChangeCallback(std::function<void(T)> onChange);
+	void addChangeCallback(std::function<void(T)> onChange);
 
 	void callChangeCallbacks(T v);
 	bool callCheckCallbacks(T v);

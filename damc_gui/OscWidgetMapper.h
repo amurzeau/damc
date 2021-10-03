@@ -36,7 +36,7 @@ public:
 	void dump() override;
 	std::string getAsString() const override { return std::string{}; }
 
-	void setChangeCallback(std::function<void(UnderlyingType)> onChange);
+	void addChangeCallback(std::function<void(UnderlyingType)> onChange);
 
 protected:
 	void notifyChanged(T* originatorWidget);
@@ -44,7 +44,7 @@ protected:
 
 private:
 	std::vector<T*> widgets;
-	std::function<void(UnderlyingType)> onChange;
+	std::vector<std::function<void(UnderlyingType)>> onChangeCallbacks;
 	double scale;
 	UnderlyingType value;
 };

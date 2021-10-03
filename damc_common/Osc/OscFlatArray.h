@@ -18,7 +18,7 @@ public:
 	void execute(const std::vector<OscArgument>& arguments) override;
 
 	void addCheckCallback(std::function<bool(const std::vector<T>&)> checkCallback);
-	void setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange);
+	void addChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange);
 
 	bool callCheckCallbacks(const std::vector<T>& v);
 

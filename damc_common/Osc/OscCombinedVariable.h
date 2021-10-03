@@ -21,7 +21,7 @@ public:
 		variable->addCheckCallback([callback](T) -> bool { return callback(); });
 	}
 	void addChangeCallback(std::function<void()> callback) override {
-		variable->setChangeCallback([callback](T) { callback(); });
+		variable->addChangeCallback([callback](T) { callback(); });
 	}
 	void callChangeCallback() override { variable->callChangeCallbacks(variable->get()); }
 

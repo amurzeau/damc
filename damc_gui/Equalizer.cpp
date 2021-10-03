@@ -28,14 +28,14 @@ Equalizer::Equalizer(QWidget* parent,
 	oscQ.setWidget(ui->qSpinBox);
 	oscGain.setWidget(ui->gainSpinBox);
 
-	oscEnable.setChangeCallback([this](bool) {
+	oscEnable.addChangeCallback([this](bool) {
 		updateResponse();
 		this->outputController->updateEqEnable();
 	});
-	oscType.setChangeCallback([this](int32_t) { updateResponse(); });
-	oscF0.setChangeCallback([this](float) { updateResponse(); });
-	oscQ.setChangeCallback([this](float) { updateResponse(); });
-	oscGain.setChangeCallback([this](float) { updateResponse(); });
+	oscType.addChangeCallback([this](int32_t) { updateResponse(); });
+	oscF0.addChangeCallback([this](float) { updateResponse(); });
+	oscQ.addChangeCallback([this](float) { updateResponse(); });
+	oscGain.addChangeCallback([this](float) { updateResponse(); });
 }
 
 Equalizer::~Equalizer() {

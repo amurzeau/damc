@@ -62,7 +62,7 @@ template<typename T> void OscFlatArray<T>::addCheckCallback(std::function<bool(c
 }
 
 template<typename T>
-void OscFlatArray<T>::setChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange) {
+void OscFlatArray<T>::addChangeCallback(std::function<void(const std::vector<T>&, const std::vector<T>&)> onChange) {
 	this->onChangeCallbacks.push_back(onChange);
 	onChange({}, values);
 }

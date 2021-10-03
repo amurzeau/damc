@@ -56,12 +56,12 @@ void JackPortAutoConnect::start(std::map<std::string, std::set<std::string>> out
 	// Connect already present ports
 	autoConnectAllExistingPorts();
 
-	oscEnableConnectMonitoring.setChangeCallback([this](bool newValue) {
+	oscEnableConnectMonitoring.addChangeCallback([this](bool newValue) {
 		if(newValue) {
 			saveAllPortConnections();
 		}
 	});
-	oscEnableAutoConnect.setChangeCallback([this](bool newValue) {
+	oscEnableAutoConnect.addChangeCallback([this](bool newValue) {
 		if(newValue) {
 			autoConnectAllExistingPorts();
 		}

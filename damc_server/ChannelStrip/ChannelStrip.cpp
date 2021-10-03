@@ -54,7 +54,7 @@ ChannelStrip::ChannelStrip(OscContainer* parent, ControlInterface* controlInterf
 		return true;
 	});
 
-	oscType.setChangeCallback([this](int newValue) { updateType(newValue); });
+	oscType.addChangeCallback([this](int newValue) { updateType(newValue); });
 
 	oscName.addCheckCallback([this](const std::string&) -> bool {
 		if(client) {
@@ -64,7 +64,7 @@ ChannelStrip::ChannelStrip(OscContainer* parent, ControlInterface* controlInterf
 		return true;
 	});
 
-	oscDisplayName.setChangeCallback([this](const std::string&) { displayNameUpdateRequested = true; });
+	oscDisplayName.addChangeCallback([this](const std::string&) { displayNameUpdateRequested = true; });
 
 	oscNumChannel.addCheckCallback([this](int32_t newValue) {
 		if(client) {
@@ -85,7 +85,7 @@ ChannelStrip::ChannelStrip(OscContainer* parent, ControlInterface* controlInterf
 		return true;
 	});
 
-	oscNumChannel.setChangeCallback([](int32_t newValue) { SPDLOG_INFO("Changing channel number to {}", newValue); });
+	oscNumChannel.addChangeCallback([](int32_t newValue) { SPDLOG_INFO("Changing channel number to {}", newValue); });
 
 	if(audioRunning) {
 		activate();
@@ -118,7 +118,7 @@ void ChannelStrip::activate() {
 		}
 		return true;
 	});
-	oscEnable.setChangeCallback([this](bool newValue) { updateEnabledState(newValue); });
+	oscEnable.addChangeCallback([this](bool newValue) { updateEnabledState(newValue); });
 }
 
 int ChannelStrip::start() {

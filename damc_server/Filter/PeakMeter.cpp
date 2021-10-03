@@ -16,7 +16,7 @@ PeakMeter::PeakMeter(OscContainer* parent,
 	oscPeakGlobalPath = parent->getFullAddress() + "/meter";
 	oscPeakPerChannelPath = parent->getFullAddress() + "/meter_per_channel";
 
-	oscNumChannel->setChangeCallback([this](int32_t newValue) {
+	oscNumChannel->addChangeCallback([this](int32_t newValue) {
 		levelsDb.resize(newValue, -192);
 
 		uv_mutex_lock(&peakMutex);

@@ -12,7 +12,7 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
 
 	this->getRoot()->addPendingConfigNode(this);
 
-	this->setChangeCallback([this](T) { this->getRoot()->notifyValueChanged(); });
+	this->addChangeCallback([this](T) { this->getRoot()->notifyValueChanged(); });
 
 	if constexpr(std::is_same_v<T, bool>) {
 		subEndpoint.emplace_back(new OscEndpoint(this, "toggle"))->setCallback([this](auto) {

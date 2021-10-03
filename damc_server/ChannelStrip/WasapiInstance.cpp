@@ -250,12 +250,12 @@ WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
 	oscDeviceSampleRate.addCheckCallback([this](int newValue) { return pDevice == nullptr && newValue > 0; });
 	oscExclusiveMode.addCheckCallback([this](int) { return pDevice == nullptr; });
 
-	oscClockDrift.setChangeCallback([this](float newValue) {
+	oscClockDrift.addChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);
 		}
 	});
-	oscDeviceSampleRate.setChangeCallback([this, direction](float newValue) {
+	oscDeviceSampleRate.addChangeCallback([this, direction](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			if(direction == D_Output) {
 				resamplingFilter.setTargetSamplingRate(newValue);

@@ -27,7 +27,7 @@ FilterChain::FilterChain(OscContainer* parent,
 	    [](OscContainer* parent, int name) { return new ReverbFilter(parent, std::to_string(name)); });
 	eqFilters.setFactory([](OscContainer* parent, int name) { return new EqFilter(parent, std::to_string(name)); });
 
-	delay.setChangeCallback([this](int32_t newValue) {
+	delay.addChangeCallback([this](int32_t newValue) {
 		for(DelayFilter& filter : delayFilters) {
 			filter.setParameters(newValue);
 		}
@@ -35,7 +35,7 @@ FilterChain::FilterChain(OscContainer* parent,
 	volume.setOscConverters(&LogScaleToOsc, &LogScaleFromOsc);
 	masterVolume.setOscConverters(&LogScaleToOsc, &LogScaleFromOsc);
 
-	oscNumChannel->setChangeCallback([this](int32_t newValue) {
+	oscNumChannel->addChangeCallback([this](int32_t newValue) {
 		if(newValue > 0)
 			updateNumChannels(newValue);
 	});

@@ -22,12 +22,12 @@ DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
 	oscDeviceSampleRate.addCheckCallback([this](int) { return stream == nullptr; });
 	oscExclusiveMode.addCheckCallback([this](int) { return stream == nullptr; });
 
-	oscClockDrift.setChangeCallback([this](float newValue) {
+	oscClockDrift.addChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);
 		}
 	});
-	oscDeviceSampleRate.setChangeCallback([this](float newValue) {
+	oscDeviceSampleRate.addChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setTargetSamplingRate(newValue);
 		}

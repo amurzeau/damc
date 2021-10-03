@@ -9,7 +9,7 @@ public:
 	OscArray(OscContainer* parent, std::string name, T defaultValue = {});
 
 	void setOscConverters(std::function<T(T)> convertToOsc, std::function<T(T)> convertFromOsc);
-	void setChangeCallback(std::function<void(T)> onChangeCallbacks);
+	void addChangeCallback(std::function<void(T)> onChangeCallbacks);
 
 protected:
 	void initializeItem(OscVariable<T>* item) override;

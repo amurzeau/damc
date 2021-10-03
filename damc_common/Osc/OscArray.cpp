@@ -16,7 +16,7 @@ void OscArray<T>::setOscConverters(std::function<T(T)> convertToOsc, std::functi
 	this->convertFromOsc = convertFromOsc;
 }
 
-template<typename T> void OscArray<T>::setChangeCallback(std::function<void(T)> onChangeCallbacks) {
+template<typename T> void OscArray<T>::addChangeCallback(std::function<void(T)> onChangeCallbacks) {
 	this->onChangeCallbacks.push_back(onChangeCallbacks);
 }
 
@@ -25,6 +25,6 @@ template<typename T> void OscArray<T>::initializeItem(OscVariable<T>* item) {
 		item->setOscConverters(convertToOsc, convertFromOsc);
 	}
 	for(auto& callback : onChangeCallbacks) {
-		item->setChangeCallback(callback);
+		item->addChangeCallback(callback);
 	}
 }

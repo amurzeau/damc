@@ -78,7 +78,7 @@ void OscWidgetMapper<T, UnderlyingType>::execute(const std::vector<OscArgument>&
 		updateWidget(widget);
 	}
 
-	if(onChange)
+	for(auto& onChange : onChangeCallbacks)
 		onChange(value);
 }
 
@@ -108,8 +108,8 @@ template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>:
 }
 
 template<class T, class UnderlyingType>
-void OscWidgetMapper<T, UnderlyingType>::setChangeCallback(std::function<void(UnderlyingType)> onChange) {
-	this->onChange = onChange;
+void OscWidgetMapper<T, UnderlyingType>::addChangeCallback(std::function<void(UnderlyingType)> onChange) {
+	this->onChangeCallbacks.push_back(onChange);
 	onChange(value);
 }
 
@@ -119,7 +119,7 @@ template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>:
 			updateWidget(widget);
 	}
 
-	if(onChange)
+	for(auto& onChange : onChangeCallbacks)
 		onChange(value);
 
 	OscArgument valueToSend = value;

@@ -12,11 +12,11 @@ EqFilter::EqFilter(OscContainer* parent, const std::string& name)
       gain(this, "gain", 0),
       Q(this, "Q", 0.5) {
 	auto onChangeCallback = [this](auto) { computeFilter(); };
-	enabled.setChangeCallback(onChangeCallback);
-	filterType.setChangeCallback(onChangeCallback);
-	f0.setChangeCallback(onChangeCallback);
-	gain.setChangeCallback(onChangeCallback);
-	Q.setChangeCallback(onChangeCallback);
+	enabled.addChangeCallback(onChangeCallback);
+	filterType.addChangeCallback(onChangeCallback);
+	f0.addChangeCallback(onChangeCallback);
+	gain.addChangeCallback(onChangeCallback);
+	Q.addChangeCallback(onChangeCallback);
 }
 
 void EqFilter::init(size_t numChannel) {

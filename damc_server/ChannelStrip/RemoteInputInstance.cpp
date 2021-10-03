@@ -24,19 +24,19 @@ RemoteInputInstance::RemoteInputInstance(OscContainer* parent)
 	oscPort.addCheckCallback([this](auto) { return !remoteUdpInput.isStarted(); });
 	oscDeviceSampleRate.addCheckCallback([](int newValue) { return newValue > 0; });
 
-	oscClockDrift.setChangeCallback([this](float newValue) {
+	oscClockDrift.addChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);
 		}
 	});
 
-	oscDeviceSampleRate.setChangeCallback([this](int32_t newValue) {
+	oscDeviceSampleRate.addChangeCallback([this](int32_t newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setSourceSamplingRate(newValue);
 		}
 	});
 
-	oscAddVbanHeader.setChangeCallback([this](bool newValue) {
+	oscAddVbanHeader.addChangeCallback([this](bool newValue) {
 		if(!newValue) {
 			vbanSampleRate = 0;
 		}

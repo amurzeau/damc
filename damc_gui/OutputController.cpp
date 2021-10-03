@@ -43,7 +43,7 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	oscDelay.setWidget(ui->delaySpinBox);
 
 	oscVolume.setWidget(ui->volumeSlider);
-	oscVolume.setChangeCallback([this](int32_t value) { ui->volumeLevelLabel->setText(QString::number(value)); });
+	oscVolume.addChangeCallback([this](int32_t value) { ui->volumeLevelLabel->setText(QString::number(value)); });
 
 	equalizersController = new EqualizersController(this, &oscFilterChain);
 	balanceController = new BalanceController(this, &oscFilterChain);
@@ -62,7 +62,7 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	connect(parent, &MainWindow::showDisabledChanged, this, &OutputController::updateHiddenState);
 	connect(ui->enableCheckBox, &QCheckBox::toggled, this, &OutputController::updateHiddenState);
 
-	oscEnable.setChangeCallback([this](bool) {
+	oscEnable.addChangeCallback([this](bool) {
 		updateHiddenState();
 		setNumChannel(0);
 		ui->levelLabel->setText("--");
@@ -78,15 +78,15 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	ui->levelLabel->setTextSize(4, Qt::AlignLeft | Qt::AlignVCenter);
 	ui->volumeLevelLabel->setTextSize(4, Qt::AlignRight | Qt::AlignVCenter);
 
-	oscMute.setChangeCallback([this](bool newValue) {
+	oscMute.addChangeCallback([this](bool newValue) {
 		for(size_t i = 0; i < levelWidgets.size(); i++) {
 			levelWidgets[i]->setDisabled(newValue);
 		}
 	});
 
-	oscName.setChangeCallback([this](const std::string&) { updateTooltip(); });
+	oscName.addChangeCallback([this](const std::string&) { updateTooltip(); });
 
-	oscDisplayName.setChangeCallback([this](const std::string& value) {
+	oscDisplayName.addChangeCallback([this](const std::string& value) {
 		QString title = QString::fromStdString(value);
 		ui->groupBox->setTitle(title);
 		equalizersController->setWindowTitle(tr("Equalizer - %1").arg(title));

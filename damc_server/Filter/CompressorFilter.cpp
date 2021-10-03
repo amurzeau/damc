@@ -16,9 +16,9 @@ CompressorFilter::CompressorFilter(OscContainer* parent)
       ratio(this, "ratio", 1000),
       kneeWidth(this, "kneeWidth", 0),
       useMovingMax(this, "useMovingMax", true) {
-	attackTime.setChangeCallback([this](float oscValue) { alphaA = oscValue != 0 ? expf(-1 / (oscValue * fs)) : 0; });
-	releaseTime.setChangeCallback([this](float oscValue) { alphaR = oscValue != 0 ? expf(-1 / (oscValue * fs)) : 0; });
-	ratio.setChangeCallback([this](float oscValue) { gainDiffRatio = 1 - 1 / oscValue; });
+	attackTime.addChangeCallback([this](float oscValue) { alphaA = oscValue != 0 ? expf(-1 / (oscValue * fs)) : 0; });
+	releaseTime.addChangeCallback([this](float oscValue) { alphaR = oscValue != 0 ? expf(-1 / (oscValue * fs)) : 0; });
+	ratio.addChangeCallback([this](float oscValue) { gainDiffRatio = 1 - 1 / oscValue; });
 }
 
 void CompressorFilter::init(size_t numChannel) {

@@ -51,7 +51,7 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	parent->getOscJackSampleRate()->setWidget(ui->measuredJackSampleRateSpinBox);
 	oscDeviceRealSampleRate.setWidget(ui->measuredDeviceSampleRateSpinBox);
 
-	oscType.setChangeCallback([this](int) { updateGroupBoxes(); });
+	oscType.addChangeCallback([this](int) { updateGroupBoxes(); });
 }
 
 OutputInstanceConfigDialog::~OutputInstanceConfigDialog() {

@@ -14,12 +14,12 @@ RemoteOutputInstance::RemoteOutputInstance(OscContainer* parent)
 	oscPort.addCheckCallback([this](auto) { return !remoteUdpOutput.isStarted(); });
 	oscDeviceSampleRate.addCheckCallback([](int32_t newValue) { return newValue > 0; });
 
-	oscClockDrift.setChangeCallback([this](float newValue) {
+	oscClockDrift.addChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setClockDrift(newValue);
 		}
 	});
-	oscDeviceSampleRate.setChangeCallback([this](int32_t newValue) {
+	oscDeviceSampleRate.addChangeCallback([this](int32_t newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
 			resamplingFilter.setTargetSamplingRate(newValue);
 		}

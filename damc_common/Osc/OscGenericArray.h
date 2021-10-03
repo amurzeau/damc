@@ -57,7 +57,7 @@ private:
 template<typename T>
 OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noexcept
     : OscContainer(parent, name), keys(this, "keys"), nextKey(0) {
-	keys.setChangeCallback([this](const std::vector<int>& oldKeys, const std::vector<int>& newKeys) {
+	keys.addChangeCallback([this](const std::vector<int>& oldKeys, const std::vector<int>& newKeys) {
 		std::vector<int> keysToKeep;
 		bool mustUpdateKeys = false;
 
