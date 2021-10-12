@@ -48,6 +48,12 @@ if(MINGW)
 endif()
 
 
+if(UNIX AND NOT APPLE)
+	set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+	set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
+endif()
+
+
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "deps")
 add_subdirectory(deps)
 

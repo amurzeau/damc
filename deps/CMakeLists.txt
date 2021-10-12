@@ -27,6 +27,7 @@ if(BUILD_SHARED_LIBS)
 	install(TARGETS
 		uv
 		RUNTIME DESTINATION ./
+		LIBRARY DESTINATION lib/
 	)
 else()
 	add_library(uv::uv ALIAS uv_a)
@@ -40,4 +41,5 @@ install(TARGETS
 	fftw3f
 	spdlog
 	RUNTIME DESTINATION ./
+	LIBRARY DESTINATION lib/
 )
