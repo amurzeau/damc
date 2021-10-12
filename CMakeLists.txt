@@ -83,7 +83,12 @@ add_subdirectory(osctools)
 
 install(FILES README.md DESTINATION ./)
 
-set(CPACK_GENERATOR ZIP)
+if(WIN32)
+	set(CPACK_GENERATOR ZIP)
+else()
+	set(CPACK_GENERATOR TGZ)
+endif()
+
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 set(CPACK_STRIP_FILES ON)
 
