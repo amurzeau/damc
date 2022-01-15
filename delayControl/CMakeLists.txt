@@ -23,5 +23,10 @@ target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES _CRT_SECURE_
 
 target_link_libraries(${TARGET_NAME} JACK::jack)
 
-install(TARGETS ${TARGET_NAME} DESTINATION ./)
+install(TARGETS
+	${TARGET_NAME}
+	spdlog
+	RUNTIME DESTINATION ./
+	LIBRARY DESTINATION ./
+)
 install(FILES data/pulse.wav DESTINATION ./)

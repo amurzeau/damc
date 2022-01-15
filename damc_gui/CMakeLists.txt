@@ -36,7 +36,15 @@ if(TARGET QtDependencies)
 	target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 	target_link_libraries(${TARGET_NAME} PRIVATE QtDependencies damc_common)
 
-	install(TARGETS ${TARGET_NAME} DESTINATION ./)
+	install(TARGETS
+			${TARGET_NAME}
+			spdlog
+		RUNTIME DESTINATION ./
+		LIBRARY DESTINATION ./)
+
+	if(MINGW)
+		include(InstallRequiredSystemLibraries)
+	endif()
 
 	if(WIN32 AND TARGET Qt${QT_VERSION_MAJOR}::qmake)
 		# Install Qt DLLs using windeployqt tool
@@ -88,7 +96,6 @@ if(TARGET QtDependencies)
 				DIRECTORY
 				"${CMAKE_CURRENT_BINARY_DIR}/windeployqt/"
 				DESTINATION .
-				COMPONENT bin-deps
 			)
 		endif()
 	endif()

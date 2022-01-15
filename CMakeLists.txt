@@ -44,7 +44,6 @@ if(MINGW)
 	message( STATUS "Installing system-libraries: ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}" )
 
 	set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION ./)
-	include(InstallRequiredSystemLibraries)
 endif()
 
 
@@ -75,13 +74,13 @@ add_subdirectory(damc_common)
 add_subdirectory(damc_server)
 add_subdirectory(damc_gui)
 
+install(FILES README.md DESTINATION ./)
+
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "tools")
 
 add_subdirectory(delayControl)
 add_subdirectory(binauralSynthesis)
 add_subdirectory(osctools)
-
-install(FILES README.md DESTINATION ./)
 
 if(WIN32)
 	set(CPACK_GENERATOR ZIP)
@@ -91,5 +90,9 @@ endif()
 
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
 set(CPACK_STRIP_FILES ON)
+set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+get_cmake_property(CPACK_COMPONENTS_ALL COMPONENTS)
+list(REMOVE_ITEM CPACK_COMPONENTS_ALL "deps")
+
 
 include(CPack)

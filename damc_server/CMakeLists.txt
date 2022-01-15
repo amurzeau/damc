@@ -85,7 +85,15 @@ if(WIN32)
 	target_link_libraries(${TARGET_NAME} PUBLIC avrt ksuser)
 endif()
 
-install(TARGETS ${TARGET_NAME}
+install(TARGETS
+	${TARGET_NAME}
+	uv
+	PortAudio
+	spdlog
 	RUNTIME DESTINATION ./
 	LIBRARY DESTINATION ./
 )
+
+if(MINGW)
+	include(InstallRequiredSystemLibraries)
+endif()
