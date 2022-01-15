@@ -34,6 +34,8 @@ public:
 
 	int32_t getSampleRate() { return oscSampleRate.get(); }
 
+	OscContainer* getFilterChain() { return &oscFilterChain; }
+
 protected slots:
 	void onShowEq();
 	void onShowCompressor();

@@ -38,6 +38,7 @@ private:
 
 	OscWidgetMapper<QComboBox> oscType;
 	OscWidgetMapper<QSpinBox> oscChannelNumber;
+	OscWidgetMapper<QAbstractButton> oscReverseAudioSignal;
 	OscWidgetMapper<QComboBox, std::string> oscDeviceName;
 	OscWidgetMapper<QSpinBox> oscBufferSize;
 	OscWidgetMapper<QSpinBox> oscActualBufferSize;

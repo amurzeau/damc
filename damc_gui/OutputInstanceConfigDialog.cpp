@@ -11,6 +11,7 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
       mainWindow(mainWindow),
       oscType(parent, "_type"),
       oscChannelNumber(parent, "channels"),
+      oscReverseAudioSignal(parent->getFilterChain(), "reverseAudioSignal"),
       oscDeviceName(this, "deviceName"),
       oscBufferSize(this, "bufferSize"),
       oscActualBufferSize(this, "actualBufferSize"),
@@ -39,6 +40,7 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	parent->getOscEnable()->setWidget(ui->enableCheckBox);
 	oscType.setWidget(ui->typeCombo);
 	oscChannelNumber.setWidget(ui->channelsSpin);
+	oscReverseAudioSignal.setWidget(ui->reverseAudioSignalCheckBox);
 	oscDeviceName.setWidget(ui->deviceDeviceCombo);
 	oscBufferSize.setWidget(ui->bufferSizeSpinBox);
 	oscActualBufferSize.setWidget(ui->actualBufferSize);

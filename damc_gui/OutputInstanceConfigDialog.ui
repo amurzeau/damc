@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>577</width>
-    <height>466</height>
+    <height>489</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -119,6 +119,13 @@
         </property>
         <property name="text">
          <string>Enable audio strip</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QCheckBox" name="reverseAudioSignalCheckBox">
+        <property name="text">
+         <string>Reverse audio signal</string>
         </property>
        </widget>
       </item>

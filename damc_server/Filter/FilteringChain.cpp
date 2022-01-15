@@ -22,7 +22,8 @@ FilterChain::FilterChain(OscContainer* parent,
       delay(this, "delay", 0),
       volume(this, "balance", 1.0f),
       masterVolume(this, "volume", 1.0f),
-      mute(this, "mute", false) {
+      mute(this, "mute", false),
+      reverseAudioSignal(this, "reverseAudioSignal", false) {
 	reverbFilters.setFactory(
 	    [](OscContainer* parent, int name) { return new ReverbFilter(parent, std::to_string(name)); });
 	eqFilters.setFactory([](OscContainer* parent, int name) { return new EqFilter(parent, std::to_string(name)); });
@@ -73,8 +74,12 @@ void FilterChain::reset(double fs) {
 }
 
 void FilterChain::processSamples(float** output, const float** input, size_t numChannel, size_t count) {
-	float masterVolume = this->masterVolume.get();
 	float peaks[numChannel];
+	float masterVolume = this->masterVolume.get();
+
+	if(reverseAudioSignal) {
+		masterVolume *= -1;
+	}
 
 	for(uint32_t channel = 0; channel < numChannel; channel++) {
 		delayFilters[channel].processSamples(output[channel], input[channel], count);

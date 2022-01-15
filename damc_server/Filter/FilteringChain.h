@@ -40,4 +40,5 @@ private:
 	OscArray<float> volume;
 	OscVariable<float> masterVolume;
 	OscVariable<bool> mute;
+	OscVariable<bool> reverseAudioSignal;
 };
