@@ -14,6 +14,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
+#include <uv.h>
+
 void onTtyAllocBuffer(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf) {
 	buf->base = new char[suggested_size];
 	buf->len = suggested_size;
@@ -33,16 +35,39 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 
 void initializeSpdLog() {
 	spdlog::init_thread_pool(8192, 1);
+	std::vector<spdlog::sink_ptr> sinks;
+
 	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 	console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%7l%$] %25!!: %v");
 	console_sink->set_level(spdlog::level::info);
+	sinks.push_back(console_sink);
 
-	auto file_sink =
-	    std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/damc_server.log", 10 * 1024 * 1024, 3);
-	file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] %7l %t %@: %v");
-	file_sink->set_level(spdlog::level::trace);
+	std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> file_sink;
+	try {
+		file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/damc_server.log", 10 * 1024 * 1024, 3);
+		SPDLOG_INFO("Logging to logs/damc_server.log in current directory");
+	} catch(...) {
+		try {
+			char tempDir[1024];
+			size_t tempDirSize = sizeof(tempDir);
+			if(uv_os_tmpdir(tempDir, &tempDirSize) != 0) {
+				throw 0;
+			}
+			tempDir[tempDirSize] = '\0';
+			std::string logFile = fmt::format("{}/damc_server.log", tempDir);
+			file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logFile.c_str(), 10 * 1024 * 1024, 3);
+			SPDLOG_INFO("Logging to damc_server.log in temp directory");
+		} catch(...) {
+			SPDLOG_INFO("Can't open log file, will log only on console");
+		}
+	}
 
-	std::vector<spdlog::sink_ptr> sinks{console_sink, file_sink};
+	if(file_sink) {
+		file_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] %7l %t %@: %v");
+		file_sink->set_level(spdlog::level::trace);
+		sinks.push_back(file_sink);
+	}
+
 	/*
 	auto logger = std::make_shared<spdlog::async_logger>(
 	    "server", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::overrun_oldest);
