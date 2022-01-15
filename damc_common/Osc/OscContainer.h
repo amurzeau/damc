@@ -6,7 +6,7 @@
 
 class OscContainer : public OscNode {
 public:
-	struct osc_node_comparator : public std::binary_function<std::string, std::string, bool> {
+	struct osc_node_comparator {
 		bool operator()(const std::string& x, const std::string& y) const;
 	};
 
