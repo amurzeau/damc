@@ -39,7 +39,7 @@ jobs:
           # Artifact name
           name: "damc-linux" # optional, default is artifact
           # A file, directory or wildcard pattern that describes what to upload
-          path: build/*.zip
+          path: build/*.tar.gz
 
       - name: Publish
         uses: softprops/action-gh-release@v1
