@@ -40,7 +40,7 @@ if(TARGET QtDependencies)
 			${TARGET_NAME}
 			spdlog
 		RUNTIME DESTINATION ./
-		LIBRARY DESTINATION ./)
+		LIBRARY DESTINATION lib/)
 
 	if(MINGW)
 		include(InstallRequiredSystemLibraries)

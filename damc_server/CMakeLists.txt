@@ -91,7 +91,7 @@ install(TARGETS
 	PortAudio
 	spdlog
 	RUNTIME DESTINATION ./
-	LIBRARY DESTINATION ./
+	LIBRARY DESTINATION lib/
 )
 
 if(MINGW)
