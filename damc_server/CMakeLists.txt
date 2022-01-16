@@ -79,7 +79,7 @@ target_link_libraries(${TARGET_NAME} PUBLIC uv::uv PortAudio JACK::jack damc_com
 target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 # Version define only for main.cpp to avoid recompiling all the source on version change
-set_property(SOURCE main.cpp APPEND PROPERTY COMPILE_DEFINITIONS DAMC_VERSION=\"${PROJECT_VERSION}\")
+set_property(SOURCE main.cpp APPEND PROPERTY COMPILE_DEFINITIONS DAMC_VERSION=\"${DAMC_GIT_VERSION}\")
 
 if(WIN32)
 	target_link_libraries(${TARGET_NAME} PUBLIC avrt ksuser)
