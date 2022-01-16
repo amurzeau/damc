@@ -1,0 +1,13 @@
+{
+    "portConnections": {},
+    "strip": {
+        "0": {
+            "_type": 0,
+            "display_name": "master",
+            "enable": 1
+        },
+        "keys": [
+            0
+        ]
+    }
+}

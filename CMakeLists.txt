@@ -75,6 +75,7 @@ add_subdirectory(damc_server)
 add_subdirectory(damc_gui)
 
 install(FILES README.md DESTINATION ./)
+install(DIRECTORY dist/ DESTINATION ./)
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "tools")
 
