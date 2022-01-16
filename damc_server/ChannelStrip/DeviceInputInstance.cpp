@@ -238,7 +238,7 @@ int DeviceInputInstance::postProcessSamples(float** samples, size_t numChannel, 
 	}
 
 	if(underflowOccured) {
-		underflowOccured = true;
+		this->underflowOccured = true;
 		bufferLatencyHistory.clear();
 	} else if(availableData) {
 		bufferLatencyHistory.push_back(availableData / sizeof(jack_default_audio_sample_t));
