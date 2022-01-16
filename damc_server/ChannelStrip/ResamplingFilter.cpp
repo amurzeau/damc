@@ -33,15 +33,16 @@ void ResamplingFilter::put(double sample) {
 }
 
 int ResamplingFilter::get(std::vector<float>& out, double period) {
-	double delay;
-	int k = 0;
+	size_t originalOutSize = out.size();
+	double delay = previousDelay;
 
-	for(delay = previousDelay; delay >= 0; delay -= period, k++) {
+	while(delay >= 0) {
 		out.push_back(getLinearInterpolatedPoint(delay));
+		delay -= period;
 	}
 
 	previousDelay = delay + oversamplingRatio;
-	return k;
+	return out.size() - originalOutSize;
 }
 
 int ResamplingFilter::processSamples(std::vector<float>& output, const float* input, size_t count) {
@@ -57,9 +58,10 @@ int ResamplingFilter::processSamples(std::vector<float>& output, const float* in
 
 int ResamplingFilter::getNextOutputSize() {
 	int iterations = 0;
-	double delay;
+	double delay = previousDelay;
 
-	for(delay = previousDelay; delay >= 0; delay -= downsamplingRatio) {
+	while(delay >= 0) {
+		delay -= downsamplingRatio;
 		iterations++;
 	}
 
