@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=DAMC Server
+Exec=sh -c "export PATH=$PATH:$(dirname %k); damc_server"
+Type=Application
+StartupNotify=true
+Terminal=true

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=DAMC GUI
+Exec=sh -c "export PATH=$PATH:$(dirname %k); damc_gui"
+Type=Application
+StartupNotify=true
+Terminal=false
