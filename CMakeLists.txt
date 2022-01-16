@@ -90,7 +90,16 @@ add_subdirectory(damc_server)
 add_subdirectory(damc_gui)
 
 install(FILES README.md DESTINATION ./)
-install(DIRECTORY dist/ DESTINATION ./)
+
+# Only install damc_config.json if it is not there already
+install(DIRECTORY dist/ DESTINATION ./ PATTERN "damc_config.json" EXCLUDE)
+install(CODE "
+	if(NOT EXISTS \${CMAKE_INSTALL_PREFIX}/damc_config.json)
+		file(INSTALL \"${CMAKE_CURRENT_SOURCE_DIR}/dist/damc_config.json\" DESTINATION \"\${CMAKE_INSTALL_PREFIX}/\")
+	else()
+		message(STATUS \"Already exists: \${CMAKE_INSTALL_PREFIX}/damc_config.json\")
+	endif()
+")
 
 set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "tools")
 
