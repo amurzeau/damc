@@ -18,33 +18,31 @@ Typical installation on Windows:
 
 Steps to use DAMC:
 
-1. First install Jack to its default path. Don't install the bundled QJackCtl as it does not support renaming audio clients (which is really handy to have)
-2. Download QJackCtl and put it in JACK install folder (`C:\Program Files\JACK2\qjackctl` or `C:\Program Files (x86)\JACK2\qjackctl`)
-3. Install ASIO4ALL or FlexASIO if you don't already have an ASIO driver for your audio soundcard
-4. If you plan to use SAR 0.13.2, enable TESTSIGNING **and reboot**: see more details here: https://github.com/eiz/SynchronousAudioRouter/releases
-5. Install SAR
-6. Configure SAR:
+1. First install [Jack (1.9.20+)](https://jackaudio.org/downloads/) to its default path. Also select the bundled QJackCtl.
+2. Install ASIO4ALL or FlexASIO if you don't already have an ASIO driver for your audio soundcard
+3. If you plan to use SAR 0.13.2, enable TESTSIGNING **and reboot**: see more details here: https://github.com/eiz/SynchronousAudioRouter/releases
+4. Install SAR
+5. Configure SAR:
    1. If with 0.13.2: use `SAR Configuration` tool to configure SAR
    2. Else use [asioconfig](https://github.com/jprjr/asioconfig)
    3. In SAR configuration:
       1. Select the appropriate ASIO Hardware interface and configure it too
       2. Add some playback / record endpoints
-7. Create a shortcut to QJackCtl where you want with the working directory set to the path containing jackd.exe (should be `C:\Program Files\JACK2`)
-8. Start QJackCtl
-9. Configure settings in QJackCtl:
+6. Start QJackCtl
+7. Configure settings in QJackCtl:
    1. In Settings -> Advanced tab: Set both `Output Device` and `Input Device` to `ASIO::Synchronous Audio Router`
    2. In Display tab: check `Enable JACK client/port prety-names (metadata)`
 
-10. In QJackCtl, click on the `Start` button, this should start jack
-11. Run DAMC server and gui:
-   - damc_server.exe
-   - damc_gui.exe
-12. In the DAMC GUI, click Add button to add a Jack client that can receive/send audio
+8. In QJackCtl, click on the `Start` button, this should start jack
+9. Run DAMC server and gui:
+   - `damc_server.exe`
+   - `damc_gui.exe`
+10. In the DAMC GUI, click Add button to add a Jack client that can receive/send audio
    - Each jack client managed by DAMC do this:
      - Receive audio from other Jack clients or from various external sources (configured by `type`)
 	 - Do processing on the audio stream (like volume, mute, compressor)
 	 - Output audio to other Jack clients or to external sinks (configured by `type`)
-13. In the config dialog box, configure things:
+11. In the config dialog box, configure things:
    - Display Name: name shown in QJackCtl and in DAMC GUI
    - Type:
       - Loopback: received audio is send on its outputs through enabled filters
@@ -66,7 +64,7 @@ Steps to use DAMC:
    - Device output:
      - Device: The external device to send / receive audio
 	 - Use Exclusive mode: use exclusive WASAPI mode (can be used with Portaudio too when using a WASAPI device)
-14. In QJackCtl, click the `Graph` button and connect jack clients together:
+12. In QJackCtl, click the `Graph` button and connect jack clients together:
    - Suppose you have this configuration:
      - SAR use a Hardware interface with a single stereo mic (= 2 physical channels)
 	 - SAR is configured with 1 playback endpoint with 2 channels (= 2 virtual channels)
