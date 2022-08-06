@@ -28,7 +28,7 @@ private:
 	std::vector<float> pulseWave;
 	size_t delay;
 
-	ssize_t currentPos;
+	int64_t currentPos;
 
 	// PI control delay
 	double smoothedError;

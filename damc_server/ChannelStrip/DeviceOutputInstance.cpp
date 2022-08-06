@@ -1,6 +1,7 @@
 #include "DeviceOutputInstance.h"
 #include <spdlog/spdlog.h>
 #include <stdio.h>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <pa_win_wasapi.h>

@@ -1,4 +1,5 @@
 #include "ServerControl.h"
+#include <algorithm>
 
 ServerControl::ServerControl() : OscRoot(false), OscConnector(this, true) {}
 

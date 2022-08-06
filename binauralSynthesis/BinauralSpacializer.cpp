@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <malloc.h>
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -100,7 +101,8 @@ int BinauralSpacializer::processSamplesStatic(jack_nframes_t nframes, void* arg)
 
 int BinauralSpacializer::processSamples(jack_nframes_t nframes) {
 	jack_default_audio_sample_t* out[32];
-	float buffer[nframes];
+	float* buffer = (float*) alloca(sizeof(float) *nframes);
+
 	size_t inputNumber = std::min(inputPorts.size(), transforms.size());
 
 	for(size_t i = 0; i < outputPorts.size(); i++) {

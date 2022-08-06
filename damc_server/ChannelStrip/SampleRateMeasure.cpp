@@ -32,7 +32,7 @@ void SampleRateMeasure::onTimeoutTimer() {
 	if(!dataPtr)
 		return;
 	data = *dataPtr;
-	*dataPtr = TimingInfo{.firstSampleTime = data.lastSampleTime};
+	*dataPtr = TimingInfo{data.lastSampleTime, 0, 0};
 	runningData.exchange(dataPtr);
 
 	if(!data.firstSampleTime) {

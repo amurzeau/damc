@@ -1,6 +1,6 @@
 #include "BiquadFilter.h"
 
-#include <cmath>
+#include <math.h>
 #include <string.h>
 
 void BiquadFilter::init(const double a_coefs[], const double b_coefs[]) {

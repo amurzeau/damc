@@ -78,15 +78,15 @@ void Convolver::normalize(float multiplier) {
 }
 
 void Convolver::normalize(float* normalizer) {
-	const ssize_t convolverSignalSize = this->convolverSignal.size();
-	const ssize_t normalizerSignalSize = convolverSignalSize;
+	const int64_t convolverSignalSize = this->convolverSignal.size();
+	const int64_t normalizerSignalSize = convolverSignalSize;
 	std::vector<float> normalizedResult;
 
 	normalizedResult.resize(convolverSignalSize);
 
-	for(ssize_t x = 0; x < (ssize_t) normalizedResult.size(); x++) {
+	for(int64_t x = 0; x < (int64_t) normalizedResult.size(); x++) {
 		float sum = 0;
-		for(ssize_t i = std::max(ssize_t(0), x - (convolverSignalSize - 1)); i < normalizerSignalSize && i < x; i++) {
+		for(int64_t i = std::max(int64_t(0), x - (convolverSignalSize - 1)); i < normalizerSignalSize && i < x; i++) {
 			sum += this->convolverSignal[convolverSignalSize - 1 + i - x] * normalizer[i];
 		}
 		normalizedResult[x] = sum;

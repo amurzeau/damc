@@ -35,6 +35,7 @@ if(TARGET QtDependencies)
 
 	target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 	target_link_libraries(${TARGET_NAME} PRIVATE QtDependencies damc_common)
+	target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES)
 
 	install(TARGETS
 			${TARGET_NAME}

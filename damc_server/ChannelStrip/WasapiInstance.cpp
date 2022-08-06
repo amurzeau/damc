@@ -336,7 +336,7 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 	hr = getDeviceByName(oscDeviceName, &pDevice);
 	EXIT_ON_ERROR(hr);
 
-	hr = pDevice->Activate(IID_IAudioClient, CLSCTX_ALL, NULL, (void**) &pAudioClient);
+	hr = pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**) &pAudioClient);
 	EXIT_ON_ERROR(hr);
 
 	hr = findAudioConfig(pAudioClient, numChannel, &pFormat);
@@ -375,9 +375,9 @@ uint32_t WasapiInstance::initializeWasapi(size_t numChannel, int jackSampleRate,
 	//	}
 
 	if(direction == D_Output)
-		hr = pAudioClient->GetService(IID_IAudioRenderClient, (void**) &pRenderClient);
+		hr = pAudioClient->GetService(__uuidof(IAudioRenderClient), (void**) &pRenderClient);
 	else
-		hr = pAudioClient->GetService(IID_IAudioCaptureClient, (void**) &pCaptureClient);
+		hr = pAudioClient->GetService(__uuidof(IAudioCaptureClient), (void**) &pCaptureClient);
 	EXIT_ON_ERROR(hr);
 
 	hr = pAudioClient->GetBufferSize(&wasapiBufferSize);
