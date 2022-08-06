@@ -74,7 +74,7 @@ void FilterChain::reset(double fs) {
 }
 
 void FilterChain::processSamples(float** output, const float** input, size_t numChannel, size_t count) {
-	float peaks[numChannel];
+	float* peaks = (float*) alloca(sizeof(float) * numChannel);
 	float masterVolume = this->masterVolume.get();
 
 	if(reverseAudioSignal) {

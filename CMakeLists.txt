@@ -86,6 +86,7 @@ set(LOG_LEVEL_OFF 6)
 add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${LOG_LEVEL_DEBUG})
 
 add_subdirectory(damc_common)
+add_subdirectory(damc_audio_processing)
 add_subdirectory(damc_server)
 add_subdirectory(damc_gui)
 

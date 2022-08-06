@@ -11,7 +11,6 @@ PeakMeter::PeakMeter(OscContainer* parent,
       oscSampleRate(oscSampleRate),
       samplesInPeaks(0),
       oscEnablePeakUpdate(parent, "meter_enable_per_channel", false) {
-	uv_mutex_init(&peakMutex);
 
 	oscPeakGlobalPath = parent->getFullAddress() + "/meter";
 	oscPeakPerChannelPath = parent->getFullAddress() + "/meter_per_channel";
@@ -19,23 +18,22 @@ PeakMeter::PeakMeter(OscContainer* parent,
 	oscNumChannel->addChangeCallback([this](int32_t newValue) {
 		levelsDb.resize(newValue, -192);
 
-		uv_mutex_lock(&peakMutex);
+		peakMutex.lock();
 		peaksPerChannel.resize(newValue, 0);
-		uv_mutex_unlock(&peakMutex);
+		peakMutex.unlock();
 	});
 }
 
 PeakMeter::~PeakMeter() {
-	uv_mutex_destroy(&peakMutex);
 }
 
 void PeakMeter::processSamples(const float* peaks, size_t numChannels, size_t samplesInPeaks) {
-	uv_mutex_lock(&peakMutex);
+	peakMutex.lock();
 	this->samplesInPeaks += samplesInPeaks;
 	for(size_t i = 0; i < numChannels; i++) {
 		this->peaksPerChannel[i] = fmaxf(peaks[i], this->peaksPerChannel[i]);
 	}
-	uv_mutex_unlock(&peakMutex);
+	peakMutex.unlock();
 }
 
 void PeakMeter::onFastTimer() {
@@ -43,11 +41,11 @@ void PeakMeter::onFastTimer() {
 	int32_t sampleRate = oscSampleRate->get();
 	std::vector<float> peaks(this->peaksPerChannel.size(), 0);
 
-	uv_mutex_lock(&peakMutex);
+	peakMutex.lock();
 	samples = this->samplesInPeaks;
 	peaks.swap(this->peaksPerChannel);
 	this->samplesInPeaks = 0;
-	uv_mutex_unlock(&peakMutex);
+	peakMutex.unlock();
 
 	if(sampleRate == 0)
 		return;

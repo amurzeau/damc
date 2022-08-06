@@ -4,7 +4,7 @@
 #include <mutex>
 #include <stdint.h>
 #include <string>
-#include <uv.h>
+#include <mutex>
 #include <vector>
 
 class OscContainer;
@@ -27,7 +27,7 @@ private:
 	OscReadOnlyVariable<int32_t>* oscSampleRate;
 
 	std::vector<float> levelsDb;
-	uv_mutex_t peakMutex;
+	std::mutex peakMutex;
 	int samplesInPeaks;
 	std::vector<float> peaksPerChannel;
 	std::string oscPeakGlobalPath;

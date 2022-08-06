@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Filter/FilteringChain.h"
+#include <FilteringChain.h>
 #include "IAudioEndpoint.h"
 #include "SampleRateMeasure.h"
 #include <Osc/OscCombinedVariable.h>
