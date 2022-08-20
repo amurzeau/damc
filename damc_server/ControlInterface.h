@@ -22,6 +22,7 @@ public:
 
 	void run();
 	void stop();
+    void asyncStop();
 
 	void saveConfig();
 
@@ -34,10 +35,13 @@ protected:
 
 	static void onFastTimerStatic(uv_timer_t* handle);
 	static void onSlowTimerStatic(uv_timer_t* handle);
+    static void onShutdownRequestStatic(uv_async_t* handle);
 	void onFastTimer();
-	void onSlowTimer();
+    void onSlowTimer();
 	static void releaseUvTimer(uv_timer_t* handle);
-	static void onCloseTimer(uv_handle_t* handle);
+    static void releaseAsyncShutdownRequest(uv_async_t* handle);
+    static void onCloseTimer(uv_handle_t* handle);
+    static void onCloseAsync(uv_handle_t* handle);
 
 private:
 	OscRoot oscRoot;
@@ -50,6 +54,7 @@ private:
 
 	std::unique_ptr<uv_timer_t, void (*)(uv_timer_t*)> fastTimer;
 	std::unique_ptr<uv_timer_t, void (*)(uv_timer_t*)> slowTimer;
+    std::unique_ptr<uv_async_t, void (*)(uv_async_t*)> shutdownRequest;
 	bool oscNeedSaveConfig;
 	bool audioRunning;
 

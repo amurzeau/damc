@@ -8,11 +8,12 @@
 #include <string>
 #include <vector>
 
+class ControlInterface;
 class OscContainer;
 
 class JackPortAutoConnect {
 public:
-	JackPortAutoConnect(OscContainer* oscParent);
+    JackPortAutoConnect(ControlInterface* controlInterface, OscContainer* oscParent);
 	~JackPortAutoConnect();
 
 	void start(std::map<std::string, std::set<std::string>> outputPortConnections);
@@ -25,6 +26,7 @@ protected:
 	static void jackOnPortConnectStatic(jack_port_id_t a, jack_port_id_t b, int connect, void* arg);
 	static int jackOnGraphReorderedStatic(void* arg);
 	static void jackOnPortRegistrationStatic(jack_port_id_t port, int is_registered, void* arg);
+    static void jackOnInfoShutdownStatic(jack_status_t code, const char* reason, void* arg);
 
 	void processJackNotifications();
 
@@ -39,6 +41,7 @@ protected:
 	void autoConnectPort(const char* portName);
 
 private:
+    ControlInterface* controlInterface;
 	jack_client_t* monitoringJackClient;
 
 	struct PortConnectionStateChange {

@@ -1,13 +1,15 @@
 #include "JackPortAutoConnect.h"
 #include "ChannelStrip/ChannelStrip.h"
+#include "ControlInterface.h"
 #include "JackUtils.h"
 #include <Osc/OscContainer.h>
 #include <OscRoot.h>
 #include <jack/jack.h>
 #include <spdlog/spdlog.h>
 
-JackPortAutoConnect::JackPortAutoConnect(OscContainer* oscParent)
-    : oscRoot(oscParent->getRoot()),
+JackPortAutoConnect::JackPortAutoConnect(ControlInterface* controlInterface, OscContainer* oscParent)
+    : controlInterface(controlInterface),
+      oscRoot(oscParent->getRoot()),
       oscEnableAutoConnect(oscParent, "enableAutoConnect", true),
       oscEnableConnectMonitoring(oscParent, "enableConnectionMonitoring", true) {
 	jack_status_t status;
@@ -48,6 +50,8 @@ void JackPortAutoConnect::start(std::map<std::string, std::set<std::string>> out
 		}
 	}
 
+    jack_on_info_shutdown(monitoringJackClient, &JackPortAutoConnect::jackOnInfoShutdownStatic, this);
+
 	jack_activate(monitoringJackClient);
 
 	// Save already present connections
@@ -65,13 +69,13 @@ void JackPortAutoConnect::start(std::map<std::string, std::set<std::string>> out
 		if(newValue) {
 			autoConnectAllExistingPorts();
 		}
-	});
+    });
 }
 
 void JackPortAutoConnect::stop() {
 	if(monitoringJackClient) {
 		SPDLOG_INFO("Stopping monitoring client");
-		jack_deactivate(monitoringJackClient);
+        jack_deactivate(monitoringJackClient);
 		jack_client_close(monitoringJackClient);
 		monitoringJackClient = nullptr;
 	}
@@ -127,7 +131,14 @@ void JackPortAutoConnect::jackOnPortRegistrationStatic(jack_port_id_t port, int 
 	{
 		std::lock_guard guard(thisInstance->jackNotificationMutex);
 		thisInstance->jackNotifications.push_back(notification);
-	}
+    }
+}
+
+void JackPortAutoConnect::jackOnInfoShutdownStatic(jack_status_t code, const char* reason, void* arg) {
+    JackPortAutoConnect* thisInstance = (JackPortAutoConnect*) arg;
+
+    SPDLOG_INFO("jack shutting down: {} (code {})", reason, code);
+    thisInstance->controlInterface->asyncStop();
 }
 
 void JackPortAutoConnect::processJackNotifications() {

@@ -21,9 +21,10 @@ ControlInterface::ControlInterface()
       oscTcpServer(&oscRoot),
       outputs(&oscRoot, "strip"),
       keyBinding(&oscRoot, &oscRoot),
-      jackPortAutoConnect(&oscRoot),
+      jackPortAutoConnect(this, &oscRoot),
       fastTimer(nullptr, &ControlInterface::releaseUvTimer),
       slowTimer(nullptr, &ControlInterface::releaseUvTimer),
+      shutdownRequest(nullptr, &ControlInterface::releaseAsyncShutdownRequest),
       oscNeedSaveConfig(false),
       audioRunning(false),
       oscTypeList(&oscRoot, "type_list"),
@@ -58,6 +59,11 @@ ControlInterface::ControlInterface()
 
 	initializeTimer(fastTimer, "fast periodic timer", 66, &ControlInterface::onFastTimerStatic);    // 15fps
 	initializeTimer(slowTimer, "slow periodic timer", 1000, &ControlInterface::onSlowTimerStatic);  // 1fps
+
+    shutdownRequest.reset(new uv_async_t);
+    shutdownRequest->data = this;
+    uv_async_init(uv_default_loop(), shutdownRequest.get(), &onShutdownRequestStatic);
+    uv_unref((uv_handle_t*) shutdownRequest.get());
 }
 
 ControlInterface::~ControlInterface() {}
@@ -120,7 +126,13 @@ void ControlInterface::stop() {
 	SPDLOG_INFO("Stopping audio strips jack clients");
 	for(std::pair<const int, std::unique_ptr<ChannelStrip>>& output : outputs) {
 		output.second->stop();
-	}
+    }
+}
+
+void ControlInterface::asyncStop() {
+    if(shutdownRequest) {
+        uv_async_send(shutdownRequest.get());
+    }
 }
 
 void ControlInterface::onFastTimerStatic(uv_timer_t* handle) {
@@ -130,7 +142,13 @@ void ControlInterface::onFastTimerStatic(uv_timer_t* handle) {
 
 void ControlInterface::onSlowTimerStatic(uv_timer_t* handle) {
 	ControlInterface* thisInstance = (ControlInterface*) handle->data;
-	thisInstance->onSlowTimer();
+    thisInstance->onSlowTimer();
+}
+
+void ControlInterface::onShutdownRequestStatic(uv_async_t* handle) {
+    ControlInterface* thisInstance = (ControlInterface*) handle->data;
+    thisInstance->shutdownRequest.reset();
+    thisInstance->stop();
 }
 
 void ControlInterface::onFastTimer() {
@@ -158,9 +176,17 @@ void ControlInterface::onSlowTimer() {
 
 void ControlInterface::releaseUvTimer(uv_timer_t* handle) {
 	uv_timer_stop(handle);
-	uv_close((uv_handle_t*) handle, &onCloseTimer);
+    uv_close((uv_handle_t*) handle, &onCloseTimer);
+}
+
+void ControlInterface::releaseAsyncShutdownRequest(uv_async_t* handle) {
+    uv_close((uv_handle_t*) handle, &onCloseAsync);
 }
 
 void ControlInterface::onCloseTimer(uv_handle_t* handle) {
 	delete(uv_timer_t*) handle;
+}
+
+void ControlInterface::onCloseAsync(uv_handle_t* handle) {
+    delete(uv_async_t*) handle;
 }
