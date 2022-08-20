@@ -47,7 +47,7 @@ target_include_directories(mysofa PUBLIC "${CMAKE_CURRENT_LIST_DIR}/hrtf/")
 target_compile_definitions(mysofa PRIVATE mysofa_shared_EXPORTS)
 if(UNIX)
 	target_link_libraries (mysofa m)
-	target_compile_definitions(mysofa PRIVATE MYSOFA_EXPORT= )
+        target_compile_definitions(mysofa PUBLIC MYSOFA_EXPORT=)
 endif()
 SET_TARGET_PROPERTIES(mysofa PROPERTIES POSITION_INDEPENDENT_CODE ON)
 install(TARGETS mysofa
