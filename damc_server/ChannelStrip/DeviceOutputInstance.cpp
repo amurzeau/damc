@@ -323,8 +323,8 @@ void DeviceOutputInstance::onFastTimer() {
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
-		SPDLOG_INFO("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
-		SPDLOG_INFO("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
+		SPDLOG_DEBUG("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
+		SPDLOG_DEBUG("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
 }

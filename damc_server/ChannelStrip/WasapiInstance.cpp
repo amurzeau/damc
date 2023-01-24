@@ -63,7 +63,7 @@
 
 #define EXIT_ON_ERROR(hres) \
 	if(FAILED(hres)) { \
-		SPDLOG_ERROR("Failed to execute COM function at line {}: {:#x}", __LINE__, (uint32_t)hres); \
+		SPDLOG_ERROR("Failed to execute COM function at line {}: {:#x}", __LINE__, (uint32_t) hres); \
 		goto exit; \
 	}
 #define SAFE_RELEASE(punk) \
@@ -114,7 +114,7 @@ HRESULT WasapiInstance::getDeviceByName(std::string name, IMMDevice** ppMMDevice
 
 			hr = pEndpoint->OpenPropertyStore(STGM_READ, &pProps);
 			if(FAILED(hr)) {
-				SPDLOG_ERROR("IMMDevice(OpenPropertyStore) failed: hr ={:#x}", (uint32_t)hr);
+				SPDLOG_ERROR("IMMDevice(OpenPropertyStore) failed: hr ={:#x}", (uint32_t) hr);
 				pEndpoint->Release();
 				continue;
 			}
@@ -125,7 +125,7 @@ HRESULT WasapiInstance::getDeviceByName(std::string name, IMMDevice** ppMMDevice
 			// Get the endpoint's friendly-name property.
 			hr = pProps->GetValue(PKEY_Device_FriendlyName, &varName);
 			if(FAILED(hr)) {
-				SPDLOG_ERROR("IPropertyStore(GetValue) failed: hr = {:#x}", (uint32_t)hr);
+				SPDLOG_ERROR("IPropertyStore(GetValue) failed: hr = {:#x}", (uint32_t) hr);
 				pProps->Release();
 				pEndpoint->Release();
 				continue;
@@ -196,7 +196,7 @@ std::vector<std::string> WasapiInstance::getDeviceList() {
 
 		hr = pEndpoint->OpenPropertyStore(STGM_READ, &pProps);
 		if(FAILED(hr)) {
-			SPDLOG_ERROR("IMMDevice(OpenPropertyStore) failed: hr = {:#x}", (uint32_t)hr);
+			SPDLOG_ERROR("IMMDevice(OpenPropertyStore) failed: hr = {:#x}", (uint32_t) hr);
 			pEndpoint->Release();
 			continue;
 		}
@@ -207,7 +207,7 @@ std::vector<std::string> WasapiInstance::getDeviceList() {
 		// Get the endpoint's friendly-name property.
 		hr = pProps->GetValue(PKEY_Device_FriendlyName, &varName);
 		if(FAILED(hr)) {
-			SPDLOG_ERROR("IPropertyStore(GetValue) failed: hr = {:#x}", (uint32_t)hr);
+			SPDLOG_ERROR("IPropertyStore(GetValue) failed: hr = {:#x}", (uint32_t) hr);
 			pProps->Release();
 			pEndpoint->Release();
 			continue;
@@ -288,7 +288,7 @@ void WasapiInstance::stop() {
 int WasapiInstance::start(int index, size_t numChannel, int sampleRate, int jackBufferSize) {
 	HRESULT hr = initializeWasapi(numChannel, sampleRate, jackBufferSize);
 	if(FAILED(hr)) {
-		SPDLOG_ERROR("Failed to initialize WASAPI: {:#x}", (uint32_t)hr);
+		SPDLOG_ERROR("Failed to initialize WASAPI: {:#x}", (uint32_t) hr);
 		return hr;
 	}
 
@@ -828,8 +828,8 @@ void WasapiInstance::onFastTimer() {
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
-		SPDLOG_INFO("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
-		SPDLOG_INFO("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
+		SPDLOG_DEBUG("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
+		SPDLOG_DEBUG("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
 		clockDriftPpm = 0;
 	}
 }
