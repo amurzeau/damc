@@ -57,6 +57,24 @@ std::vector<std::string> DeviceInputInstance::getDeviceList() {
 	return result;
 }
 
+static size_t getSimilarity(const char* str1, const char* str2) {
+	size_t similarity = 0;
+	size_t i;
+
+	for(i = 0; str1[i] && str2[i]; i++) {
+		if(str1[i] == str2[i]) {
+			similarity++;
+		}
+	}
+
+	// If both end at the same time, add a bonus 1
+	if(str1[i] == str2[i]) {
+		similarity++;
+	}
+
+	return similarity;
+}
+
 int DeviceInputInstance::getDeviceIndex(const std::string& name) {
 	int numDevices = Pa_GetDeviceCount();
 
@@ -66,16 +84,22 @@ int DeviceInputInstance::getDeviceIndex(const std::string& name) {
 		return Pa_GetDefaultInputDevice();
 	}
 
+	size_t bestSimilarity = 0;
+	size_t bestIndex = -1;
+
 	for(int i = 0; i < numDevices; i++) {
 		const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
 		std::string devName;
 
 		devName = std::string(Pa_GetHostApiInfo(deviceInfo->hostApi)->name) + "::" + std::string(deviceInfo->name);
-		if(devName == name)
-			return i;
+		size_t similarity = getSimilarity(devName.c_str(), name.c_str());
+		if(similarity > bestSimilarity) {
+			bestSimilarity = similarity;
+			bestIndex = i;
+		}
 	}
 
-	return -1;
+	return bestIndex;
 }
 
 void DeviceInputInstance::stop() {
