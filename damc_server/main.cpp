@@ -34,11 +34,11 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 }
 
 void onSigTerm(uv_signal_t* handle, int signal) {
-    ControlInterface* controlInterface = (ControlInterface*) handle->data;
+	ControlInterface* controlInterface = (ControlInterface*) handle->data;
 
-    SPDLOG_INFO("Signal {} received, stopping", signal);
+	SPDLOG_INFO("Signal {} received, stopping", signal);
 
-    controlInterface->stop();
+	exit(0);
 }
 
 void initializeSpdLog() {
@@ -98,17 +98,17 @@ void portAudioLogger(const char* log) {
 }
 
 void initializeSignalHandler(uv_signal_t* handle, ControlInterface* controlInterface, int signal) {
-    uv_signal_init(uv_default_loop(), handle);
-    handle->data = controlInterface;
-    uv_signal_start(handle, &onSigTerm, signal);
-    uv_unref((uv_handle_t*) handle);
+	uv_signal_init(uv_default_loop(), handle);
+	handle->data = controlInterface;
+	uv_signal_start(handle, &onSigTerm, signal);
+	uv_unref((uv_handle_t*) handle);
 }
 
 int main() {
 	uv_tty_t ttyRead;
-    uv_signal_t sigTermHandler;
-    uv_signal_t sigIntHandler;
-    uv_signal_t sigHupHandler;
+	uv_signal_t sigTermHandler;
+	uv_signal_t sigIntHandler;
+	uv_signal_t sigHupHandler;
 
 	unsigned int oldMXCSR = _mm_getcsr();      /* read the old MXCSR setting */
 	unsigned int newMXCSR = oldMXCSR | 0x8040; /* set DAZ and FZ bits */
@@ -137,13 +137,13 @@ int main() {
 		ttyRead.data = &controlInterface;
 		uv_read_start((uv_stream_t*) &ttyRead, &onTtyAllocBuffer, &onTtyRead);
 		SPDLOG_INFO("Press enter to stop");
-    }
+	}
 
-    initializeSignalHandler(&sigTermHandler, &controlInterface, SIGTERM);
-    initializeSignalHandler(&sigIntHandler, &controlInterface, SIGINT);
-    initializeSignalHandler(&sigHupHandler, &controlInterface, SIGHUP);
+	initializeSignalHandler(&sigTermHandler, &controlInterface, SIGTERM);
+	initializeSignalHandler(&sigIntHandler, &controlInterface, SIGINT);
+	initializeSignalHandler(&sigHupHandler, &controlInterface, SIGHUP);
 
-    controlInterface.run();
+	controlInterface.run();
 
 	spdlog::shutdown();
 
