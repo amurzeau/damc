@@ -291,6 +291,9 @@
         <property name="text">
          <string>Bal.</string>
         </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
       <item row="6" column="0">

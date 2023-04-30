@@ -9,13 +9,16 @@ class Balance;
 }  // namespace Ui
 
 class Balance;
+class OutputController;
 
 class BalanceController : public QDialog {
 	Q_OBJECT
 
 public:
-	explicit BalanceController(QWidget* parent, OscContainer* oscParent);
+	explicit BalanceController(OutputController* parent, OscContainer* oscParent);
 	~BalanceController();
+
+	bool getEnabled();
 
 public slots:
 	void show();

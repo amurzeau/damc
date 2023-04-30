@@ -27,6 +27,7 @@ public:
 
 	void showConfigDialog();
 	void updateEqEnable();
+	void updateBalanceEnable();
 	OscWidgetMapper<QAbstractButton>* getOscEnable() { return &oscEnable; }
 	OscWidgetMapper<QLineEdit>* getOscName() { return &oscName; }
 	OscWidgetMapper<QLineEdit>* getOscDisplayName() { return &oscDisplayName; }

@@ -150,6 +150,10 @@ void OutputController::updateEqEnable() {
 	ui->eqButton->setChecked(equalizersController->getEqEnabled());
 }
 
+void OutputController::updateBalanceEnable() {
+	ui->balanceButton->setChecked(balanceController->getEnabled());
+}
+
 void OutputController::onShowEq() {
 	ui->eqButton->toggle();
 	if(equalizersController->isHidden()) {
@@ -178,6 +182,7 @@ void OutputController::onShowExpander() {
 }
 
 void OutputController::onShowBalance() {
+	ui->balanceButton->toggle();
 	if(balanceController->isHidden()) {
 		balanceController->show();
 	} else {
