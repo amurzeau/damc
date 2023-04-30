@@ -1,0 +1,16 @@
+[Unit]
+Description=JACK
+Before=pulseaudio.service
+ConditionUser=!root
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/jackd -dalsa -r48000 -p512 -D -Chw:Generic -Phw:Generic
+# jackd will take some time before being ready
+ExecStartPost=/usr/bin/sleep 1
+Restart=always
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target

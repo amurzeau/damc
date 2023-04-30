@@ -100,6 +100,10 @@ if(UNIX)
 			dist/damc_server.desktop
 		DESTINATION ./
 	)
+	install(
+		DIRECTORY dist/systemd
+		DESTINATION ./
+	)
 endif()
 install(CODE "
 	if(NOT EXISTS \${CMAKE_INSTALL_PREFIX}/damc_config.json)

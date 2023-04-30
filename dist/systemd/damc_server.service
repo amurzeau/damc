@@ -1,0 +1,15 @@
+[Unit]
+Description=DAMC Audio Service
+After=jackd.service
+Requires=jackd.service
+ConditionUser=!root
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=damc_server
+Restart=always
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target
