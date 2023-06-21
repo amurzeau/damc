@@ -10,7 +10,7 @@
 
 template<typename T> class OscGenericArray : protected OscContainer {
 public:
-	using OscFactoryFunction = std::function<T*(OscContainer*, int)>;
+	using OscFactoryFunction = std::function<T*(OscContainer*, int32_t)>;
 
 public:
 	OscGenericArray(OscContainer* parent, std::string name) noexcept;
@@ -24,10 +24,10 @@ public:
 	const T& at(size_t index) const { return *value.at(index); }
 	bool contains(size_t index) const;
 
-	int getNextKey();
+	int32_t getNextKey();
 	void push_back();
-	void insert(int key);
-	void erase(int key);
+	void insert(int32_t key);
+	void erase(int32_t key);
 	void resize(size_t size);
 
 	auto size() const { return value.size(); }
@@ -44,25 +44,25 @@ protected:
 	virtual void initializeItem(T*) {}
 	void updateNextKeyToMaxKey();
 
-	void insertValue(int key);
-	void eraseValue(int key);
+	void insertValue(int32_t key);
+	void eraseValue(int32_t key);
 
 private:
-	OscFlatArray<int> keys;
-	std::map<int, std::unique_ptr<T>> value;
+	OscFlatArray<int32_t> keys;
+	std::map<int32_t, std::unique_ptr<T>> value;
 	OscFactoryFunction factoryFunction;
-	int nextKey;
+	int32_t nextKey;
 };
 
 template<typename T>
 OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noexcept
     : OscContainer(parent, name), keys(this, "keys"), nextKey(0) {
-	keys.addChangeCallback([this](const std::vector<int>& oldKeys, const std::vector<int>& newKeys) {
-		std::vector<int> keysToKeep;
+	keys.addChangeCallback([this](const std::vector<int32_t>& oldKeys, const std::vector<int32_t>& newKeys) {
+		std::vector<int32_t> keysToKeep;
 		bool mustUpdateKeys = false;
 
 		for(size_t i = 0; i < newKeys.size(); i++) {
-			int key = newKeys[i];
+			int32_t key = newKeys[i];
 
 			if(std::count(keysToKeep.begin(), keysToKeep.end(), key) > 0) {
 				SPDLOG_ERROR("{}: Duplicate key {}", this->getFullAddress(), key);
@@ -78,8 +78,8 @@ OscGenericArray<T>::OscGenericArray(OscContainer* parent, std::string name) noex
 			}
 		}
 
-		std::vector<int> keyToRemove;
-		for(int key : oldKeys) {
+		std::vector<int32_t> keyToRemove;
+		for(int32_t key : oldKeys) {
 			if(std::count(keysToKeep.begin(), keysToKeep.end(), key) == 0) {
 				eraseValue(key);
 			}
@@ -98,8 +98,8 @@ template<typename T> bool OscGenericArray<T>::contains(size_t index) const {
 	return value.count(index) > 0;
 }
 
-template<typename T> int OscGenericArray<T>::getNextKey() {
-	int newKey = nextKey;
+template<typename T> int32_t OscGenericArray<T>::getNextKey() {
+	int32_t newKey = nextKey;
 	nextKey++;
 	return newKey;
 }
@@ -108,15 +108,15 @@ template<typename T> void OscGenericArray<T>::push_back() {
 	insert(getNextKey());
 }
 
-template<typename T> void OscGenericArray<T>::insert(int newKey) {
+template<typename T> void OscGenericArray<T>::insert(int32_t newKey) {
 	if(nextKey <= newKey)
 		nextKey = newKey + 1;
 
-	keys.updateData([&newKey](std::vector<int>& keys) { keys.push_back(newKey); });
+	keys.updateData([&newKey](std::vector<int32_t>& keys) { keys.push_back(newKey); });
 }
 
-template<typename T> void OscGenericArray<T>::erase(int key) {
-	keys.updateData([&key](std::vector<int>& data) { Utils::vector_erase(data, key); });
+template<typename T> void OscGenericArray<T>::erase(int32_t key) {
+	keys.updateData([&key](std::vector<int32_t>& data) { Utils::vector_erase(data, key); });
 }
 
 template<typename T> void OscGenericArray<T>::resize(size_t newSize) {
@@ -141,7 +141,7 @@ void OscGenericArray<T>::execute(std::string_view address, const std::vector<Osc
 	splitAddress(address, &childAddress, nullptr);
 
 	if(!childAddress.empty() && Utils::isNumber(childAddress)) {
-		int key = atoi(std::string(childAddress).c_str());
+		int32_t key = atoi(std::string(childAddress).c_str());
 
 		if(value.count(key) == 0) {
 			SPDLOG_DEBUG("{}: detect new key {} by direct access", this->getFullAddress(), key);
@@ -153,7 +153,7 @@ void OscGenericArray<T>::execute(std::string_view address, const std::vector<Osc
 }
 
 template<typename T> void OscGenericArray<T>::updateNextKeyToMaxKey() {
-	int maxKey = 0;
+	int32_t maxKey = 0;
 	for(auto it = value.begin(); it != value.end(); ++it) {
 		if(it->first + 1 > maxKey || it == value.begin())
 			maxKey = it->first + 1;
@@ -162,7 +162,7 @@ template<typename T> void OscGenericArray<T>::updateNextKeyToMaxKey() {
 	nextKey = maxKey;
 }
 
-template<typename T> void OscGenericArray<T>::insertValue(int key) {
+template<typename T> void OscGenericArray<T>::insertValue(int32_t key) {
 	SPDLOG_INFO("{}: new item {}", this->getFullAddress(), key);
 
 	T* newValue = factoryFunction(this, key);
@@ -171,7 +171,7 @@ template<typename T> void OscGenericArray<T>::insertValue(int key) {
 	value.insert(std::make_pair(key, std::unique_ptr<T>(newValue)));
 }
 
-template<typename T> void OscGenericArray<T>::eraseValue(int key) {
+template<typename T> void OscGenericArray<T>::eraseValue(int32_t key) {
 	SPDLOG_INFO("{}: removing item {}", this->getFullAddress(), key);
 
 	for(auto it = value.begin(); it != value.end();) {
