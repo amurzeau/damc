@@ -8,7 +8,7 @@ file(GLOB SOURCES *.cpp)
 
 macro(find_qt OUTPUT_VARIABLE)
 	find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
-	find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS Core Gui Widgets Network REQUIRED)
+	find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS Core Gui Widgets Network SerialPort REQUIRED)
 
 	add_library(${OUTPUT_VARIABLE} INTERFACE)
 	target_link_libraries(${OUTPUT_VARIABLE} INTERFACE
@@ -16,6 +16,7 @@ macro(find_qt OUTPUT_VARIABLE)
 		Qt${QT_VERSION_MAJOR}::Gui
 		Qt${QT_VERSION_MAJOR}::Widgets
 		Qt${QT_VERSION_MAJOR}::Network
+		Qt${QT_VERSION_MAJOR}::SerialPort
 	)
 endmacro()
 

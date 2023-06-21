@@ -1,7 +1,6 @@
 #pragma once
 
 #include "OscWidgetArray.h"
-#include "WavePlayInterface.h"
 #include <Osc/OscFlatArray.h>
 #include <OscRoot.h>
 #include <QWidget>
@@ -16,7 +15,7 @@ class MainWindow : public QWidget {
 	Q_OBJECT
 
 public:
-	explicit MainWindow(QWidget* parent = 0);
+	explicit MainWindow(OscRoot* oscRoot, QWidget* parent = 0);
 	~MainWindow();
 
 	void removeInstance(int key);
@@ -41,8 +40,7 @@ signals:
 private:
 	Ui::MainWindow* ui;
 
-	OscRoot oscRoot;
-	WavePlayInterface wavePlayInterface;
+	OscRoot* oscRoot;
 	OscWidgetArray outputInterfaces;
 
 	GlobalConfigDialog* globalConfigDialog;

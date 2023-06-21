@@ -4,18 +4,17 @@
 #include "ui_MainWindow.h"
 #include <QInputDialog>
 
-MainWindow::MainWindow(QWidget* parent)
+MainWindow::MainWindow(OscRoot* oscRoot, QWidget* parent)
     : QWidget(parent),
       ui(new Ui::MainWindow),
-      oscRoot(false),
-      wavePlayInterface(&oscRoot),
-      outputInterfaces(&oscRoot, "strip"),
-      oscTypeArray(&oscRoot, "type_list"),
-      oscPortaudioDeviceArray(&oscRoot, "device_list"),
-      oscWasapiDeviceArray(&oscRoot, "device_list_wasapi") {
+      oscRoot(oscRoot),
+      outputInterfaces(oscRoot, "strip"),
+      oscTypeArray(oscRoot, "type_list"),
+      oscPortaudioDeviceArray(oscRoot, "device_list"),
+      oscWasapiDeviceArray(oscRoot, "device_list_wasapi") {
 	ui->setupUi(this);
 
-	globalConfigDialog = new GlobalConfigDialog(this, &oscRoot);
+	globalConfigDialog = new GlobalConfigDialog(this, oscRoot);
 	connect(globalConfigDialog, &GlobalConfigDialog::showStateChanged, [this](bool shown) {
 		ui->globalConfigButton->setChecked(shown);
 	});
@@ -85,6 +84,6 @@ bool MainWindow::getShowDisabledOutputInstances() {
 }
 
 void MainWindow::updateDeviceList() {
-	oscRoot.sendMessage("/device_list/dump", nullptr, 0);
-	oscRoot.sendMessage("/device_list_wasapi/dump", nullptr, 0);
+	oscRoot->sendMessage("/device_list/dump", nullptr, 0);
+	oscRoot->sendMessage("/device_list_wasapi/dump", nullptr, 0);
 }
