@@ -92,7 +92,7 @@ jobs:
           cmd /c start /wait $exePath /SILENT /NORESTART /NOICONS /TYPE=full
           echo "Done installing Jack win${{ matrix.config.arch }} $jack_latest_version"
 
-          echo "::set-output name=JACK_VERSION::$jack_latest_version"
+          echo "JACK_VERSION=$jack_latest_version" >> $env:GITHUB_OUTPUT
 
           pip install -U pip
           pip install --pre aqtinstall
@@ -105,11 +105,11 @@ jobs:
           $mingw_path="$QT_ROOT\Tools\mingw810_${{ matrix.config.arch }}"
           $ninja_path="$QT_ROOT\Tools\Ninja"
 
-          echo "::set-output name=QT_ROOT::$QT_ROOT"
-          echo "::set-output name=QT_VERSION::$qt_latest_version"
-          echo "::set-output name=QT_PATH::$qt_path"
-          echo "::set-output name=MINGW_PATH::$mingw_path"
-          echo "::set-output name=NINJA_PATH::$ninja_path"
+          echo "QT_ROOT=$QT_ROOT" >> $env:GITHUB_OUTPUT
+          echo "QT_VERSION=$qt_latest_version" >> $env:GITHUB_OUTPUT
+          echo "QT_PATH=$qt_path" >> $env:GITHUB_OUTPUT
+          echo "MINGW_PATH=$mingw_path" >> $env:GITHUB_OUTPUT
+          echo "NINJA_PATH=$ninja_path" >> $env:GITHUB_OUTPUT
 
       - name: Cache Qt
         uses: actions/cache@v2
