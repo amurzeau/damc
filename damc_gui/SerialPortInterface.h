@@ -9,12 +9,13 @@
 class SerialPortInterface : public QObject, public OscConnector {
 	Q_OBJECT
 public:
-	SerialPortInterface(OscRoot* oscRoot, QString portName);
+	SerialPortInterface(OscRoot* oscRoot);
 
 	void updateOscVariables();
 
 protected slots:
 	void onOscDataReceived();
+	void onOscErrorOccurred(QSerialPort::SerialPortError error);
 	void onOscReconnect();
 
 protected:

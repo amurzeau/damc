@@ -1,10 +1,12 @@
 #include "SerialPortInterface.h"
 #include <QMessageBox>
 #include <QSerialPortInfo>
+#include <spdlog/fmt/bin_to_hex.h>
+#include <spdlog/spdlog.h>
 
-SerialPortInterface::SerialPortInterface(OscRoot* oscRoot, QString portName)
-    : OscConnector(oscRoot, true), oscSerialPort(portName) {
+SerialPortInterface::SerialPortInterface(OscRoot* oscRoot) : OscConnector(oscRoot, true) {
 	connect(&oscSerialPort, &QIODevice::readyRead, this, &SerialPortInterface::onOscDataReceived);
+	connect(&oscSerialPort, &QSerialPort::errorOccurred, this, &SerialPortInterface::onOscErrorOccurred);
 
 	onOscReconnect();
 }
@@ -19,34 +21,46 @@ void SerialPortInterface::onOscDataReceived() {
 		QByteArray receivedData;
 
 		receivedData = oscSerialPort.readAll();
-		printf("data: %s\n", receivedData.constData());
+		// printf("data: %s\n", receivedData.constData());
+		SPDLOG_DEBUG("Received OSC data: {:a}", spdlog::to_hex(receivedData));
 		OscConnector::onOscDataReceived((const uint8_t*) receivedData.data(), receivedData.size());
 	} while(oscSerialPort.bytesAvailable());
 }
 
-// void SerialPortInterface::onOscConnectionStateChanged(QAbstractSocket::SocketState state) {
-// 	if(state == QAbstractSocket::UnconnectedState) {
-// 		oscReconnectTimer.singleShot(1000, this, &SerialPortInterface::onOscReconnect);
-// 	} else if(state == QAbstractSocket::ConnectedState) {
-// 		updateOscVariables();
-// 	}
-// }
+void SerialPortInterface::onOscErrorOccurred(QSerialPort::SerialPortError error) {
+	if(error == QSerialPort::NoError)
+		return;
+	SPDLOG_ERROR("{}: error {}", oscSerialPort.portName().toStdString(), oscSerialPort.errorString().toStdString());
+	oscSerialPort.close();
+	oscReconnectTimer.singleShot(1000, this, &SerialPortInterface::onOscReconnect);
+}
 
 void SerialPortInterface::onOscReconnect() {
-#if 1
 	QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
-	for(const auto& port : ports) {
-		printf(
-		    "available port: %s: %s\n", port.portName().toUtf8().constData(), port.description().toUtf8().constData());
+	bool portFound = false;
+	for(const QSerialPortInfo& port : ports) {
+		SPDLOG_INFO(
+		    "available port: {}: {}", port.portName().toUtf8().constData(), port.description().toUtf8().constData());
+		if(port.description().contains("DAMC STM32 Audio")) {
+			oscSerialPort.setPort(port);
+			portFound = true;
+		}
 	}
 
-	if(!oscSerialPort.open(QIODevice::ReadWrite)) {
-		printf("Open failed: %s\n", oscSerialPort.errorString().toUtf8().constData());
+	if(portFound) {
+		if(oscSerialPort.open(QIODevice::ReadWrite)) {
+			SPDLOG_INFO("Opened: {}", oscSerialPort.portName().toStdString());
+			updateOscVariables();
+		} else {
+			SPDLOG_ERROR("Open failed: {}", oscSerialPort.errorString().toStdString());
+			portFound = false;
+		}
 	}
-	updateOscVariables();
-#else
-	oscSerialPort.bind(10000, QAbstractSocket::ReuseAddressHint);
-#endif
+
+	if(!portFound) {
+		SPDLOG_INFO("Serial port DAMC STM32 Audio not available, waiting");
+		oscReconnectTimer.singleShot(1000, this, &SerialPortInterface::onOscReconnect);
+	}
 }
 
 void SerialPortInterface::sendOscData(const uint8_t* data, size_t size) {
