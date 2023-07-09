@@ -39,9 +39,13 @@ void SerialPortInterface::onOscReconnect() {
 	QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
 	bool portFound = false;
 	for(const QSerialPortInfo& port : ports) {
-		SPDLOG_INFO(
-		    "available port: {}: {}", port.portName().toUtf8().constData(), port.description().toUtf8().constData());
-		if(port.description().contains("DAMC STM32 Audio")) {
+		SPDLOG_INFO("available port: {}: {}, {}, {}, {}",
+		            port.portName().toStdString(),
+		            port.description().toStdString(),
+		            port.manufacturer().toStdString(),
+		            port.serialNumber().toStdString(),
+		            port.systemLocation().toStdString());
+		if(port.description().contains("DAMC STM32 Audio") || port.serialNumber().contains("356F31473037")) {
 			oscSerialPort.setPort(port);
 			portFound = true;
 		}
