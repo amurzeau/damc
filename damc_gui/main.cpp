@@ -65,5 +65,9 @@ int main(int argc, char* argv[]) {
 	MainWindow w(&oscRoot);
 	w.show();
 
-	return a.exec();
+	int exitCode = a.exec();
+
+	spdlog::shutdown();
+
+	return exitCode;
 }
