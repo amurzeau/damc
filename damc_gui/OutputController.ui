@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>62</width>
+    <width>70</width>
     <height>391</height>
    </rect>
   </property>
@@ -95,6 +95,19 @@
           <number>0</number>
          </property>
          <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>77</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
           <widget class="QWidget" name="levelContainer" native="true">
            <layout class="QHBoxLayout" name="levelContainerLayout">
             <property name="spacing">
@@ -116,20 +129,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>77</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QSlider" name="volumeSlider">
+          <widget class="DoubleClickSlider" name="volumeSlider">
            <property name="minimum">
             <number>-80</number>
            </property>
@@ -364,6 +364,11 @@
    <extends>QWidget</extends>
    <header>FastLabelWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DoubleClickSlider</class>
+   <extends>QSlider</extends>
+   <header>DoubleClickSlider.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
