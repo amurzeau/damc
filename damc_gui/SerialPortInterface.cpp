@@ -45,7 +45,7 @@ void SerialPortInterface::onOscReconnect() {
 		            port.manufacturer().toStdString(),
 		            port.serialNumber().toStdString(),
 		            port.systemLocation().toStdString());
-		if(port.description().contains("DAMC STM32 Audio") || port.serialNumber().contains("356F31473037")) {
+		if(port.description().contains("DAMC STM32 Audio") || port.serialNumber().contains("DAMC_")) {
 			oscSerialPort.setPort(port);
 			portFound = true;
 		}
