@@ -14,10 +14,19 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 
 	if(updateOnChange) {
 		if constexpr(std::is_base_of_v<QAbstractButton, T> || std::is_base_of_v<QGroupBox, T>) {
-			connect(widget, &T::toggled, [this, widget](bool value) {
-				this->value = value;
-				notifyChanged(widget);
-			});
+			if(widget->isCheckable()) {
+				connect(widget, &T::toggled, [this, widget](bool value) {
+					this->value = value;
+					notifyChanged(widget);
+				});
+			} else {
+				connect(widget, &T::clicked, [this, widget](bool value) {
+					this->value = 1;
+					notifyChanged(widget);
+					this->value = 0;
+					notifyChanged(widget);
+				});
+			}
 		} else if constexpr(std::is_base_of_v<QDoubleSpinBox, T>) {
 			connect(widget, qOverload<double>(&T::valueChanged), [this, widget](double value) {
 				this->value = (float) (value / scale);
@@ -45,7 +54,7 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 			});
 		} else {
 			connect(widget, qOverload<int>(&T::valueChanged), [this, widget](int value) {
-				this->value = (int32_t)(value / scale);
+				this->value = (int32_t) (value / scale);
 				notifyChanged(widget);
 			});
 		}

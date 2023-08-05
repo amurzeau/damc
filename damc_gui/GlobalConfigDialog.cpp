@@ -7,6 +7,8 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
       ui(new Ui::GlobalConfigDialog),
       oscEnableAutoConnect(oscParent, "enableAutoConnect"),
       oscMonitorConnections(oscParent, "enableConnectionMonitoring"),
+      oscSaveCount(oscParent, "saveCount"),
+      oscSaveNow(oscParent, "saveNow"),
       timeUsbInterrupt(oscParent, "timeUsbInterrupt"),
       timeAudioProcessing(oscParent, "timeAudioProc"),
       timeFastTimer(oscParent, "timeFastTimer"),
@@ -21,6 +23,9 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 
 	oscEnableAutoConnect.setWidget(ui->autoConnectJackClients);
 	oscMonitorConnections.setWidget(ui->monitorConnections);
+
+	oscSaveCount.setWidget(ui->saveCountSpinBox, false);
+	oscSaveNow.setWidget(ui->saveNowPushButton, true);
 
 	// Convert 1/1000000 values to percents (1/100)
 	timeUsbInterrupt.setScale(1.f / 10000.f);

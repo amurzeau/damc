@@ -29,6 +29,9 @@ private:
 	OscWidgetMapper<QAbstractButton> oscEnableAutoConnect;
 	OscWidgetMapper<QAbstractButton> oscMonitorConnections;
 
+	OscWidgetMapper<QSpinBox> oscSaveCount;
+	OscWidgetMapper<QAbstractButton> oscSaveNow;
+
 	OscWidgetMapper<QDoubleSpinBox> timeUsbInterrupt;
 	OscWidgetMapper<QDoubleSpinBox> timeAudioProcessing;
 	OscWidgetMapper<QDoubleSpinBox> timeFastTimer;
