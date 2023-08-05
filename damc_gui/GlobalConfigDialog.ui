@@ -58,6 +58,9 @@
       </item>
       <item row="5" column="2">
        <widget class="QDoubleSpinBox" name="timersProcessingPerLoopSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
         <property name="suffix">
          <string> %</string>
         </property>
@@ -68,6 +71,9 @@
       </item>
       <item row="2" column="2">
        <widget class="QDoubleSpinBox" name="usbInterruptsPerLoopSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
         <property name="suffix">
          <string> %</string>
         </property>
@@ -78,6 +84,9 @@
       </item>
       <item row="3" column="2">
        <widget class="QDoubleSpinBox" name="audioProcessingPerLoopSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
         <property name="suffix">
          <string> %</string>
         </property>
@@ -196,6 +205,9 @@
       </item>
       <item row="4" column="2">
        <widget class="QDoubleSpinBox" name="oscProcessingPerLoopSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
         <property name="suffix">
          <string> %</string>
         </property>
