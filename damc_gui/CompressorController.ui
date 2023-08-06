@@ -6,135 +6,48 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>235</width>
-    <height>191</height>
+    <width>283</width>
+    <height>338</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="5" column="1">
-    <widget class="QDoubleSpinBox" name="releaseTimeSpinBox">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="suffix">
-      <string> ms</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>9000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>25.000000000000000</double>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="0">
-    <widget class="QLabel" name="releaseTimeLabel">
+    <widget class="QLabel" name="thresholdLabel">
      <property name="text">
-      <string>Release Time</string>
+      <string>Threshold</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QLabel" name="kneeWidthLabel">
      <property name="text">
       <string>Knee Width</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QDoubleSpinBox" name="staticGainSpinBox">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="suffix">
-      <string> dB</string>
-     </property>
-     <property name="decimals">
-      <number>1</number>
-     </property>
-     <property name="minimum">
-      <double>-100.000000000000000</double>
-     </property>
-    </widget>
-   </item>
    <item row="3" column="1">
-    <widget class="QDoubleSpinBox" name="kneeWidthSpinBox">
+    <widget class="QDoubleSpinBox" name="ratioSpinBox">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
-     </property>
-     <property name="suffix">
-      <string> dB</string>
      </property>
      <property name="decimals">
       <number>1</number>
      </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="2">
-    <widget class="QCheckBox" name="enableCheckBox">
-     <property name="text">
-      <string>Enable</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="ratioLabel">
-     <property name="text">
-      <string>Ratio</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="QDoubleSpinBox" name="attackTimeSpinBox">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="suffix">
-      <string> ms</string>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
      <property name="minimum">
-      <double>0.000000000000000</double>
+      <double>1.000000000000000</double>
      </property>
      <property name="maximum">
-      <double>9000.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>200.000000000000000</double>
+      <double>1000.000000000000000</double>
      </property>
     </widget>
    </item>
-   <item row="6" column="0">
-    <widget class="QLabel" name="attackTimeLabel">
-     <property name="text">
-      <string>Attack Time</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1">
+   <item row="5" column="1">
     <widget class="QDoubleSpinBox" name="thresholdSpinBox">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -156,43 +69,219 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="thresholdLabel">
+   <item row="6" column="0">
+    <widget class="QLabel" name="releaseTimeLabel">
      <property name="text">
-      <string>Threshold</string>
+      <string>Release Time</string>
      </property>
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QDoubleSpinBox" name="ratioSpinBox">
+    <widget class="QDoubleSpinBox" name="staticGainSpinBox">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="suffix">
+      <string> dB</string>
+     </property>
      <property name="decimals">
       <number>1</number>
      </property>
      <property name="minimum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>1000.000000000000000</double>
+      <double>-100.000000000000000</double>
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="2" column="0">
     <widget class="QLabel" name="staticGainLabel">
      <property name="text">
       <string>Static Gain</string>
      </property>
     </widget>
    </item>
-   <item row="7" column="0" colspan="2">
-    <widget class="QCheckBox" name="useMovingMaxCheckBox">
+   <item row="1" column="0" colspan="2">
+    <widget class="QCheckBox" name="enableLoudnessCheckBox">
      <property name="text">
-      <string>Use moving max envelope detection</string>
+      <string>Enable loudness compression</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QDoubleSpinBox" name="attackTimeSpinBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="suffix">
+      <string> ms</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="minimum">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>99999.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>200.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QDoubleSpinBox" name="kneeWidthSpinBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="suffix">
+      <string> dB</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QDoubleSpinBox" name="releaseTimeSpinBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="suffix">
+      <string> ms</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="minimum">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>99999.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>25.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="ratioLabel">
+     <property name="text">
+      <string>Ratio</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="attackTimeLabel">
+     <property name="text">
+      <string>Attack Time</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="QCheckBox" name="enablePeakCheckBox">
+     <property name="text">
+      <string>Enable peak compression</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="QDoubleSpinBox" name="loudnessTargetSpinBox">
+     <property name="suffix">
+      <string> LUFS</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="minimum">
+      <double>-999.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>999.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="loudnessTargetLabel">
+     <property name="text">
+      <string>LUFS Target</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1">
+    <widget class="QDoubleSpinBox" name="lufsIntegrationTimeSpinBox">
+     <property name="suffix">
+      <string> ms</string>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="maximum">
+      <double>99999.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="lufsIntegrationTimeLabel">
+     <property name="text">
+      <string>LUFS Integ Time</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="1">
+    <widget class="QDoubleSpinBox" name="lufsMeterSpinBox">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="suffix">
+      <string> LUFS</string>
+     </property>
+     <property name="minimum">
+      <double>-999.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>999.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="lufsMeterLabel">
+     <property name="text">
+      <string>LUFS Meter</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="QDoubleSpinBox" name="lufsGateSpinBox">
+     <property name="suffix">
+      <string> dB</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="minimum">
+      <double>-100.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>0.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="lufsGateLabel">
+     <property name="text">
+      <string>LUFS Gate</string>
      </property>
     </widget>
    </item>

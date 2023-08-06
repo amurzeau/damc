@@ -6,33 +6,47 @@ CompressorController::CompressorController(QWidget* parent, OscContainer* oscPar
     : QDialog(parent),
       OscContainer(oscParent, name),
       ui(new Ui::CompressorController),
-      oscEnable(this, "enable"),
+      oscEnablePeak(this, "enable"),
+      oscEnableLoudness(this, "enableLoudness"),
       oscReleaseTime(this, "releaseTime"),
       oscAttackTime(this, "attackTime"),
       oscThreshold(this, "threshold"),
       oscStaticGain(this, "makeUpGain"),
       oscRatio(this, "ratio"),
       oscKneeWidth(this, "kneeWidth"),
-      oscMovingMax(this, "useMovingMax") {
+      oscLoudnessTarget(this, "lufsTarget"),
+      oscLufsIntegrationTime(this, "lufsIntegTime"),
+      oscLufsGate(this, "lufsGate"),
+      oscLufsMeter(this, "lufsMeter") {
 	ui->setupUi(this);
 
 	ui->gridLayout->setAlignment(Qt::AlignHCenter);
 
-	oscEnable.setWidget(ui->enableCheckBox);
+	oscEnablePeak.setWidget(ui->enablePeakCheckBox);
+	oscEnableLoudness.setWidget(ui->enableLoudnessCheckBox);
 	oscReleaseTime.setWidget(ui->releaseTimeSpinBox);
 	oscAttackTime.setWidget(ui->attackTimeSpinBox);
 	oscThreshold.setWidget(ui->thresholdSpinBox);
 	oscStaticGain.setWidget(ui->staticGainSpinBox);
 	oscRatio.setWidget(ui->ratioSpinBox);
 	oscKneeWidth.setWidget(ui->kneeWidthSpinBox);
-	oscMovingMax.setWidget(ui->useMovingMaxCheckBox);
+	oscLoudnessTarget.setWidget(ui->loudnessTargetSpinBox);
+	oscLufsIntegrationTime.setWidget(ui->lufsIntegrationTimeSpinBox);
+	oscLufsGate.setWidget(ui->lufsGateSpinBox);
+	oscLufsMeter.setWidget(ui->lufsMeterSpinBox);
 
 	oscReleaseTime.setScale(1000);
 	oscAttackTime.setScale(1000);
+	oscLufsIntegrationTime.setScale(1000);
 }
 
 CompressorController::~CompressorController() {
 	delete ui;
+}
+
+void CompressorController::setEnableButton(QAbstractButton* button) {
+	oscEnablePeak.setWidget(button, false);
+	oscEnableLoudness.setWidget(button, false);
 }
 
 void CompressorController::show() {

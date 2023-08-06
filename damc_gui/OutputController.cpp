@@ -49,10 +49,10 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 	balanceController = new BalanceController(this, &oscFilterChain);
 
 	compressorController = new CompressorController(this, &oscFilterChain, "compressorFilter");
-	compressorController->getEnableMapper().setWidget(ui->compressorButton, false);
+	compressorController->setEnableButton(ui->compressorButton);
 
 	expanderController = new CompressorController(this, &oscFilterChain, "expanderFilter");
-	expanderController->getEnableMapper().setWidget(ui->expanderButton, false);
+	expanderController->setEnableButton(ui->expanderButton);
 
 	configDialog = new OutputInstanceConfigDialog(parent, this);
 	connect(configDialog, &OutputInstanceConfigDialog::showStateChanged, [this](bool shown) {
