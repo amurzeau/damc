@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>168</width>
-    <height>165</height>
+    <width>142</width>
+    <height>169</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout">
@@ -33,64 +33,31 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <property name="leftMargin">
-       <number>3</number>
+       <number>0</number>
       </property>
       <property name="topMargin">
-       <number>3</number>
+       <number>0</number>
       </property>
       <property name="rightMargin">
-       <number>3</number>
+       <number>0</number>
       </property>
       <property name="bottomMargin">
-       <number>3</number>
+       <number>0</number>
       </property>
-      <property name="horizontalSpacing">
-       <number>3</number>
-      </property>
-      <property name="verticalSpacing">
-       <number>2</number>
-      </property>
-      <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="qSpinBox">
-        <property name="minimum">
-         <double>0.010000000000000</double>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="enableCheckBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
         </property>
-        <property name="maximum">
-         <double>200.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>1.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="f0SpinBox">
-        <property name="minimum">
-         <double>10.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>96000.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>1000.000000000000000</double>
+        <property name="text">
+         <string>Enable</string>
         </property>
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="typeLabel">
-        <property name="text">
-         <string>Type</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="gainLabel">
-        <property name="text">
-         <string>Gain</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
        <widget class="QComboBox" name="typeComboBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
@@ -151,14 +118,51 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="f0Label">
-        <property name="text">
-         <string>f0</string>
+       <widget class="QDoubleSpinBox" name="f0SpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <double>10.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>96000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1000.000000000000000</double>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
+      <item row="3" column="0">
+       <widget class="QDoubleSpinBox" name="qSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <double>0.010000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>200.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
        <widget class="QDoubleSpinBox" name="gainSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimum">
          <double>-100.000000000000000</double>
         </property>
@@ -167,20 +171,6 @@
         </property>
         <property name="value">
          <double>-10.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="qLabel">
-        <property name="text">
-         <string>Q</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0" colspan="2">
-       <widget class="QCheckBox" name="enableCheckBox">
-        <property name="text">
-         <string>Enable</string>
         </property>
        </widget>
       </item>
