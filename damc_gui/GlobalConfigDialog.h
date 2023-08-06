@@ -29,6 +29,7 @@ private:
 	OscWidgetMapper<QAbstractButton> oscEnableAutoConnect;
 	OscWidgetMapper<QAbstractButton> oscMonitorConnections;
 
+	OscContainer oscConfigContainer;
 	OscWidgetMapper<QSpinBox> oscSaveCount;
 	OscWidgetMapper<QAbstractButton> oscSaveNow;
 

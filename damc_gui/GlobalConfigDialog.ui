@@ -98,7 +98,7 @@
          <string> %</string>
         </property>
         <property name="maximum">
-         <double>100.000000000000000</double>
+         <double>10000.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -111,7 +111,7 @@
          <string> %</string>
         </property>
         <property name="maximum">
-         <double>100.000000000000000</double>
+         <double>10000.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -124,7 +124,7 @@
          <string> %</string>
         </property>
         <property name="maximum">
-         <double>100.000000000000000</double>
+         <double>10000.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -245,7 +245,7 @@
          <string> %</string>
         </property>
         <property name="maximum">
-         <double>100.000000000000000</double>
+         <double>10000.000000000000000</double>
         </property>
        </widget>
       </item>
