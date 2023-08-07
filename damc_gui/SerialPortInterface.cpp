@@ -7,6 +7,9 @@
 SerialPortInterface::SerialPortInterface(OscRoot* oscRoot) : OscConnector(oscRoot, true) {
 	connect(&oscSerialPort, &QIODevice::readyRead, this, &SerialPortInterface::onOscDataReceived);
 	connect(&oscSerialPort, &QSerialPort::errorOccurred, this, &SerialPortInterface::onOscErrorOccurred);
+	connect(&oscReconnectTimer, &QTimer::timeout, this, &SerialPortInterface::onOscReconnect);
+	oscReconnectTimer.setSingleShot(true);
+	oscReconnectTimer.setInterval(1000);
 
 	onOscReconnect();
 }
@@ -31,8 +34,9 @@ void SerialPortInterface::onOscErrorOccurred(QSerialPort::SerialPortError error)
 	if(error == QSerialPort::NoError)
 		return;
 	SPDLOG_ERROR("{}: error {}", oscSerialPort.portName().toStdString(), oscSerialPort.errorString().toStdString());
-	oscSerialPort.close();
-	oscReconnectTimer.singleShot(1000, this, &SerialPortInterface::onOscReconnect);
+	if(oscSerialPort.isOpen())
+		oscSerialPort.close();
+	oscReconnectTimer.start();
 }
 
 void SerialPortInterface::onOscReconnect() {
@@ -63,7 +67,7 @@ void SerialPortInterface::onOscReconnect() {
 
 	if(!portFound) {
 		SPDLOG_INFO("Serial port DAMC STM32 Audio not available, waiting");
-		oscReconnectTimer.singleShot(1000, this, &SerialPortInterface::onOscReconnect);
+		oscReconnectTimer.start();
 	}
 }
 
