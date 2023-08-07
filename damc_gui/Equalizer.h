@@ -27,7 +27,6 @@ public:
 
 protected:
 	void updateResponse();
-	virtual void showEvent(QShowEvent* event) override;
 
 private:
 	Ui::Equalizer* ui;

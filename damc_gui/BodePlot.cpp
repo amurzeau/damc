@@ -20,7 +20,7 @@ static void logSpace(double* array, int size, double xmin, double xmax) {
 		array[i] = exp(lxmin + double(i) * lstep);
 }
 
-BodePlot::BodePlot(QWidget* parent) : BodePlotWidget(parent) {
+BodePlot::BodePlot(QWidget* parent) : BodePlotWidget(parent), plotUpdatesEnabled(false), plotRequiresUpdate(false) {
 	setBackgroundBrush(Qt::darkBlue);
 
 	xAxis = PlotAxis("Frequency", 20.0f, 24000.0f);
@@ -34,6 +34,14 @@ BodePlot::BodePlot(QWidget* parent) : BodePlotWidget(parent) {
 	d_curve2.pen = QPen(Qt::cyan, 0, Qt::SolidLine);
 	d_curve2.axis = AxisType::YRight;
 	addCurve(&d_curve2);
+}
+
+void BodePlot::enablePlotUpdate(bool enable) {
+	plotUpdatesEnabled = enable;
+	if(plotUpdatesEnabled && plotRequiresUpdate) {
+		plotRequiresUpdate = false;
+		updatePlot();
+	}
 }
 
 void BodePlot::addEqualizer(Equalizer* eq) {
@@ -55,6 +63,11 @@ void BodePlot::showData(const double* frequency, const double* amplitude, const 
 //
 void BodePlot::updatePlot() {
 	static constexpr int ArraySize = 2000;
+
+	if(!plotUpdatesEnabled) {
+		plotRequiresUpdate = true;
+		return;
+	}
 
 	double frequency[ArraySize] = {0};
 	double amplitude[ArraySize];

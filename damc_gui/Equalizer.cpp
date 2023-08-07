@@ -64,7 +64,3 @@ void Equalizer::updateResponse() {
 	                           ui->qSpinBox->value());
 	bodePlot->updatePlot();
 }
-
-void Equalizer::showEvent(QShowEvent*) {
-	updateResponse();
-}

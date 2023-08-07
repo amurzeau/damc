@@ -31,6 +31,7 @@ bool EqualizersController::getEqEnabled() {
 }
 
 void EqualizersController::show() {
+	ui->bodePlot->enablePlotUpdate(true);
 	QDialog::show();
 	if(savedGeometry.isValid())
 		setGeometry(savedGeometry);
@@ -39,4 +40,5 @@ void EqualizersController::show() {
 void EqualizersController::hideEvent(QHideEvent*) {
 	qDebug("hide event");
 	savedGeometry = geometry();
+	ui->bodePlot->enablePlotUpdate(false);
 }

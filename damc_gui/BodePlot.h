@@ -12,6 +12,7 @@ class BodePlot : public BodePlotWidget {
 public:
 	BodePlot(QWidget* parent);
 
+	void enablePlotUpdate(bool enable);
 	void addEqualizer(Equalizer* eq);
 	void removeEqualizer(Equalizer* eq);
 	void updatePlot();
@@ -23,6 +24,8 @@ private:
 
 	PlotCurve d_curve1;
 	PlotCurve d_curve2;
+	bool plotUpdatesEnabled;
+	bool plotRequiresUpdate;
 
 	std::set<Equalizer*> eqFilters;
 };
