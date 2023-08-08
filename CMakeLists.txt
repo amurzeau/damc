@@ -104,6 +104,12 @@ if(UNIX)
 		DIRECTORY dist/systemd
 		DESTINATION ./
 	)
+elseif(WIN32)
+	install(
+		FILES
+			dist/damc_gui_serial.bat
+		DESTINATION ./
+	)
 endif()
 install(CODE "
 	if(NOT EXISTS \${CMAKE_INSTALL_PREFIX}/damc_config.json)
