@@ -3,7 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#if defined(__SSE__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 1)
+#define SSE_ENABLED
+#endif
+
+#ifdef SSE_ENABLED
 #include <xmmintrin.h>
+#endif
 
 #include <pa_debugprint.h>
 
@@ -110,9 +117,11 @@ int main() {
 	uv_signal_t sigIntHandler;
 	uv_signal_t sigHupHandler;
 
+#ifdef SSE_ENABLED
 	unsigned int oldMXCSR = _mm_getcsr();      /* read the old MXCSR setting */
 	unsigned int newMXCSR = oldMXCSR | 0x8040; /* set DAZ and FZ bits */
 	_mm_setcsr(newMXCSR);                      /* write the new MXCSR setting to the MXCSR */
+#endif
 
 	srand(time(nullptr));
 
