@@ -41,7 +41,6 @@ static inline uint64_t HTONLL(uint64_t l) {
 }
 #endif
 
-#if _WIN32
 static void tosc_strncpy(char* strDest, const char* strSource, size_t count) {
 	while(*strSource && count > 1) {
 		*strDest++ = *strSource++;
@@ -50,10 +49,6 @@ static void tosc_strncpy(char* strDest, const char* strSource, size_t count) {
 	if(count > 0)
 		*strDest = '\0';
 }
-#else
-#include <netinet/in.h>
-#define tosc_strncpy(_dst, _src, _len) strncpy(_dst, _src, _len)
-#endif
 
 #define BUNDLE_ID 0x2362756E646C6500L  // "#bundle"
 
@@ -62,9 +57,9 @@ int tosc_parseMessage(tosc_message_const* o, const char* buffer, const int len) 
 	// NOTE(mhroth): if there's a comma in the address, that's weird
 	int i = 0;
 	while(buffer[i] != '\0' && i < len)
-		++i;  // find the null-terminated address
+		++i;        // find the null-terminated address
 	while(buffer[i] != ',' && i < len)
-		++i;  // find the comma which starts the format string
+		++i;        // find the comma which starts the format string
 	if(i >= len)
 		return -1;  // error while looking for format string
 
@@ -74,7 +69,7 @@ int tosc_parseMessage(tosc_message_const* o, const char* buffer, const int len) 
 	while(i < len && buffer[i] != '\0')
 		++i;
 	if(i == len)
-		return -2;  // format string not null terminated
+		return -2;       // format string not null terminated
 
 	i = (i + 4) & ~0x3;  // advance to the next multiple of 4 after trailing '\0'
 	o->marker = buffer + i;
@@ -181,7 +176,7 @@ const char* tosc_getNextString(tosc_message_const* o) {
 void tosc_getNextBlob(tosc_message_const* o, const char** buffer, int* len) {
 	int i = (int) HTONL(*((const uint32_t*) o->marker));  // get the blob length
 	if(o->marker + 4 + i <= o->buffer + o->len) {
-		*len = i;  // length of blob
+		*len = i;                                         // length of blob
 		*buffer = o->marker + 4;
 		i = (i + 7) & ~0x3;
 		o->marker += i;
@@ -443,10 +438,10 @@ void tosc_printMessage(tosc_message_const* osc) {
 	for(int i = 0; osc->format[i] != '\0'; i++) {
 		switch(osc->format[i]) {
 			case 'b': {
-				const char* b = NULL;  // will point to binary data
-				int n = 0;             // takes the length of the blob
+				const char* b = NULL;             // will point to binary data
+				int n = 0;                        // takes the length of the blob
 				tosc_getNextBlob(osc, &b, &n);
-				printf(" [%i]", n);  // print length of blob
+				printf(" [%i]", n);               // print length of blob
 				for(int j = 0; j < n; ++j)
 					printf("%02X", b[j] & 0xFF);  // print blob bytes
 				break;
