@@ -40,7 +40,8 @@ if(TARGET QtDependencies)
 	target_link_libraries(${TARGET_NAME} PRIVATE QtDependencies damc_common)
 	target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES)
 
-	install(TARGETS
+	install(
+		TARGETS
 			${TARGET_NAME}
 			spdlog
 		RUNTIME DESTINATION ./
@@ -60,21 +61,22 @@ if(TARGET QtDependencies)
 
 		if(EXISTS ${QT_WINDEPLOYQT})
 			set(WINDEPLOYQT_EXTRA_OPTIONS)
-			if (QT_VERSION VERSION_LESS 6.0.0)
+
+			if(QT_VERSION VERSION_LESS 6.0.0)
 				# These options are not available with Qt 6
-				set (WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --no-webkit2 --no-angle)
+				set(WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --no-webkit2 --no-angle)
 			endif()
 
 			if(QT_VERSION VERSION_GREATER_EQUAL 5.14.0)
 				# --no-virtualkeyboard was introduced in Qt 5.14
-				set (WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --no-virtualkeyboard)
+				set(WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --no-virtualkeyboard)
 			endif()
 
 			if(QT_VERSION VERSION_LESS 5.14.0)
 				if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-					set (WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --debug)
+					set(WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --debug)
 				else()
-					set (WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --release)
+					set(WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --release)
 				endif()
 			endif()
 
@@ -90,6 +92,7 @@ if(TARGET QtDependencies)
 					--no-compiler-runtime
 					--no-opengl-sw
 					--no-svg
+					--no-system-d3d-compiler
 					${WINDEPLOYQT_EXTRA_OPTIONS}
 					"$<TARGET_FILE:${TARGET_NAME}>"
 				USES_TERMINAL
@@ -103,5 +106,4 @@ if(TARGET QtDependencies)
 			)
 		endif()
 	endif()
-
 endif()
