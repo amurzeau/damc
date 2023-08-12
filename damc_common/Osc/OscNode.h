@@ -9,7 +9,9 @@
 template<class T> struct osc_type_name {};
 
 #define DEFINE_OSC_TYPE(type_) \
-	template<> struct osc_type_name<type_> { static constexpr const char* name = #type_; }
+	template<> struct osc_type_name<type_> { \
+		static constexpr const char* name = #type_; \
+	}
 
 DEFINE_OSC_TYPE(bool);
 DEFINE_OSC_TYPE(int32_t);
@@ -70,7 +72,6 @@ public:
 	const std::string& getName() const { return name; }
 	virtual void dump() {}
 
-	virtual bool visit(const std::function<bool(OscNode*)>* nodeVisitorFunction);
 	virtual void execute(std::string_view address, const std::vector<OscArgument>& arguments);
 
 	virtual OscRoot* getRoot();

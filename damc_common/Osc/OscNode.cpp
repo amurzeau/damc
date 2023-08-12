@@ -62,16 +62,6 @@ void OscNode::setOscParent(OscContainer* parent) {
 	this->parent = parent;
 }
 
-bool OscNode::visit(const std::function<bool(OscNode*)>* nodeVisitorFunction) {
-	if(nodeVisitorFunction) {
-		SPDLOG_DEBUG("Executing address {}", getFullAddress());
-		if(!(*nodeVisitorFunction)(this))
-			return false;
-	}
-
-	return true;
-}
-
 void OscNode::sendMessage(const OscArgument* arguments, size_t number) {
 	getRoot()->sendMessage(getFullAddress(), arguments, number);
 }

@@ -86,17 +86,6 @@ void OscContainer::execute(std::string_view address, const std::vector<OscArgume
 	}
 }
 
-bool OscContainer::visit(const std::function<bool(OscNode*)>* nodeVisitorFunction) {
-	if(!OscNode::visit(nodeVisitorFunction))
-		return false;
-
-	for(auto& child : children) {
-		child.second->visit(nodeVisitorFunction);
-	}
-
-	return true;
-}
-
 std::string OscContainer::getAsString() const {
 	std::string result;
 	static size_t depth = 0;

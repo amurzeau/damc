@@ -23,7 +23,6 @@ public:
 
 	using OscNode::execute;
 	void execute(std::string_view address, const std::vector<OscArgument>& arguments) override;
-	bool visit(const std::function<bool(OscNode*)>* nodeVisitorFunction) override;
 
 	std::string getAsString() const override;
 
