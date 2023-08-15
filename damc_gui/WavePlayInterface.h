@@ -9,7 +9,7 @@
 class WavePlayInterface : public QObject, public OscConnector {
 	Q_OBJECT
 public:
-	WavePlayInterface(OscRoot* oscRoot);
+	WavePlayInterface(OscRoot* oscRoot, QString ip, uint32_t port);
 
 	void updateOscVariables();
 
@@ -22,6 +22,8 @@ protected:
 	void sendOscData(const uint8_t* data, size_t size) override;
 
 private:
+	QString ip;
+	uint32_t port;
 	QTcpSocket oscSocket;
 	QTimer oscReconnectTimer;
 };

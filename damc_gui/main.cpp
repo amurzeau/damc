@@ -3,6 +3,7 @@
 #include "WavePlayInterface.h"
 #include <OscRoot.h>
 #include <QApplication>
+#include <QCommandLineParser>
 #include <spdlog/async.h>
 #include <spdlog/cfg/env.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -48,6 +49,7 @@ void initializeSpdLog() {
 
 int main(int argc, char* argv[]) {
 	QApplication a(argc, argv);
+	int exitCode = 1;
 
 	initializeSpdLog();
 
@@ -55,17 +57,41 @@ int main(int argc, char* argv[]) {
 
 	std::unique_ptr<OscConnector> oscConnector;
 
-	qsizetype serialArgIndex = a.arguments().indexOf("--serial");
-	if(serialArgIndex >= 0) {
+	QCommandLineParser parser;
+
+	QCommandLineOption serialOption{"serial", "use serial port instead of TCP/IP socket"};
+	QCommandLineOption ipOption{"ip", "IP of the DAMC server", "ip", "127.0.0.1"};
+	QCommandLineOption portOption{"port", "Port of the DAMC server", "port", "2408"};
+
+	parser.setApplicationDescription("DAMC");
+	parser.addHelpOption();
+	parser.addOption(serialOption);
+	parser.addOption(ipOption);
+	parser.addOption(portOption);
+
+	parser.process(a);
+
+	if(parser.isSet(serialOption)) {
 		oscConnector.reset(new SerialPortInterface(&oscRoot));
 	} else {
-		oscConnector.reset(new WavePlayInterface(&oscRoot));
+		QString ip = parser.value(ipOption);
+		QString portStr = parser.value(portOption);
+		uint32_t port = portStr.toInt();
+		if(port == 0) {
+			SPDLOG_ERROR("Invalid port {}", portStr.toStdString());
+			exitCode = 2;
+		} else {
+			SPDLOG_INFO("Using DAMC server at {}:{}", ip.toStdString(), port);
+			oscConnector.reset(new WavePlayInterface(&oscRoot, ip, port));
+		}
 	}
 
-	MainWindow w(&oscRoot);
-	w.show();
+	if(oscConnector) {
+		MainWindow w(&oscRoot);
+		w.show();
 
-	int exitCode = a.exec();
+		exitCode = a.exec();
+	}
 
 	spdlog::shutdown();
 

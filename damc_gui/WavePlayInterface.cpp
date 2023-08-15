@@ -1,7 +1,8 @@
 #include "WavePlayInterface.h"
 #include <QMessageBox>
 
-WavePlayInterface::WavePlayInterface(OscRoot* oscRoot) : OscConnector(oscRoot, true) {
+WavePlayInterface::WavePlayInterface(OscRoot* oscRoot, QString ip, uint32_t port)
+    : OscConnector(oscRoot, true), ip(ip), port(port) {
 	connect(&oscSocket, &QIODevice::readyRead, this, &WavePlayInterface::onOscDataReceived);
 	connect(&oscSocket, &QAbstractSocket::stateChanged, this, &WavePlayInterface::onOscConnectionStateChanged);
 
@@ -37,7 +38,7 @@ void WavePlayInterface::onOscConnectionStateChanged(QAbstractSocket::SocketState
 
 void WavePlayInterface::onOscReconnect() {
 #if 1
-	oscSocket.connectToHost("127.0.0.1", 2408);
+	oscSocket.connectToHost(ip, port);
 #else
 	oscSocket.bind(10000, QAbstractSocket::ReuseAddressHint);
 #endif
