@@ -67,8 +67,8 @@ if(TARGET QtDependencies)
 				set(WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --no-webkit2 --no-angle)
 			endif()
 
-			if(QT_VERSION VERSION_GREATER_EQUAL 5.14.0)
-				# --no-virtualkeyboard was introduced in Qt 5.14
+			if(QT_VERSION VERSION_GREATER_EQUAL 5.14.0 AND QT_VERSION VERSION_LESS 6.5.0)
+				# --no-virtualkeyboard was introduced in Qt 5.14 and removed in 6.5
 				set(WINDEPLOYQT_EXTRA_OPTIONS ${WINDEPLOYQT_EXTRA_OPTIONS} --no-virtualkeyboard)
 			endif()
 
