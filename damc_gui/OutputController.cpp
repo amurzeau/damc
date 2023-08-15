@@ -271,7 +271,14 @@ void OutputController::dragMoveEvent(QDragMoveEvent* event) {
 			int sourceInstance;
 			dataStream >> sourceInstance;
 
-			mainWindow->moveOutputInstance(sourceInstance, atoi(getName().c_str()), event->pos().x() < width() / 2);
+			QPoint pos;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+			pos = event->pos();
+#else
+			pos = event->position().toPoint();
+#endif
+
+			mainWindow->moveOutputInstance(sourceInstance, atoi(getName().c_str()), pos.x() < width() / 2);
 		}
 	} else {
 		event->ignore();
