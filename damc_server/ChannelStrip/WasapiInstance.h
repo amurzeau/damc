@@ -73,7 +73,11 @@ private:
 	OscReadOnlyVariable<int32_t> oscActualBufferSize;
 	OscVariable<int> oscDeviceSampleRate;
 	OscVariable<float> oscClockDrift;
+	OscReadOnlyVariable<float> oscMeasuredClockDrift;
 	OscVariable<bool> oscExclusiveMode;
+	OscReadOnlyVariable<bool> oscIsRunning;
+	OscVariable<int32_t> oscUnderflowCount;
+	OscVariable<int32_t> oscOverflowCount;
 
 	uint32_t bufferLatencyNr = 0;
 	std::vector<uint32_t> bufferLatencyHistory;
@@ -81,6 +85,7 @@ private:
 	double previousAverageLatency = 0;
 	double clockDriftPpm = 0;
 
+	bool isPaRunning = false;
 	size_t underflowSize = 0;
 	size_t overflowSize = 0;
 	size_t maxBufferSize = 0;

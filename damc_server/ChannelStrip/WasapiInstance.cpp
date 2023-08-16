@@ -240,7 +240,11 @@ WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
       oscActualBufferSize(this, "actualBufferSize", 0),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
       oscClockDrift(this, "clockDrift", 0.0f),
+      oscMeasuredClockDrift(this, "measuredClockDrift", 0.0f),
       oscExclusiveMode(this, "exclusiveMode", true),
+      oscIsRunning(this, "isRunning", false),
+      oscUnderflowCount(this, "underflowCount", 0),
+      oscOverflowCount(this, "overflowCount", 0),
       deviceSampleRateMeasure(this, "realSampleRate") {
 	this->direction = direction;
 
@@ -640,6 +644,7 @@ int WasapiInstance::postProcessSamplesRender(float** samples, size_t numChannel,
 
 		hr = pRenderClient->ReleaseBuffer(requiredBufferSize, 0);
 		EXIT_ON_ERROR(hr);
+		isPaRunning = true;
 		deviceSampleRateMeasure.notifySampleProcessed(requiredBufferSize);
 	} else {
 		overflowOccured = true;
@@ -752,7 +757,7 @@ int WasapiInstance::postProcessSamplesCapture(float** samples, size_t numChannel
 		return 0;
 
 	UINT32 validSize;
-	UINT32 numFrameToRead;
+	UINT32 numFrameToRead = 0;
 	DWORD flags;
 
 	BYTE* buffer;
@@ -779,6 +784,10 @@ int WasapiInstance::postProcessSamplesCapture(float** samples, size_t numChannel
 	hr = pCaptureClient->ReleaseBuffer(numFrameToRead);
 	EXIT_ON_ERROR(hr);
 	deviceSampleRateMeasure.notifySampleProcessed(numFrameToRead);
+
+	if(numFrameToRead > 0) {
+		isPaRunning = true;
+	}
 
 	if(underflowOccured || overflowOccured) {
 		bufferLatencyHistory.clear();
@@ -820,20 +829,31 @@ void WasapiInstance::onFastTimer() {
 		return;
 
 	if(overflowOccured) {
-		SPDLOG_WARN("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
+		SPDLOG_DEBUG("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
+		oscOverflowCount = oscOverflowCount + 1;
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		SPDLOG_WARN("{}: underrun: {}, {}", oscDeviceName.get(), bufferLatencyNr, underflowSize);
+		SPDLOG_DEBUG("{}: underrun: {}, {}", oscDeviceName.get(), bufferLatencyNr, underflowSize);
+		oscUnderflowCount = oscUnderflowCount + 1;
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
 		SPDLOG_DEBUG("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
 		SPDLOG_DEBUG("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
+		oscMeasuredClockDrift = clockDriftPpm;
 		clockDriftPpm = 0;
 	}
 }
 
 void WasapiInstance::onSlowTimer() {
+	if(!isPaRunning) {
+		SPDLOG_DEBUG("{}: portaudio not running !", oscDeviceName.get());
+		oscIsRunning = false;
+	} else {
+		isPaRunning = false;
+		oscIsRunning = true;
+	}
+
 	deviceSampleRateMeasure.onTimeoutTimer();
 }

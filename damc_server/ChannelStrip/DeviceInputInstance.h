@@ -49,10 +49,18 @@ private:
 
 	OscVariable<std::string> oscDeviceName;
 	OscVariable<float> oscClockDrift;
+	OscReadOnlyVariable<float> oscMeasuredClockDrift;
 	OscVariable<int32_t> oscBufferSize;
 	OscReadOnlyVariable<int32_t> oscActualBufferSize;
 	OscVariable<int32_t> oscDeviceSampleRate;
+
+#ifdef _WIN32
 	OscVariable<bool> oscExclusiveMode;
+#endif
+
+	OscReadOnlyVariable<bool> oscIsRunning;
+	OscVariable<int32_t> oscUnderflowCount;
+	OscVariable<int32_t> oscOverflowCount;
 
 	uint32_t bufferLatencyNr = 0;
 	std::vector<uint32_t> bufferLatencyHistory;

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>577</width>
-    <height>489</height>
+    <width>475</width>
+    <height>708</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -122,7 +122,7 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
+      <item row="6" column="0" colspan="2">
        <widget class="QCheckBox" name="reverseAudioSignalCheckBox">
         <property name="text">
          <string>Reverse audio signal</string>
@@ -133,9 +133,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QGroupBox" name="sampleRateBox">
+    <widget class="QGroupBox" name="audioParametersGroupBox">
      <property name="title">
-      <string>Sample rate</string>
+      <string>Audio Parameters</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0">
@@ -145,58 +145,10 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="clockDriftLabel">
+      <item row="3" column="0" colspan="2">
+       <widget class="QLabel" name="bufferOverflowCountLabel">
         <property name="text">
-         <string>Clock drift</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="sampleRateLabel">
-        <property name="text">
-         <string>Sample rate</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="bufferSizeSpinBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="toolTip">
-         <string>Buffer size to ask for use</string>
-        </property>
-        <property name="suffix">
-         <string> samples</string>
-        </property>
-        <property name="maximum">
-         <number>999999</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QSpinBox" name="actualBufferSize">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="toolTip">
-         <string>Actual used buffer size</string>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="suffix">
-         <string> samples</string>
-        </property>
-        <property name="maximum">
-         <number>999999</number>
+         <string>Buffer Overflow</string>
         </property>
        </widget>
       </item>
@@ -222,23 +174,73 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QSpinBox" name="measuredDeviceSampleRateSpinBox">
+      <item row="4" column="0" colspan="2">
+       <widget class="QLabel" name="bufferUnderflowCountLabel">
+        <property name="text">
+         <string>Buffer Underflow</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="sampleRateLabel">
+        <property name="text">
+         <string>Sample rate</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="measuredClockDriftSpinBox">
         <property name="toolTip">
-         <string>Measured device sample rate</string>
+         <string>Measured clock drift in PPM (part per million)</string>
         </property>
         <property name="readOnly">
          <bool>true</bool>
         </property>
         <property name="suffix">
-         <string> Hz</string>
+         <string> ppm</string>
+        </property>
+        <property name="minimum">
+         <double>-999999.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>999999.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QSpinBox" name="bufferUnderflowCountSpinBox">
+        <property name="maximum">
+         <number>99999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="bufferSizeSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Buffer size to ask for use</string>
+        </property>
+        <property name="suffix">
+         <string> samples</string>
         </property>
         <property name="maximum">
          <number>999999</number>
         </property>
        </widget>
       </item>
-      <item row="2" column="1" colspan="2">
+      <item row="2" column="0">
+       <widget class="QLabel" name="clockDriftLabel">
+        <property name="text">
+         <string>Clock drift</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="clockDriftSpinBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
@@ -257,6 +259,65 @@
         </property>
         <property name="maximum">
          <double>999999.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QSpinBox" name="actualBufferSize">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Actual used buffer size</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> samples</string>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QSpinBox" name="bufferOverflowCountSpinBox">
+        <property name="maximum">
+         <number>99999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QSpinBox" name="measuredDeviceSampleRateSpinBox">
+        <property name="toolTip">
+         <string>Measured device sample rate</string>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> Hz</string>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QCheckBox" name="isRunningCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QLabel" name="isRunningLabel">
+        <property name="text">
+         <string>Is Running</string>
         </property>
        </widget>
       </item>

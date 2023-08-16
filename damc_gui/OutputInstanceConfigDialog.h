@@ -43,11 +43,15 @@ private:
 	OscWidgetMapper<QSpinBox> oscBufferSize;
 	OscWidgetMapper<QSpinBox> oscActualBufferSize;
 	OscWidgetMapper<QDoubleSpinBox> oscClockDrift;
+	OscWidgetMapper<QDoubleSpinBox> oscMeasuredClockDrift;
 	OscWidgetMapper<QSpinBox> oscDeviceSampleRate;
 	OscWidgetMapper<QLineEdit> oscIp;
 	OscWidgetMapper<QSpinBox> oscPort;
 	OscWidgetMapper<QAbstractButton> oscAddVbanHeader;
 	OscWidgetMapper<QAbstractButton> oscExclusiveMode;
+	OscWidgetMapper<QAbstractButton> oscIsRunning;
+	OscWidgetMapper<QSpinBox> oscUnderflowCount;
+	OscWidgetMapper<QSpinBox> oscOverflowCount;
 
 	OscWidgetMapper<QSpinBox> oscDeviceRealSampleRate;
 };

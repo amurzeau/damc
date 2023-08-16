@@ -16,11 +16,15 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
       oscBufferSize(this, "bufferSize"),
       oscActualBufferSize(this, "actualBufferSize"),
       oscClockDrift(this, "clockDrift"),
+      oscMeasuredClockDrift(this, "measuredClockDrift"),
       oscDeviceSampleRate(this, "deviceSampleRate"),
       oscIp(this, "ip"),
       oscPort(this, "port"),
       oscAddVbanHeader(this, "vbanFormat"),
       oscExclusiveMode(this, "exclusiveMode"),
+      oscIsRunning(this, "isRunning"),
+      oscUnderflowCount(this, "underflowCount"),
+      oscOverflowCount(this, "overflowCount"),
       oscDeviceRealSampleRate(this, "realSampleRate") {
 	ui->setupUi(this);
 
@@ -45,11 +49,15 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	oscBufferSize.setWidget(ui->bufferSizeSpinBox);
 	oscActualBufferSize.setWidget(ui->actualBufferSize);
 	oscClockDrift.setWidget(ui->clockDriftSpinBox);
+	oscMeasuredClockDrift.setWidget(ui->measuredClockDriftSpinBox);
 	oscDeviceSampleRate.setWidget(ui->sampleRateSpinBox);
 	oscIp.setWidget(ui->remoteIpEdit);
 	oscPort.setWidget(ui->remotePortSpin);
 	oscAddVbanHeader.setWidget(ui->vbanCheckBox);
 	oscExclusiveMode.setWidget(ui->useExclusiveModeCheckBox);
+	oscIsRunning.setWidget(ui->isRunningCheckBox);
+	oscOverflowCount.setWidget(ui->bufferOverflowCountSpinBox);
+	oscUnderflowCount.setWidget(ui->bufferUnderflowCountSpinBox);
 	parent->getOscJackSampleRate()->setWidget(ui->measuredJackSampleRateSpinBox);
 	oscDeviceRealSampleRate.setWidget(ui->measuredDeviceSampleRateSpinBox);
 
@@ -171,7 +179,7 @@ void OutputInstanceConfigDialog::updateGroupBoxes() {
 			break;
 	}
 
-	ui->sampleRateBox->setVisible(clockConfigEnable);
+	ui->audioParametersGroupBox->setVisible(clockConfigEnable);
 	ui->remoteOutputBox->setVisible(remoteConfigEnable);
 	ui->deviceOutputBox->setVisible(deviceConfigEnable);
 	ui->useExclusiveModeCheckBox->setVisible(deviceExclusiveModeConfigEnable);

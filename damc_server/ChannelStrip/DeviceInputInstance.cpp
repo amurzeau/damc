@@ -11,17 +11,26 @@ DeviceInputInstance::DeviceInputInstance(OscContainer* parent)
       stream(nullptr),
       oscDeviceName(this, "deviceName", "default_in"),
       oscClockDrift(this, "clockDrift", 0.0f),
+      oscMeasuredClockDrift(this, "measuredClockDrift", 0.0f),
       oscBufferSize(this, "bufferSize", 0),
       oscActualBufferSize(this, "actualBufferSize", 0),
       oscDeviceSampleRate(this, "deviceSampleRate", 48000),
+#ifdef _WIN32
       oscExclusiveMode(this, "exclusiveMode", true),
+#endif
+      oscIsRunning(this, "isRunning", false),
+      oscUnderflowCount(this, "underflowCount", 0),
+      oscOverflowCount(this, "overflowCount", 0),
       deviceSampleRateMeasure(this, "realSampleRate") {
 	direction = D_Input;
 
 	oscDeviceName.addCheckCallback([this](const std::string&) { return stream == nullptr; });
 	oscBufferSize.addCheckCallback([this](int newValue) { return stream == nullptr && newValue >= 0; });
 	oscDeviceSampleRate.addCheckCallback([this](int newValue) { return stream == nullptr && newValue > 0; });
+
+#ifdef _WIN32
 	oscExclusiveMode.addCheckCallback([this](int) { return stream == nullptr; });
+#endif
 
 	oscClockDrift.addChangeCallback([this](float newValue) {
 		for(auto& resamplingFilter : resamplingFilters) {
@@ -295,25 +304,30 @@ int DeviceInputInstance::postProcessSamples(float** samples, size_t numChannel, 
 
 void DeviceInputInstance::onFastTimer() {
 	if(overflowOccured) {
-		SPDLOG_WARN("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
+		SPDLOG_DEBUG("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
+		oscOverflowCount = oscOverflowCount + 1;
 		overflowOccured = false;
 	}
 	if(underflowOccured) {
-		SPDLOG_WARN("{}: underrun: {}, {}", oscDeviceName.get(), bufferLatencyNr, underflowSize);
+		SPDLOG_DEBUG("{}: underrun: {}, {}", oscDeviceName.get(), bufferLatencyNr, underflowSize);
+		oscUnderflowCount = oscUnderflowCount + 1;
 		underflowOccured = false;
 	}
 	if(clockDriftPpm) {
-		SPDLOG_INFO("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
-		SPDLOG_INFO("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
+		SPDLOG_DEBUG("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
+		SPDLOG_DEBUG("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
+		oscMeasuredClockDrift = clockDriftPpm;
 		clockDriftPpm = 0;
 	}
 }
 
 void DeviceInputInstance::onSlowTimer() {
 	if(!isPaRunning) {
-		SPDLOG_WARN("{}: portaudio not running !", oscDeviceName.get());
+		SPDLOG_DEBUG("{}: portaudio not running !", oscDeviceName.get());
+		oscIsRunning = false;
 	} else {
 		isPaRunning = false;
+		oscIsRunning = true;
 	}
 
 	deviceSampleRateMeasure.onTimeoutTimer();
