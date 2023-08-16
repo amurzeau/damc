@@ -41,8 +41,6 @@ void onTtyRead(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
 }
 
 void onSigTerm(uv_signal_t* handle, int signal) {
-	ControlInterface* controlInterface = (ControlInterface*) handle->data;
-
 	SPDLOG_INFO("Signal {} received, stopping", signal);
 
 	exit(0);
