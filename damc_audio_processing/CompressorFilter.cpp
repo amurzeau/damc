@@ -10,7 +10,7 @@ CompressorFilter::CompressorFilter(OscContainer* parent)
     : OscContainer(parent, "compressorFilter"),
       enable(this, "enable", false),
       attackTime(this, "attackTime", 0),
-      releaseTime(this, "releaseTime", 2000),
+      releaseTime(this, "releaseTime", 2),
       threshold(this, "threshold", -50),
       makeUpGain(this, "makeUpGain", 0),
       ratio(this, "ratio", 1000),
@@ -28,7 +28,7 @@ void CompressorFilter::init(size_t numChannel) {
 
 void CompressorFilter::reset(double fs) {
 	this->fs = fs;
-	gainHoldSamples = (uint32_t)(fs / 20);
+	gainHoldSamples = (uint32_t) (fs / 20);
 	std::fill_n(perChannelData.begin(), numChannel, PerChannelData{});
 }
 

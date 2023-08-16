@@ -8,7 +8,7 @@ ExpanderFilter::ExpanderFilter(OscContainer* parent)
     : OscContainer(parent, "expanderFilter"),
       enable(this, "enable", false),
       attackTime(this, "attackTime", 0),
-      releaseTime(this, "releaseTime", 8000),
+      releaseTime(this, "releaseTime", 8),
       threshold(this, "threshold", -50),
       makeUpGain(this, "makeUpGain", 0),
       ratio(this, "ratio", 4),
