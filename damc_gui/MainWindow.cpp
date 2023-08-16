@@ -27,7 +27,15 @@ MainWindow::MainWindow(OscRoot* oscRoot, QWidget* parent)
 	connect(ui->globalConfigButton, &QAbstractButton::clicked, this, &MainWindow::onShowGlobalConfig);
 	connect(ui->addButton, &QAbstractButton::clicked, this, &MainWindow::onAddInstance);
 	connect(ui->removeButton, &QAbstractButton::clicked, this, &MainWindow::onRemoveInstance);
-	connect(ui->showDisabledCheckBox, &QCheckBox::toggled, this, &MainWindow::showDisabledChanged);
+	connect(ui->showDisabledCheckBox, &QCheckBox::toggled, [this](bool showDisabled) {
+		emit showDisabledChanged();
+		if(!showDisabled) {
+			// These 2 processEvents are required so the resize is really taken into account by Qt
+			QApplication::processEvents();
+			QApplication::processEvents();
+			this->resize(minimumWidth(), this->height());
+		}
+	});
 
 	oscTypeArray.addChangeCallback([this](const auto&, const auto&) { emit typeListChanged(); });
 
