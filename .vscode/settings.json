@@ -1,0 +1,8 @@
+{
+    "C_Cpp.autoAddFileAssociations": false,
+    "files.associations": {
+        "*.h": "cpp",
+        "**/include/c++/**": "cpp",
+    },
+    "editor.formatOnSave": true
+}
