@@ -25,11 +25,12 @@ template<> struct OscWidgetMapperType<QLineEdit> { using type = std::string; };
 template<class T, class UnderlyingType = typename OscWidgetMapperType<T>::type>
 class OscWidgetMapper : public QObject, public OscContainer {
 public:
-	OscWidgetMapper(OscContainer* parent, std::string name) noexcept;
+	OscWidgetMapper(OscContainer* parent, std::string name, UnderlyingType defaultValue = UnderlyingType{}) noexcept;
 
 	void setWidget(T* widget, bool updateOnChange = true);
 	void setScale(double scale);
 	UnderlyingType get() const { return value; }
+	bool isDefault() const { return defaultValue; }
 
 	void execute(const std::vector<OscArgument>& arguments) override;
 
@@ -47,6 +48,7 @@ private:
 	std::vector<std::function<void(UnderlyingType)>> onChangeCallbacks;
 	double scale;
 	UnderlyingType value;
+	bool defaultValue;
 };
 
 extern template class OscWidgetMapper<QAbstractSlider>;

@@ -84,7 +84,11 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 		}
 	});
 
-	oscName.addChangeCallback([this](const std::string&) { updateTooltip(); });
+	oscName.addChangeCallback([this](const std::string&) {
+		updateTooltip();
+		if(!oscName.isDefault() && oscEnable.isDefault())
+			ui->enableCheckBox->setChecked(true);
+	});
 
 	oscDisplayName.addChangeCallback([this](const std::string& value) {
 		QString title = QString::fromStdString(value);

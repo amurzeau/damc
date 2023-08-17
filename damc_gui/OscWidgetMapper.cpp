@@ -3,8 +3,10 @@
 #include <type_traits>
 
 template<class T, class UnderlyingType>
-OscWidgetMapper<T, UnderlyingType>::OscWidgetMapper(OscContainer* parent, std::string name) noexcept
-    : OscContainer(parent, name), scale(1.0), value(UnderlyingType{}) {}
+OscWidgetMapper<T, UnderlyingType>::OscWidgetMapper(OscContainer* parent,
+                                                    std::string name,
+                                                    UnderlyingType defaultValue) noexcept
+    : OscContainer(parent, name), scale(1.0), value(defaultValue), defaultValue(true) {}
 
 template<class T, class UnderlyingType>
 void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChange) {
@@ -77,6 +79,8 @@ void OscWidgetMapper<T, UnderlyingType>::execute(const std::vector<OscArgument>&
 
 	if(!getArgumentAs<UnderlyingType>(arguments[0], value))
 		return;
+
+	this->defaultValue = false;
 
 	if(this->value == value)
 		return;
