@@ -194,7 +194,7 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 
 	if(strstr(address, "meter") == nullptr) {
 		tosc_reset(osc);
-		SPDLOG_DEBUG("OSC message received: {} {} {}",
+		SPDLOG_TRACE("OSC message received: {} {} {}",
 		             address,
 		             osc->format,
 		             getArgumentVectorAsString(&arguments[0], arguments.size()));
