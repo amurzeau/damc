@@ -5,7 +5,7 @@
 #include <QHideEvent>
 
 BalanceController::BalanceController(OutputController* parent, OscContainer* oscParent)
-    : QDialog(parent), ui(new Ui::BalanceController), oscBalances(oscParent, "balance") {
+    : ManagedVisibilityWidget<QDialog>(parent), ui(new Ui::BalanceController), oscBalances(oscParent, "balance") {
 	ui->setupUi(this);
 	oscBalances.setWidget(
 	    this, ui->verticalLayout, [parent](QWidget* parentWidget, OscContainer* oscParent, int name) -> QWidget* {
@@ -13,6 +13,7 @@ BalanceController::BalanceController(OutputController* parent, OscContainer* osc
 		    balance->addChangeCallback([parent](bool) { parent->updateBalanceEnable(); });
 		    return balance;
 	    });
+	manageWidgetsVisiblity();
 }
 
 BalanceController::~BalanceController() {

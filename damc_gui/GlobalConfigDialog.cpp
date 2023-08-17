@@ -3,7 +3,7 @@
 #include <Osc/OscContainer.h>
 
 GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
-    : QDialog(parent),
+    : ManagedVisibilityWidget<QDialog>(parent),
       ui(new Ui::GlobalConfigDialog),
       oscEnableAutoConnect(oscParent, "enableAutoConnect"),
       oscMonitorConnections(oscParent, "enableConnectionMonitoring"),
@@ -59,6 +59,8 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 
 	memoryAvailable.setWidget(ui->availableMemorySpinBox, false);
 	memoryAvailable.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
+
+	manageWidgetsVisiblity();
 }
 
 GlobalConfigDialog::~GlobalConfigDialog() {

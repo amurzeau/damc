@@ -54,6 +54,7 @@ int main(int argc, char* argv[]) {
 	initializeSpdLog();
 
 	OscRoot oscRoot(false);
+	bool isMicrocontrollerDamc;
 
 	std::unique_ptr<OscConnector> oscConnector;
 
@@ -73,10 +74,14 @@ int main(int argc, char* argv[]) {
 
 	if(parser.isSet(serialOption)) {
 		oscConnector.reset(new SerialPortInterface(&oscRoot));
+		isMicrocontrollerDamc = true;
 	} else {
 		QString ip = parser.value(ipOption);
 		QString portStr = parser.value(portOption);
 		uint32_t port = portStr.toInt();
+
+		isMicrocontrollerDamc = false;
+
 		if(port == 0) {
 			SPDLOG_ERROR("Invalid port {}", portStr.toStdString());
 			exitCode = 2;
@@ -87,7 +92,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	if(oscConnector) {
-		MainWindow w(&oscRoot);
+		MainWindow w(&oscRoot, isMicrocontrollerDamc);
 		w.show();
 
 		exitCode = a.exec();

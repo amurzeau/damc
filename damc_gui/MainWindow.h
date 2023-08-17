@@ -15,7 +15,7 @@ class MainWindow : public QWidget {
 	Q_OBJECT
 
 public:
-	explicit MainWindow(OscRoot* oscRoot, QWidget* parent = 0);
+	explicit MainWindow(OscRoot* oscRoot, bool isMicrocontrollerDamc, QWidget* parent = 0);
 	~MainWindow();
 
 	void removeInstance(int key);
@@ -41,6 +41,8 @@ private:
 	Ui::MainWindow* ui;
 
 	OscRoot* oscRoot;
+	bool isMicrocontrollerDamc;
+
 	OscWidgetArray outputInterfaces;
 
 	GlobalConfigDialog* globalConfigDialog;

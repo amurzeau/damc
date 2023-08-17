@@ -16,7 +16,10 @@
 
 #define DRAG_FORMAT "application/x-dndwaveoutputinstancewidget"
 
-OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, const std::string& name)
+OutputController::OutputController(MainWindow* parent,
+                                   OscContainer* oscParent,
+                                   const std::string& name,
+                                   bool isMicrocontrollerDamc)
     : QWidget(parent),
       OscContainer(oscParent, name),
       ui(new Ui::OutputController),
@@ -37,6 +40,11 @@ OutputController::OutputController(MainWindow* parent, OscContainer* oscParent, 
 
 	// By default hide, it will be shown if enabled
 	hide();
+
+	if(isMicrocontrollerDamc) {
+		// No add/remove with microcontroller DAMC
+		ui->removeButton->hide();
+	}
 
 	oscEnable.setWidget(ui->enableCheckBox);
 	oscMute.setWidget(ui->muteButton);

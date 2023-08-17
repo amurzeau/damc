@@ -14,13 +14,27 @@
 
 template<class T> struct OscWidgetMapperType {};
 
-template<> struct OscWidgetMapperType<QAbstractSlider> { using type = int32_t; };
-template<> struct OscWidgetMapperType<QAbstractButton> { using type = bool; };
-template<> struct OscWidgetMapperType<QDoubleSpinBox> { using type = float; };
-template<> struct OscWidgetMapperType<QSpinBox> { using type = int32_t; };
-template<> struct OscWidgetMapperType<QComboBox> { using type = int32_t; };
-template<> struct OscWidgetMapperType<QGroupBox> { using type = bool; };
-template<> struct OscWidgetMapperType<QLineEdit> { using type = std::string; };
+template<> struct OscWidgetMapperType<QAbstractSlider> {
+	using type = int32_t;
+};
+template<> struct OscWidgetMapperType<QAbstractButton> {
+	using type = bool;
+};
+template<> struct OscWidgetMapperType<QDoubleSpinBox> {
+	using type = float;
+};
+template<> struct OscWidgetMapperType<QSpinBox> {
+	using type = int32_t;
+};
+template<> struct OscWidgetMapperType<QComboBox> {
+	using type = int32_t;
+};
+template<> struct OscWidgetMapperType<QGroupBox> {
+	using type = bool;
+};
+template<> struct OscWidgetMapperType<QLineEdit> {
+	using type = std::string;
+};
 
 template<class T, class UnderlyingType = typename OscWidgetMapperType<T>::type>
 class OscWidgetMapper : public QObject, public OscContainer {

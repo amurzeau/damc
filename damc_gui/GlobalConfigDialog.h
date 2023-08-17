@@ -1,13 +1,15 @@
 #pragma once
 
+#include "ManagedVisibilityWidget.h"
 #include "OscWidgetMapper.h"
+#include "WidgetAutoHidden.h"
 #include <QDialog>
 
 namespace Ui {
 class GlobalConfigDialog;
 }
 
-class GlobalConfigDialog : public QDialog {
+class GlobalConfigDialog : public ManagedVisibilityWidget<QDialog> {
 	Q_OBJECT
 
 public:

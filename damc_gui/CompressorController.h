@@ -1,6 +1,8 @@
 #pragma once
 
+#include "ManagedVisibilityWidget.h"
 #include "OscWidgetMapper.h"
+#include "WidgetAutoHidden.h"
 #include <Osc/OscContainer.h>
 #include <QDialog>
 
@@ -8,7 +10,7 @@ namespace Ui {
 class CompressorController;
 }
 
-class CompressorController : public QDialog, public OscContainer {
+class CompressorController : public ManagedVisibilityWidget<QDialog>, public OscContainer {
 public:
 	explicit CompressorController(QWidget* parent, OscContainer* oscParent, const std::string& name);
 	~CompressorController();

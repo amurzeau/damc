@@ -5,7 +5,7 @@
 #include "ui_OutputInstanceConfigDialog.h"
 
 OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, OutputController* parent)
-    : QDialog(parent),
+    : ManagedVisibilityWidget<QDialog>(parent),
       OscContainer(parent, "device"),
       ui(new Ui::OutputInstanceConfigDialog),
       mainWindow(mainWindow),
@@ -62,6 +62,8 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	oscDeviceRealSampleRate.setWidget(ui->measuredDeviceSampleRateSpinBox);
 
 	oscType.addChangeCallback([this](int) { updateGroupBoxes(); });
+
+	manageWidgetsVisiblity();
 }
 
 OutputInstanceConfigDialog::~OutputInstanceConfigDialog() {

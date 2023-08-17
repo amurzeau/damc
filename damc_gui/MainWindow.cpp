@@ -4,15 +4,22 @@
 #include "ui_MainWindow.h"
 #include <QInputDialog>
 
-MainWindow::MainWindow(OscRoot* oscRoot, QWidget* parent)
+MainWindow::MainWindow(OscRoot* oscRoot, bool isMicrocontrollerDamc, QWidget* parent)
     : QWidget(parent),
       ui(new Ui::MainWindow),
       oscRoot(oscRoot),
+      isMicrocontrollerDamc(isMicrocontrollerDamc),
       outputInterfaces(oscRoot, "strip"),
       oscTypeArray(oscRoot, "type_list"),
       oscPortaudioDeviceArray(oscRoot, "device_list"),
       oscWasapiDeviceArray(oscRoot, "device_list_wasapi") {
 	ui->setupUi(this);
+
+	if(isMicrocontrollerDamc) {
+		ui->showDisabledCheckBox->hide();
+		ui->addButton->hide();
+		ui->removeButton->hide();
+	}
 
 	globalConfigDialog = new GlobalConfigDialog(this, oscRoot);
 	connect(globalConfigDialog, &GlobalConfigDialog::showStateChanged, [this](bool shown) {
@@ -21,7 +28,7 @@ MainWindow::MainWindow(OscRoot* oscRoot, QWidget* parent)
 
 	outputInterfaces.setWidget(
 	    this, ui->horizontalLayout, [this](QWidget*, OscContainer* oscParent, int name) -> QWidget* {
-		    return new OutputController(this, oscParent, std::to_string(name));
+		    return new OutputController(this, oscParent, std::to_string(name), this->isMicrocontrollerDamc);
 	    });
 
 	connect(ui->globalConfigButton, &QAbstractButton::clicked, this, &MainWindow::onShowGlobalConfig);

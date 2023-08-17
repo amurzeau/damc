@@ -3,7 +3,7 @@
 #include <QHideEvent>
 
 CompressorController::CompressorController(QWidget* parent, OscContainer* oscParent, const std::string& name)
-    : QDialog(parent),
+    : ManagedVisibilityWidget<QDialog>(parent),
       OscContainer(oscParent, name),
       ui(new Ui::CompressorController),
       oscEnablePeak(this, "enable"),
@@ -38,6 +38,8 @@ CompressorController::CompressorController(QWidget* parent, OscContainer* oscPar
 	oscReleaseTime.setScale(1000);
 	oscAttackTime.setScale(1000);
 	oscLufsIntegrationTime.setScale(1000);
+
+	manageWidgetsVisiblity();
 }
 
 CompressorController::~CompressorController() {

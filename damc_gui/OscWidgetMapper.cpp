@@ -12,6 +12,8 @@ template<class T, class UnderlyingType>
 void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChange) {
 	this->widgets.push_back(widget);
 
+	widget->setVisible(false);
+
 	updateWidget(widget);
 
 	if(updateOnChange) {
@@ -22,6 +24,8 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 					notifyChanged(widget);
 				});
 			} else {
+				// Stateless buttons won't receive any value, so never hide them
+				widget->setVisible(true);
 				connect(widget, &T::clicked, [this, widget](bool value) {
 					this->value = 1;
 					notifyChanged(widget);
@@ -79,6 +83,12 @@ void OscWidgetMapper<T, UnderlyingType>::execute(const std::vector<OscArgument>&
 
 	if(!getArgumentAs<UnderlyingType>(arguments[0], value))
 		return;
+
+	for(T* widget : widgets) {
+		if(widget->isHidden()) {
+			widget->setVisible(true);
+		}
+	}
 
 	this->defaultValue = false;
 

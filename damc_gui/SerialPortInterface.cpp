@@ -25,7 +25,7 @@ void SerialPortInterface::onOscDataReceived() {
 
 		receivedData = oscSerialPort.readAll();
 		// printf("data: %s\n", receivedData.constData());
-		SPDLOG_DEBUG("Received OSC data: {:a}", spdlog::to_hex(receivedData));
+		SPDLOG_TRACE("Received OSC data: {:a}", spdlog::to_hex(receivedData));
 		OscConnector::onOscDataReceived((const uint8_t*) receivedData.data(), receivedData.size());
 	} while(oscSerialPort.bytesAvailable());
 }
@@ -58,6 +58,7 @@ void SerialPortInterface::onOscReconnect() {
 	if(portFound) {
 		if(oscSerialPort.open(QIODevice::ReadWrite)) {
 			SPDLOG_INFO("Opened: {}", oscSerialPort.portName().toStdString());
+			oscSerialPort.clear();
 			updateOscVariables();
 		} else {
 			SPDLOG_ERROR("Open failed: {}", oscSerialPort.errorString().toStdString());

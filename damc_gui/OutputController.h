@@ -22,7 +22,10 @@ class LevelMeterWidget;
 class OutputController : public QWidget, public OscContainer {
 	Q_OBJECT
 public:
-	explicit OutputController(MainWindow* parent, OscContainer* oscParent, const std::string& name);
+	explicit OutputController(MainWindow* parent,
+	                          OscContainer* oscParent,
+	                          const std::string& name,
+	                          bool isMicrocontrollerDamc);
 	~OutputController();
 
 	void showConfigDialog();

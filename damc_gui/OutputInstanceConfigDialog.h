@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ManagedVisibilityWidget.h"
 #include "OscWidgetMapper.h"
 #include <Osc/OscContainer.h>
 #include <Osc/OscVariable.h>
@@ -12,7 +13,7 @@ class OutputInstanceConfigDialog;
 class MainWindow;
 class OutputController;
 
-class OutputInstanceConfigDialog : public QDialog, public OscContainer {
+class OutputInstanceConfigDialog : public ManagedVisibilityWidget<QDialog>, public OscContainer {
 	Q_OBJECT
 
 public:

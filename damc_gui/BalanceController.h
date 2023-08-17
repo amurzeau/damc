@@ -2,6 +2,7 @@
 
 #include "OscWidgetArray.h"
 #include <QDialog>
+#include "ManagedVisibilityWidget.h"
 
 namespace Ui {
 class BalanceController;
@@ -11,7 +12,7 @@ class Balance;
 class Balance;
 class OutputController;
 
-class BalanceController : public QDialog {
+class BalanceController : public ManagedVisibilityWidget<QDialog> {
 	Q_OBJECT
 
 public:
