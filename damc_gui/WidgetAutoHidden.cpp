@@ -10,11 +10,35 @@
 
 WidgetAutoHidden::WidgetAutoHidden() noexcept : widgetsShown(false) {}
 
+template<class T> static void helper_qt_findChildren(QObject* parent, QList<T>* list, Qt::FindChildOptions options) {
+	typedef typename std::remove_cv<typename std::remove_pointer<T>::type>::type ObjType;
+	const QMetaObject& mo = ObjType::staticMetaObject;
+
+	if(!parent)
+		return;
+
+	const QObjectList& children = parent->children();
+	QObject* obj;
+	for(int i = 0; i < children.size(); ++i) {
+		obj = children.at(i);
+		if(mo.cast(obj)) {
+			list->append((T) obj);
+		}
+		if(options & Qt::FindChildrenRecursively)
+			helper_qt_findChildren<T>(obj, list, options);
+	}
+}
+
 void WidgetAutoHidden::addContainerWidgets(std::initializer_list<QWidget*> containerWidgets) {
 	for(QWidget* containerWidget : containerWidgets) {
 		SPDLOG_DEBUG("Object {} contains:", containerWidget->objectName().toStdString());
 
-		QList<QLabel*> labelWidgets = containerWidget->findChildren<QLabel*>(Qt::FindDirectChildrenOnly);
+		QList<QLabel*> labelWidgets;
+
+		// Equalent of `labelWidgets = containerWidget->findChildren<QLabel*>(Qt::FindDirectChildrenOnly);`
+		// but compatible with Qt 5
+		helper_qt_findChildren<QLabel*>(containerWidget, &labelWidgets, Qt::FindDirectChildrenOnly);
+
 		bool isGroupBox = qobject_cast<QGroupBox*>(containerWidget) != nullptr;
 
 		for(QObject* child : containerWidget->children()) {
