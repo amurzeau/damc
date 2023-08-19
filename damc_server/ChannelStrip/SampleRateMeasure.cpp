@@ -36,7 +36,7 @@ void SampleRateMeasure::onTimeoutTimer() {
 	runningData.exchange(dataPtr);
 
 	if(!data.firstSampleTime) {
-		SPDLOG_WARN("{}: No audio running !", oscRealSampleRate.getFullAddress());
+		SPDLOG_DEBUG("{}: No audio running !", oscRealSampleRate.getFullAddress());
 		OscArgument arg = 0;
 		oscRealSampleRate.sendMessage(&arg, 1);
 	} else {
