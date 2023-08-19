@@ -24,8 +24,4 @@ target_link_libraries(${TARGET_NAME} PUBLIC  damc_common spdlog::spdlog)
 target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX)
 target_include_directories(${TARGET_NAME} PUBLIC .)
 
-install(TARGETS
-	${TARGET_NAME}
-	RUNTIME DESTINATION ./
-	LIBRARY DESTINATION lib/
-)
+# Don't install this library as it is always STATIC
