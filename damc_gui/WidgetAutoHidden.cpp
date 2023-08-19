@@ -1,4 +1,5 @@
 #include "WidgetAutoHidden.h"
+#include "OscWidgetMapper.h"
 #include <QDialog>
 #include <QEvent>
 #include <QGroupBox>
@@ -57,8 +58,11 @@ void WidgetAutoHidden::addContainerWidgets(std::initializer_list<QWidget*> conta
 
 			// Only handle visibility of GroupBoxes
 			if(isGroupBox) {
-				this->containerWidgetsByChildMap.emplace(child, containerWidget);
-				this->childByContainerWidgetMap.emplace(containerWidget, childAsWidget);
+				// Ignore widgets not associated with a OSC variable
+				if(childAsWidget->property(OSC_MAPPED_PROPERTY).toBool()) {
+					this->containerWidgetsByChildMap.emplace(child, containerWidget);
+					this->childByContainerWidgetMap.emplace(containerWidget, childAsWidget);
+				}
 			}
 
 			childAsWidget->installEventFilter(this);

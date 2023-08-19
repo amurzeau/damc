@@ -12,6 +12,8 @@
 #include <QSpinBox>
 #include <vector>
 
+static constexpr const char* OSC_MAPPED_PROPERTY = "oscMapped";
+
 template<class T> struct OscWidgetMapperType {};
 
 template<> struct OscWidgetMapperType<QAbstractSlider> {

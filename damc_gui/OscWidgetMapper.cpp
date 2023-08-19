@@ -14,6 +14,8 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 
 	widget->setVisible(false);
 
+	widget->setProperty(OSC_MAPPED_PROPERTY, true);
+
 	updateWidget(widget);
 
 	if(updateOnChange) {
@@ -24,8 +26,6 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 					notifyChanged(widget);
 				});
 			} else {
-				// Stateless buttons won't receive any value, so never hide them
-				widget->setVisible(true);
 				connect(widget, &T::clicked, [this, widget](bool value) {
 					this->value = 1;
 					notifyChanged(widget);
