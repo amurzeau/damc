@@ -5,7 +5,7 @@
 
 template<typename T> class OscVariable : public OscReadOnlyVariable<T> {
 public:
-	OscVariable(OscContainer* parent, std::string name, T initialValue = {}, bool fixedSize = false) noexcept;
+	OscVariable(OscContainer* parent, std::string name, T initialValue = {}, bool persistValue = true) noexcept;
 
 	using OscReadOnlyVariable<T>::operator=;
 	OscVariable& operator=(const OscVariable<T>& v);
@@ -19,7 +19,6 @@ public:
 private:
 	T incrementAmount;
 	std::vector<std::unique_ptr<OscEndpoint>> subEndpoint;
-	bool fixedSize;
 };
 
 EXPLICIT_INSTANCIATE_OSC_VARIABLE(extern template, OscVariable)
