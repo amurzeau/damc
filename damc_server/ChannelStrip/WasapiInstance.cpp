@@ -243,8 +243,8 @@ WasapiInstance::WasapiInstance(OscContainer* parent, Direction direction)
       oscMeasuredClockDrift(this, "measuredClockDrift", 0.0f),
       oscExclusiveMode(this, "exclusiveMode", true),
       oscIsRunning(this, "isRunning", false),
-      oscUnderflowCount(this, "underflowCount", 0),
-      oscOverflowCount(this, "overflowCount", 0),
+      oscUnderflowCount(this, "underflowCount", 0, false),
+      oscOverflowCount(this, "overflowCount", 0, false),
       deviceSampleRateMeasure(this, "realSampleRate") {
 	this->direction = direction;
 
@@ -828,6 +828,15 @@ void WasapiInstance::onFastTimer() {
 	if(!pAudioClient)
 		return;
 
+	if(clockDriftPpm) {
+		SPDLOG_DEBUG("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
+		SPDLOG_DEBUG("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
+		oscMeasuredClockDrift = clockDriftPpm;
+		clockDriftPpm = 0;
+	}
+}
+
+void WasapiInstance::onSlowTimer() {
 	if(overflowOccured) {
 		SPDLOG_DEBUG("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
 		oscOverflowCount = oscOverflowCount + 1;
@@ -838,15 +847,6 @@ void WasapiInstance::onFastTimer() {
 		oscUnderflowCount = oscUnderflowCount + 1;
 		underflowOccured = false;
 	}
-	if(clockDriftPpm) {
-		SPDLOG_DEBUG("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
-		SPDLOG_DEBUG("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
-		oscMeasuredClockDrift = clockDriftPpm;
-		clockDriftPpm = 0;
-	}
-}
-
-void WasapiInstance::onSlowTimer() {
 	if(!isPaRunning) {
 		SPDLOG_DEBUG("{}: portaudio not running !", oscDeviceName.get());
 		oscIsRunning = false;

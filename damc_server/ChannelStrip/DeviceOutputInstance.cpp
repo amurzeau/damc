@@ -20,8 +20,8 @@ DeviceOutputInstance::DeviceOutputInstance(OscContainer* parent)
       oscExclusiveMode(this, "exclusiveMode", true),
 #endif
       oscIsRunning(this, "isRunning", false),
-      oscUnderflowCount(this, "underflowCount", 0),
-      oscOverflowCount(this, "overflowCount", 0),
+      oscUnderflowCount(this, "underflowCount", 0, false),
+      oscOverflowCount(this, "overflowCount", 0, false),
       deviceSampleRateMeasure(this, "realSampleRate") {
 	oscDeviceName.addCheckCallback([this](const std::string&) { return stream == nullptr; });
 	oscBufferSize.addCheckCallback([this](int newValue) { return stream == nullptr && newValue >= 0; });
@@ -323,6 +323,15 @@ int DeviceOutputInstance::renderCallback(const void* input,
 }
 
 void DeviceOutputInstance::onFastTimer() {
+	if(clockDriftPpm) {
+		SPDLOG_DEBUG("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
+		SPDLOG_DEBUG("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
+		oscMeasuredClockDrift = clockDriftPpm;
+		clockDriftPpm = 0;
+	}
+}
+
+void DeviceOutputInstance::onSlowTimer() {
 	if(overflowOccured) {
 		SPDLOG_DEBUG("{}: Overflow: {}, {}", oscDeviceName.get(), bufferLatencyNr, overflowSize);
 		oscOverflowCount = oscOverflowCount + 1;
@@ -333,15 +342,6 @@ void DeviceOutputInstance::onFastTimer() {
 		oscUnderflowCount = oscUnderflowCount + 1;
 		underflowOccured = false;
 	}
-	if(clockDriftPpm) {
-		SPDLOG_DEBUG("{}: average latency: {}", oscDeviceName.get(), previousAverageLatency);
-		SPDLOG_DEBUG("{}: drift: {}", oscDeviceName.get(), clockDriftPpm);
-		oscMeasuredClockDrift = clockDriftPpm;
-		clockDriftPpm = 0;
-	}
-}
-
-void DeviceOutputInstance::onSlowTimer() {
 	if(!isPaRunning) {
 		SPDLOG_DEBUG("{}: portaudio not running !", oscDeviceName.get());
 		oscIsRunning = false;
