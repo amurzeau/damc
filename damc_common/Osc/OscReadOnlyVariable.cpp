@@ -15,7 +15,7 @@ template<typename T> void OscReadOnlyVariable<T>::set(T v, bool fromOsc) {
 	if(value != v || isDefaultValue) {
 		bool isDataValid = callCheckCallbacks(v);
 		if(isDataValid) {
-			SPDLOG_INFO("{}: set to {}", getFullAddress(), v);
+			SPDLOG_DEBUG("{}: set to {}", getFullAddress(), v);
 			isDefaultValue = false;
 			value = v;
 			callChangeCallbacks(v);

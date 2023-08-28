@@ -85,7 +85,9 @@ ChannelStrip::ChannelStrip(OscContainer* parent, ControlInterface* controlInterf
 		return true;
 	});
 
-	oscNumChannel.addChangeCallback([](int32_t newValue) { SPDLOG_INFO("Changing channel number to {}", newValue); });
+	oscNumChannel.addChangeCallback([this](int32_t newValue) {
+		SPDLOG_DEBUG("{}: Changing channel number to {}", oscDisplayName.get(), newValue);
+	});
 
 	if(audioRunning) {
 		activate();
@@ -297,9 +299,9 @@ void ChannelStrip::updateJackDisplayName() {
 }
 
 void ChannelStrip::onJackPropertyChangeCallback(jack_uuid_t subject,
-                                                  const char* key,
-                                                  jack_property_change_t change,
-                                                  void* arg) {
+                                                const char* key,
+                                                jack_property_change_t change,
+                                                void* arg) {
 	ChannelStrip* thisInstance = (ChannelStrip*) arg;
 	char* pszValue = nullptr;
 	char* pszType = nullptr;
@@ -349,7 +351,7 @@ int ChannelStrip::processSamplesStatic(jack_nframes_t nframes, void* arg) {
 int ChannelStrip::processInputSamples(jack_nframes_t nframes) {
 	float* buffers[32];
 
-	if(oscNumChannel > (int32_t)(sizeof(buffers) / sizeof(buffers[0]))) {
+	if(oscNumChannel > (int32_t) (sizeof(buffers) / sizeof(buffers[0]))) {
 		SPDLOG_ERROR("Too many channels, buffer too small !!!");
 		return 0;
 	}
@@ -369,7 +371,7 @@ int ChannelStrip::processSamples(jack_nframes_t nframes) {
 	float* outputs[32];
 	const float* inputs[32];
 
-	if(oscNumChannel > (int32_t)(sizeof(outputs) / sizeof(outputs[0]))) {
+	if(oscNumChannel > (int32_t) (sizeof(outputs) / sizeof(outputs[0]))) {
 		SPDLOG_ERROR("Too many channels, buffer too small !!!");
 		return 0;
 	}

@@ -15,7 +15,7 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
 
 	if constexpr(std::is_same_v<T, bool>) {
 		subEndpoint.emplace_back(new OscEndpoint(this, "toggle"))->setCallback([this](auto) {
-			SPDLOG_INFO("{}: Toggling", this->getFullAddress());
+			SPDLOG_DEBUG("{}: Toggling", this->getFullAddress());
 			this->setFromOsc(!this->getToOsc());
 		});
 	} else if constexpr(std::is_same_v<T, std::string>) {
@@ -30,7 +30,7 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
 				    OscNode::getArgumentAs<T>(arguments[0], amount);
 			    }
 
-			    SPDLOG_INFO("{}: Incrementing by {}", this->getFullAddress(), amount);
+			    SPDLOG_DEBUG("{}: Incrementing by {}", this->getFullAddress(), amount);
 			    this->setFromOsc(this->getToOsc() + amount);
 		    });
 		subEndpoint.emplace_back(new OscEndpoint(this, "decrement"))
@@ -41,7 +41,7 @@ OscVariable<T>::OscVariable(OscContainer* parent, std::string name, T initialVal
 				    OscNode::getArgumentAs<T>(arguments[0], amount);
 			    }
 
-			    SPDLOG_INFO("{}: Decrementing by {}", this->getFullAddress(), amount);
+			    SPDLOG_DEBUG("{}: Decrementing by {}", this->getFullAddress(), amount);
 			    this->setFromOsc(this->getToOsc() - amount);
 		    });
 	}

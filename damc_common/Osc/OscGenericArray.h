@@ -163,7 +163,7 @@ template<typename T> void OscGenericArray<T>::updateNextKeyToMaxKey() {
 }
 
 template<typename T> void OscGenericArray<T>::insertValue(int32_t key) {
-	SPDLOG_INFO("{}: new item {}", this->getFullAddress(), key);
+	SPDLOG_DEBUG("{}: new item {}", this->getFullAddress(), key);
 
 	T* newValue = factoryFunction(this, key);
 
@@ -172,7 +172,7 @@ template<typename T> void OscGenericArray<T>::insertValue(int32_t key) {
 }
 
 template<typename T> void OscGenericArray<T>::eraseValue(int32_t key) {
-	SPDLOG_INFO("{}: removing item {}", this->getFullAddress(), key);
+	SPDLOG_DEBUG("{}: removing item {}", this->getFullAddress(), key);
 
 	for(auto it = value.begin(); it != value.end();) {
 		if(it->first == key) {
