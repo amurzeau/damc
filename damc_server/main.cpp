@@ -87,9 +87,20 @@ void initializeSpdLog() {
 	//*/
 	auto logger = std::make_shared<spdlog::logger>("server", sinks.begin(), sinks.end());
 	spdlog::set_default_logger(logger);
-	spdlog::set_level(spdlog::level::debug);
+	spdlog::set_level(spdlog::level::info);
 
 	spdlog::cfg::load_env_levels();
+
+	SPDLOG_INFO("Log level: global: {}, console: {}, file: {}",
+	            to_string_view(logger->level()),
+	            to_string_view(console_sink->level()),
+	            to_string_view(file_sink->level()));
+	SPDLOG_INFO("Set SPDLOG_LEVEL environment variable to change log level");
+	if(file_sink) {
+		SPDLOG_INFO("Note: logs above info level are only written to the log file at {}", file_sink->filename());
+	} else {
+		SPDLOG_INFO("Note: logs above info level are only written to the log file, but couldn't write to a file");
+	}
 
 	spdlog::flush_every(std::chrono::seconds(10));
 }

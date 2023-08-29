@@ -87,7 +87,7 @@ set(LOG_LEVEL_WARN 3)
 set(LOG_LEVEL_ERROR 4)
 set(LOG_LEVEL_CRITICAL 5)
 set(LOG_LEVEL_OFF 6)
-add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${LOG_LEVEL_DEBUG})
+add_compile_definitions(SPDLOG_ACTIVE_LEVEL=${LOG_LEVEL_TRACE})
 
 add_subdirectory(damc_common)
 add_subdirectory(damc_audio_processing)
