@@ -18,8 +18,10 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
       timePerLoopAudioProcessing(oscParent, "timePerLoopAudioProc"),
       timePerLoopFastTimer(oscParent, "timePerLoopFastTimer"),
       timePerLoopOscInput(oscParent, "timePerLoopOscInput"),
-      memoryUsed(oscParent, "memoryUsed"),
-      memoryAvailable(oscParent, "memoryAvailable") {
+      fastMemoryUsed(oscParent, "fastMemoryUsed"),
+      fastMemoryAvailable(oscParent, "fastMemoryAvailable"),
+      slowMemoryUsed(oscParent, "memoryUsed"),
+      slowMemoryAvailable(oscParent, "memoryAvailable") {
 	ui->setupUi(this);
 
 	oscEnableAutoConnect.setWidget(ui->autoConnectJackClients);
@@ -54,11 +56,17 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 	timePerLoopFastTimer.setWidget(ui->timersProcessingPerLoopSpinBox, false);
 	timePerLoopOscInput.setWidget(ui->oscProcessingPerLoopSpinBox, false);
 
-	memoryUsed.setWidget(ui->allocatedMemorySpinBox, false);
-	memoryUsed.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
+	fastMemoryUsed.setWidget(ui->usedFastMemorySpinBox, false);
+	fastMemoryUsed.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
 
-	memoryAvailable.setWidget(ui->availableMemorySpinBox, false);
-	memoryAvailable.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
+	fastMemoryAvailable.setWidget(ui->availableFastMemorySpinBox, false);
+	fastMemoryAvailable.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
+
+	slowMemoryUsed.setWidget(ui->allocatedSlowMemorySpinBox, false);
+	slowMemoryUsed.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
+
+	slowMemoryAvailable.setWidget(ui->availableSlowMemorySpinBox, false);
+	slowMemoryAvailable.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
 
 	manageWidgetsVisiblity();
 }
@@ -81,13 +89,23 @@ void GlobalConfigDialog::updateCpuTotalUsage() {
 }
 
 void GlobalConfigDialog::updateMemoryUsagePercent() {
-	int32_t totalMemory = memoryUsed.get() + memoryAvailable.get();
+	int32_t totalMemory = fastMemoryUsed.get() + fastMemoryAvailable.get();
 
 	if(totalMemory > 0) {
-		ui->allocatedMemoryPercentSpinBox->setValue(100.f * memoryUsed.get() / totalMemory);
-		ui->availableMemoryPercentSpinBox->setValue(100.f * memoryAvailable.get() / totalMemory);
+		ui->usedFastMemoryPercentSpinBox->setValue(100.f * fastMemoryUsed.get() / totalMemory);
+		ui->availableFastMemoryPercentSpinBox->setValue(100.f * fastMemoryAvailable.get() / totalMemory);
 	} else {
-		ui->allocatedMemoryPercentSpinBox->setValue(0);
-		ui->availableMemoryPercentSpinBox->setValue(0);
+		ui->usedFastMemoryPercentSpinBox->setValue(0);
+		ui->availableFastMemoryPercentSpinBox->setValue(0);
+	}
+
+	totalMemory = slowMemoryUsed.get() + slowMemoryAvailable.get();
+
+	if(totalMemory > 0) {
+		ui->allocatedSlowMemoryPercentSpinBox->setValue(100.f * slowMemoryUsed.get() / totalMemory);
+		ui->availableSlowMemoryPercentSpinBox->setValue(100.f * slowMemoryAvailable.get() / totalMemory);
+	} else {
+		ui->allocatedSlowMemoryPercentSpinBox->setValue(0);
+		ui->availableSlowMemoryPercentSpinBox->setValue(0);
 	}
 }

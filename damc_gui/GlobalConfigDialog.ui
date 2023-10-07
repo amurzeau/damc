@@ -275,15 +275,60 @@
       <string>Memory usage</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <widget class="QLabel" name="allocatedMemoryLabel">
+      <item row="2" column="0">
+       <widget class="QLabel" name="allocatedSlowMemoryLabel">
+        <property name="toolTip">
+         <string>Slow memory used for non-realtime processing</string>
+        </property>
         <property name="text">
-         <string>Allocated memory</string>
+         <string>Allocated slow memory</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QSpinBox" name="allocatedMemorySpinBox">
+      <item row="3" column="0">
+       <widget class="QLabel" name="availableSlowMemoryLabel">
+        <property name="toolTip">
+         <string>Slow memory available for non-realtime processing</string>
+        </property>
+        <property name="text">
+         <string>Available slow memory</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="allocatedSlowMemoryPercentSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
+        <property name="suffix">
+         <string> %</string>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QDoubleSpinBox" name="availableSlowMemoryPercentSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
+        <property name="suffix">
+         <string> %</string>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="availableSlowMemorySpinBox">
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -295,8 +340,18 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="availableMemorySpinBox">
+      <item row="0" column="0">
+       <widget class="QLabel" name="usedFastMemoryLabel">
+        <property name="toolTip">
+         <string>Fast memory used for realtime processing</string>
+        </property>
+        <property name="text">
+         <string>Used fast memory</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="allocatedSlowMemorySpinBox">
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -309,14 +364,43 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="availableMemoryLabel">
+       <widget class="QLabel" name="availableFastMemoryLabel">
+        <property name="toolTip">
+         <string>Fast memory available for realtime processing</string>
+        </property>
         <property name="text">
-         <string>Available memory</string>
+         <string>Available fast memory</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="usedFastMemorySpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
+        <property name="maximum">
+         <number>9999999</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="availableFastMemorySpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
+        <property name="maximum">
+         <number>9999999</number>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
-       <widget class="QDoubleSpinBox" name="allocatedMemoryPercentSpinBox">
+       <widget class="QDoubleSpinBox" name="usedFastMemoryPercentSpinBox">
         <property name="readOnly">
          <bool>true</bool>
         </property>
@@ -332,7 +416,7 @@
        </widget>
       </item>
       <item row="1" column="2">
-       <widget class="QDoubleSpinBox" name="availableMemoryPercentSpinBox">
+       <widget class="QDoubleSpinBox" name="availableFastMemoryPercentSpinBox">
         <property name="readOnly">
          <bool>true</bool>
         </property>

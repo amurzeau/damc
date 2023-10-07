@@ -43,6 +43,8 @@ private:
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopAudioProcessing;
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopFastTimer;
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopOscInput;
-	OscWidgetMapper<QSpinBox> memoryUsed;
-	OscWidgetMapper<QSpinBox> memoryAvailable;
+	OscWidgetMapper<QSpinBox> fastMemoryUsed;
+	OscWidgetMapper<QSpinBox> fastMemoryAvailable;
+	OscWidgetMapper<QSpinBox> slowMemoryUsed;
+	OscWidgetMapper<QSpinBox> slowMemoryAvailable;
 };
