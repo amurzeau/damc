@@ -26,17 +26,22 @@ find_qt(QtDependencies)
 
 if(TARGET QtDependencies)
 	set(CMAKE_AUTOMOC ON)
-	set(CMAKE_AUTOUIC ON)
 
 	message(STATUS "Using Qt ${QT_VERSION}")
 
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS} ${FORMS})
+	if(QT_VERSION VERSION_LESS 5.15.0)
+		qt5_wrap_ui(SOURCES ${FORMS})
 	else()
-		add_executable(${TARGET_NAME} WIN32 ${SOURCES} ${HEADERS} ${FORMS})
+		qt_wrap_ui(SOURCES ${FORMS})
 	endif()
 
-	target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		add_executable(${TARGET_NAME} ${SOURCES} ${HEADERS})
+	else()
+		add_executable(${TARGET_NAME} WIN32 ${SOURCES} ${HEADERS})
+	endif()
+
+	target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	target_link_libraries(${TARGET_NAME} PRIVATE QtDependencies damc_common)
 	target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES)
 
