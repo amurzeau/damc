@@ -54,6 +54,22 @@ bool Equalizer::getEnabled() {
 	return ui->enableCheckBox->isChecked();
 }
 
+void Equalizer::setParameters(bool enabled, FilterType filterType, double fc, double gain, double Q) {
+	ui->enableCheckBox->setChecked(enabled);
+	ui->typeComboBox->setCurrentIndex((int) filterType);
+	ui->f0SpinBox->setValue(fc);
+	ui->gainSpinBox->setValue(gain);
+	ui->qSpinBox->setValue(Q);
+}
+
+void Equalizer::getParameters(bool& enabled, FilterType& filterType, double& fc, double& gain, double& Q) {
+	enabled = ui->enableCheckBox->isChecked();
+	filterType = (FilterType) ui->typeComboBox->currentIndex();
+	fc = ui->f0SpinBox->value();
+	gain = ui->gainSpinBox->value();
+	Q = ui->qSpinBox->value();
+}
+
 void Equalizer::updateResponse() {
 	this->fs = outputController->getSampleRate();
 	biquadFilter.computeFilter(ui->enableCheckBox->isChecked(),

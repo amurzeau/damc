@@ -2,6 +2,7 @@
 
 #include "OscWidgetArray.h"
 #include <QDialog>
+#include <QMenu>
 
 namespace Ui {
 class EqualizersController;
@@ -21,6 +22,10 @@ public:
 
 	void show();
 
+protected slots:
+	void onImportAction();
+	void onExportAction();
+
 protected:
 	virtual void hideEvent(QHideEvent* event) override;
 
@@ -28,4 +33,6 @@ private:
 	Ui::EqualizersController* ui;
 	QRect savedGeometry;
 	OscWidgetArray oscEqualizers;
+
+	QMenu buttonMenu;
 };

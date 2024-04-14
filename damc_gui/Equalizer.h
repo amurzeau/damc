@@ -24,6 +24,8 @@ public:
 
 	std::complex<double> getResponse(double f0);
 	bool getEnabled();
+	void setParameters(bool enabled, FilterType filterType, double fc, double gain, double Q);
+	void getParameters(bool& enabled, FilterType& filterType, double& fc, double& gain, double& Q);
 
 protected:
 	void updateResponse();
