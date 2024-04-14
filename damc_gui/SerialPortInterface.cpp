@@ -73,5 +73,18 @@ void SerialPortInterface::onOscReconnect() {
 }
 
 void SerialPortInterface::sendOscData(const uint8_t* data, size_t size) {
-	oscSerialPort.write((const char*) data, size);
+	qint64 totalWritten = 0;
+	do {
+		qint64 byteWritten = oscSerialPort.write((const char*) data + totalWritten, size - totalWritten);
+		if(byteWritten < 0) {
+			break;
+		}
+		totalWritten += byteWritten;
+
+		if(totalWritten >= (qint64) size) {
+			break;
+		}
+
+		oscSerialPort.waitForBytesWritten(100);
+	} while(1);
 }
