@@ -49,20 +49,20 @@ void SerialPortInterface::onOscReconnect() {
 		            port.manufacturer().toStdString(),
 		            port.serialNumber().toStdString(),
 		            port.systemLocation().toStdString());
-		if(port.description().contains("DAMC STM32 Audio") || port.serialNumber().contains("DAMC_")) {
-			oscSerialPort.setPort(port);
-			portFound = true;
+		if(!port.description().contains("DAMC STM32 Audio") && !port.serialNumber().contains("DAMC_")) {
+			continue;
 		}
-	}
 
-	if(portFound) {
+		oscSerialPort.setPort(port);
+
 		if(oscSerialPort.open(QIODevice::ReadWrite)) {
 			SPDLOG_INFO("Opened: {}", oscSerialPort.portName().toStdString());
 			oscSerialPort.clear();
 			updateOscVariables();
+			portFound = true;
+			break;
 		} else {
 			SPDLOG_ERROR("Open failed: {}", oscSerialPort.errorString().toStdString());
-			portFound = false;
 		}
 	}
 
