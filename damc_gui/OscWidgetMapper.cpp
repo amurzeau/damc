@@ -6,7 +6,7 @@ template<class T, class UnderlyingType>
 OscWidgetMapper<T, UnderlyingType>::OscWidgetMapper(OscContainer* parent,
                                                     std::string name,
                                                     UnderlyingType defaultValue) noexcept
-    : OscContainer(parent, name), scale(1.0), value(defaultValue), defaultValue(true) {}
+    : OscContainer(parent, name), value(defaultValue), defaultValue(true) {}
 
 template<class T, class UnderlyingType>
 void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChange) {
@@ -35,13 +35,13 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 			}
 		} else if constexpr(std::is_base_of_v<QDoubleSpinBox, T>) {
 			connect(widget, qOverload<double>(&T::valueChanged), [this, widget](double value) {
-				this->value = (float) (value / scale);
+				this->value = (float) mapValue(value, false);
 				notifyChanged(widget);
 			});
 		} else if constexpr(std::is_base_of_v<QComboBox, T>) {
 			if constexpr(std::is_same_v<int32_t, UnderlyingType>) {
 				connect(widget, qOverload<int>(&T::currentIndexChanged), [this, widget](int value) {
-					this->value = (int32_t) value;
+					this->value = (int32_t) mapValue(value, false);
 					notifyChanged(widget);
 				});
 			} else {
@@ -60,7 +60,7 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 			});
 		} else {
 			connect(widget, qOverload<int>(&T::valueChanged), [this, widget](int value) {
-				this->value = (int32_t) (value / scale);
+				this->value = (int32_t) mapValue(value, false);
 				notifyChanged(widget);
 			});
 		}
@@ -68,7 +68,20 @@ void OscWidgetMapper<T, UnderlyingType>::setWidget(T* widget, bool updateOnChang
 }
 
 template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::setScale(double scale) {
-	this->scale = scale;
+	if constexpr(std::is_same_v<UnderlyingType, int32_t> || std::is_same_v<UnderlyingType, float>) {
+		setValueMappingCallback([scale](UnderlyingType value, bool toWidget) {
+			if(toWidget)
+				return value * scale;
+			else
+				return value / scale;
+		});
+	}
+}
+
+template<class T, class UnderlyingType>
+void OscWidgetMapper<T, UnderlyingType>::setValueMappingCallback(
+    std::function<UnderlyingType(UnderlyingType, bool)> callback) {
+	mappingCallback = callback;
 }
 
 template<class T, class UnderlyingType>
@@ -158,7 +171,7 @@ template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>:
 	} else if constexpr(std::is_base_of_v<QComboBox, T>) {
 		QComboBox* w = widgets.front();
 		if constexpr(std::is_same_v<int32_t, UnderlyingType>) {
-			w->setCurrentIndex(value);
+			w->setCurrentIndex(mapValue(value, true));
 		} else {
 			w->setCurrentText(QString::fromStdString(value));
 		}
@@ -166,10 +179,17 @@ template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>:
 		QLineEdit* w = widgets.front();
 		w->setText(QString::fromStdString(value));
 	} else {
-		widget->setValue(value * scale);
+		widget->setValue(mapValue(value, true));
 	}
 
 	widget->blockSignals(false);
+}
+
+template<class T, class UnderlyingType>
+UnderlyingType OscWidgetMapper<T, UnderlyingType>::mapValue(UnderlyingType value, bool toWidget) {
+	if(mappingCallback)
+		return mappingCallback(value, toWidget);
+	return value;
 }
 
 template class OscWidgetMapper<QAbstractSlider>;

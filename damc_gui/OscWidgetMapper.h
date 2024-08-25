@@ -45,6 +45,7 @@ public:
 
 	void setWidget(T* widget, bool updateOnChange = true);
 	void setScale(double scale);
+	void setValueMappingCallback(std::function<UnderlyingType(UnderlyingType, bool)> callback);
 	UnderlyingType get() const { return value; }
 	bool isDefault() const { return defaultValue; }
 
@@ -58,11 +59,12 @@ public:
 protected:
 	void notifyChanged(T* originatorWidget);
 	void updateWidget(T* widget);
+	UnderlyingType mapValue(UnderlyingType value, bool toWidget);
 
 private:
 	std::vector<T*> widgets;
 	std::vector<std::function<void(UnderlyingType)>> onChangeCallbacks;
-	double scale;
+	std::function<UnderlyingType(UnderlyingType, bool)> mappingCallback;
 	UnderlyingType value;
 	bool defaultValue;
 };
