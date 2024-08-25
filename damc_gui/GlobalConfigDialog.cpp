@@ -1,6 +1,7 @@
 #include "GlobalConfigDialog.h"
 #include "ui_GlobalConfigDialog.h"
 #include <Osc/OscContainer.h>
+#include <math.h>
 
 GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
     : ManagedVisibilityWidget<QDialog>(parent),
@@ -10,14 +11,19 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
       oscConfigContainer(oscParent, "config"),
       oscSaveCount(&oscConfigContainer, "saveCount"),
       oscSaveNow(&oscConfigContainer, "saveNow"),
+      oscEnableMicBias(oscParent, "enableMicBias", true),
+      oscCpuContainer(oscParent, "cpu"),
+      cpuFrequency(&oscCpuContainer, "freq"),
+      cpuDivider(&oscCpuContainer, "divider"),
+      cpuManualControl(&oscCpuContainer, "manual"),
       timeUsbInterrupt(oscParent, "timeUsbInterrupt"),
       timeAudioProcessing(oscParent, "timeAudioProc"),
-      timeFastTimer(oscParent, "timeFastTimer"),
-      timeOscInput(oscParent, "timeOscInput"),
+      timeOtherInterrupts(oscParent, "timeOtherInterrupts"),
+      timeMainLoop(oscParent, "timeMainLoop"),
       timePerLoopUsbInterrupt(oscParent, "timePerLoopUsbInterrupt"),
       timePerLoopAudioProcessing(oscParent, "timePerLoopAudioProc"),
-      timePerLoopFastTimer(oscParent, "timePerLoopFastTimer"),
-      timePerLoopOscInput(oscParent, "timePerLoopOscInput"),
+      timePerLoopOtherInterrupts(oscParent, "timePerLoopOtherInterrupts"),
+      timePerLoopMainLoop(oscParent, "timePerLoopMainLoop"),
       fastMemoryUsed(oscParent, "fastMemoryUsed"),
       fastMemoryAvailable(oscParent, "fastMemoryAvailable"),
       slowMemoryUsed(oscParent, "memoryUsed"),
@@ -30,31 +36,49 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 	oscSaveCount.setWidget(ui->saveCountSpinBox, false);
 	oscSaveNow.setWidget(ui->saveNowPushButton, true);
 
+	oscEnableMicBias.setWidget(ui->enableMicBiasCheckBox);
+
+	// Convert Hz to Mhz
+	cpuFrequency.setScale(1.f / 1000000.f);
+	cpuFrequency.setWidget(ui->cpuFrequencySpinBox, false);
+	cpuDivider.setValueMappingCallback([](int32_t value, bool toWidget) {
+		if(toWidget)
+			return (int32_t) log2(value);
+		else
+			return 1 << value;
+	});
+	cpuDivider.setWidget(ui->cpuDividerComboBox);
+	cpuManualControl.setWidget(ui->cpuManualControlCheckBox);
+
 	// Convert 1/1000000 values to percents (1/100)
 	timeUsbInterrupt.setScale(1.f / 10000.f);
 	timeAudioProcessing.setScale(1.f / 10000.f);
-	timeFastTimer.setScale(1.f / 10000.f);
-	timeOscInput.setScale(1.f / 10000.f);
+	timeOtherInterrupts.setScale(1.f / 10000.f);
+	timeMainLoop.setScale(1.f / 10000.f);
 
 	timeUsbInterrupt.setWidget(ui->usbInterruptsSpinBox, false);
 	timeAudioProcessing.setWidget(ui->audioProcessingSpinBox, false);
-	timeFastTimer.setWidget(ui->timersProcessingSpinBox, false);
-	timeOscInput.setWidget(ui->oscProcessingSpinBox, false);
+	timeOtherInterrupts.setWidget(ui->otherInterruptsSpinBox, false);
+	timeMainLoop.setWidget(ui->timersProcessingSpinBox, false);
 
 	timeUsbInterrupt.addChangeCallback([this](float) { updateCpuTotalUsage(); });
 	timeAudioProcessing.addChangeCallback([this](float) { updateCpuTotalUsage(); });
-	timeFastTimer.addChangeCallback([this](float) { updateCpuTotalUsage(); });
-	timeOscInput.addChangeCallback([this](float) { updateCpuTotalUsage(); });
+	timeOtherInterrupts.addChangeCallback([this](float) { updateCpuTotalUsage(); });
+	timeMainLoop.addChangeCallback([this](float) { updateCpuTotalUsage(); });
 
 	timePerLoopUsbInterrupt.setScale(1.f / 10.f);
 	timePerLoopAudioProcessing.setScale(1.f / 10.f);
-	timePerLoopFastTimer.setScale(1.f / 10.f);
-	timePerLoopOscInput.setScale(1.f / 10.f);
+	timePerLoopOtherInterrupts.setScale(1.f / 10.f);
+	timePerLoopMainLoop.setScale(1.f / 10.f);
 
 	timePerLoopUsbInterrupt.setWidget(ui->usbInterruptsPerLoopSpinBox, false);
 	timePerLoopAudioProcessing.setWidget(ui->audioProcessingPerLoopSpinBox, false);
-	timePerLoopFastTimer.setWidget(ui->timersProcessingPerLoopSpinBox, false);
-	timePerLoopOscInput.setWidget(ui->oscProcessingPerLoopSpinBox, false);
+	timePerLoopOtherInterrupts.setWidget(ui->otherInterruptsPerLoopSpinBox, false);
+	timePerLoopMainLoop.setWidget(ui->timersProcessingPerLoopSpinBox, false);
+
+	timePerLoopUsbInterrupt.addChangeCallback([this](float) { updateCpuTotalUsagePerLoop(); });
+	timePerLoopAudioProcessing.addChangeCallback([this](float) { updateCpuTotalUsagePerLoop(); });
+	timePerLoopOtherInterrupts.addChangeCallback([this](float) { updateCpuTotalUsagePerLoop(); });
 
 	fastMemoryUsed.setWidget(ui->usedFastMemorySpinBox, false);
 	fastMemoryUsed.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
@@ -84,8 +108,15 @@ void GlobalConfigDialog::hideEvent(QHideEvent*) {
 }
 
 void GlobalConfigDialog::updateCpuTotalUsage() {
-	float totalCpuUsage = timeUsbInterrupt.get() + timeAudioProcessing.get() + timeFastTimer.get() + timeOscInput.get();
+	float totalCpuUsage =
+	    timeUsbInterrupt.get() + timeAudioProcessing.get() + timeOtherInterrupts.get() + timeMainLoop.get();
 	ui->totalCpuUsageSpinBox->setValue(totalCpuUsage / 10000.f);
+}
+
+void GlobalConfigDialog::updateCpuTotalUsagePerLoop() {
+	float totalCpuUsage =
+	    timePerLoopUsbInterrupt.get() + timePerLoopAudioProcessing.get() + timePerLoopOtherInterrupts.get();
+	ui->totalCpuUsagePerLoopSpinBox->setValue(totalCpuUsage / 10.f);
 }
 
 void GlobalConfigDialog::updateMemoryUsagePercent() {

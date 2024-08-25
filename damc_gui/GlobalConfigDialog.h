@@ -23,6 +23,7 @@ protected:
 	void showEvent(QShowEvent*) override;
 	void hideEvent(QHideEvent*) override;
 	void updateCpuTotalUsage();
+	void updateCpuTotalUsagePerLoop();
 	void updateMemoryUsagePercent();
 
 private:
@@ -34,15 +35,22 @@ private:
 	OscContainer oscConfigContainer;
 	OscWidgetMapper<QSpinBox> oscSaveCount;
 	OscWidgetMapper<QAbstractButton> oscSaveNow;
+	OscWidgetMapper<QAbstractButton> oscEnableMicBias;
+
+	OscContainer oscCpuContainer;
+	OscWidgetMapper<QDoubleSpinBox> cpuFrequency;
+	OscWidgetMapper<QComboBox> cpuDivider;
+	OscWidgetMapper<QAbstractButton> cpuManualControl;
 
 	OscWidgetMapper<QDoubleSpinBox> timeUsbInterrupt;
 	OscWidgetMapper<QDoubleSpinBox> timeAudioProcessing;
-	OscWidgetMapper<QDoubleSpinBox> timeFastTimer;
-	OscWidgetMapper<QDoubleSpinBox> timeOscInput;
+	OscWidgetMapper<QDoubleSpinBox> timeOtherInterrupts;
+	OscWidgetMapper<QDoubleSpinBox> timeMainLoop;
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopUsbInterrupt;
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopAudioProcessing;
-	OscWidgetMapper<QDoubleSpinBox> timePerLoopFastTimer;
-	OscWidgetMapper<QDoubleSpinBox> timePerLoopOscInput;
+	OscWidgetMapper<QDoubleSpinBox> timePerLoopOtherInterrupts;
+	OscWidgetMapper<QDoubleSpinBox> timePerLoopMainLoop;
+
 	OscWidgetMapper<QSpinBox> fastMemoryUsed;
 	OscWidgetMapper<QSpinBox> fastMemoryAvailable;
 	OscWidgetMapper<QSpinBox> slowMemoryUsed;
