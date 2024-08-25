@@ -3,6 +3,7 @@
 #include "OscContainer.h"
 #include "OscFlatArray.h"
 #include "Utils.h"
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <set>
