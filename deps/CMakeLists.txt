@@ -11,6 +11,7 @@ add_subdirectory(portaudio EXCLUDE_FROM_ALL)
 add_subdirectory(libuv EXCLUDE_FROM_ALL)
 add_subdirectory(zlib EXCLUDE_FROM_ALL)
 add_subdirectory(libmysofa EXCLUDE_FROM_ALL)
+add_subdirectory(nlohmann_json EXCLUDE_FROM_ALL)
 
 set(DISABLE_FORTRAN ON)
 set(ENABLE_FLOAT ON)

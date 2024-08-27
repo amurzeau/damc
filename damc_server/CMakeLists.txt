@@ -41,7 +41,6 @@ add_executable(${TARGET_NAME}
 
 	ControlInterface.cpp
 	ControlInterface.h
-	json.h
 	JackPortAutoConnect.cpp
 	JackPortAutoConnect.h
 	JackUtils.cpp
@@ -58,7 +57,7 @@ add_executable(${TARGET_NAME}
 	OscStatePersist.h
 	main.cpp
 )
-target_link_libraries(${TARGET_NAME} PUBLIC uv::uv PortAudio JACK::jack damc_common Threads::Threads spdlog::spdlog damc_audio_processing)
+target_link_libraries(${TARGET_NAME} PUBLIC uv::uv PortAudio JACK::jack damc_common Threads::Threads spdlog::spdlog damc_audio_processing nlohmann_json)
 target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES _CRT_SECURE_NO_WARNINGS NOMINMAX JSON_SKIP_UNSUPPORTED_COMPILER_CHECK)
 
 # Version define only for main.cpp to avoid recompiling all the source on version change

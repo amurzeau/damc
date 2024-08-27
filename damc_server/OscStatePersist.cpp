@@ -3,7 +3,7 @@
 #include <spdlog/spdlog.h>
 #include <uv.h>
 
-#include "json.h"
+#include <json.h>
 
 OscStatePersist::OscStatePersist(OscRoot* oscRoot, std::string fileName) : oscRoot(oscRoot) {
 	char basePath[1024];
