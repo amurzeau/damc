@@ -23,8 +23,6 @@ public:
 
 	void execute(std::string_view address, const std::vector<OscArgument>& arguments) override;
 
-	std::string getAsString() const override { return std::string{}; }
-
 	int addItem();
 	void removeItem(int key);
 	void swapWidgets(int sourceKey, int targetKey, bool insertBefore, bool notifyOsc);

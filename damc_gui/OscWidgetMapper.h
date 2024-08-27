@@ -52,9 +52,11 @@ public:
 	void execute(const std::vector<OscArgument>& arguments) override;
 
 	void dump() override;
-	std::string getAsString() const override { return std::string{}; }
+	std::string getAsString() const override;
 
 	void addChangeCallback(std::function<void(UnderlyingType)> onChange);
+
+	bool isPersisted() override;
 
 protected:
 	void notifyChanged(T* originatorWidget);

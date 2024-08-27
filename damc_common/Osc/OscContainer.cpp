@@ -100,6 +100,8 @@ std::string OscContainer::getAsString() const {
 		depth += 1;
 		size_t processedItems = 0;
 		for(const auto& child : children) {
+			if(!child.second->isPersisted())
+				continue;
 			std::string childData = child.second->getAsString();
 
 			if(childData.empty()) {

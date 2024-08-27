@@ -81,6 +81,8 @@ public:
 	// Called from derived types when their value is changed
 	void sendMessage(const OscArgument* arguments, size_t number);
 
+	virtual bool isPersisted() { return true; }
+
 protected:
 	friend class OscRoot;  // OscRoot calls execute on loadConfig
 	// Called by the public execute to really execute the action on this node (rather than descending through the tree

@@ -1,5 +1,8 @@
 #include "OscWidgetMapper.h"
-#include "QtUtils.h"
+#include "QtUtils.h"  // IWYU pragma: keep: needed for qOverload on older Qt versions (< 5.7)
+#include <charconv>
+#include <spdlog/spdlog.h>
+#include <stdexcept>
 #include <type_traits>
 
 template<class T, class UnderlyingType>
@@ -143,10 +146,47 @@ template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>:
 	sendMessage(&arg, 1);
 }
 
+template<class T, class UnderlyingType> std::string OscWidgetMapper<T, UnderlyingType>::getAsString() const {
+	if(this->isDefault())
+		return {};
+
+	if constexpr(std::is_same_v<UnderlyingType, std::string>) {
+		return "\"" + this->value + "\"";
+	} else if constexpr(std::is_same_v<UnderlyingType, bool>) {
+		return value ? "true" : "false";
+	} else {
+		std::string result;
+		result.resize(128);
+		auto [ptr, ec] = std::to_chars(result.data(), result.data() + result.size(), this->value);
+		if(ec != std::errc{}) {
+			throw std::runtime_error(fmt::format("failed to convert value {} to string", value));
+		}
+		result.resize(ptr - result.data());
+		return result;
+	}
+}
+
 template<class T, class UnderlyingType>
 void OscWidgetMapper<T, UnderlyingType>::addChangeCallback(std::function<void(UnderlyingType)> onChange) {
 	this->onChangeCallbacks.push_back(onChange);
 	onChange(value);
+}
+
+template<class T, class UnderlyingType> bool OscWidgetMapper<T, UnderlyingType>::isPersisted() {
+	bool persist = true;
+
+	if constexpr(std::is_base_of_v<QAbstractButton, T> || std::is_base_of_v<QAbstractSlider, T> ||
+	             std::is_base_of_v<QComboBox, T> || std::is_base_of_v<QGroupBox, T>) {
+		return persist;
+	} else {
+		for(auto& widget : widgets) {
+			if(widget->isReadOnly()) {
+				persist = false;
+			}
+		}
+	}
+
+	return persist;
 }
 
 template<class T, class UnderlyingType> void OscWidgetMapper<T, UnderlyingType>::notifyChanged(T* originatorWidget) {
