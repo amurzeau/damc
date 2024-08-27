@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>410</width>
+    <width>505</width>
     <height>451</height>
    </rect>
   </property>
@@ -14,6 +14,26 @@
    <string>Digital Audio Mixing Console - DAMC</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="1">
+    <spacer name="buttonsSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="4">
+    <widget class="QPushButton" name="removeButton">
+     <property name="text">
+      <string>Remove</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="3">
     <widget class="QPushButton" name="addButton">
      <property name="text">
@@ -55,26 +75,6 @@
       </property>
      </layout>
     </widget>
-   </item>
-   <item row="0" column="4">
-    <widget class="QPushButton" name="removeButton">
-     <property name="text">
-      <string>Remove</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <spacer name="buttonsSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
    </item>
   </layout>
  </widget>

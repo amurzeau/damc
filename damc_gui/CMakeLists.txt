@@ -42,7 +42,7 @@ if(TARGET QtDependencies)
 	endif()
 
 	target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	target_link_libraries(${TARGET_NAME} PRIVATE QtDependencies damc_common)
+	target_link_libraries(${TARGET_NAME} PRIVATE QtDependencies damc_common nlohmann_json)
 	target_compile_definitions(${TARGET_NAME} PRIVATE _USE_MATH_DEFINES)
 
 	install(

@@ -1,8 +1,10 @@
 #pragma once
 
+#include "OscStatePersist.h"
 #include "OscWidgetArray.h"
 #include <Osc/OscFlatArray.h>
 #include <OscRoot.h>
+#include <QMenu>
 #include <QWidget>
 
 namespace Ui {
@@ -29,6 +31,9 @@ public:
 
 protected slots:
 	void onShowGlobalConfig();
+	void onSaveConfiguration();
+	void onLoadConfiguration();
+
 	void onAddInstance();
 	void onRemoveInstance();
 
@@ -41,6 +46,7 @@ private:
 	Ui::MainWindow* ui;
 
 	OscRoot* oscRoot;
+	OscStatePersist statePersist;
 	bool isMicrocontrollerDamc;
 
 	OscWidgetArray outputInterfaces;
@@ -50,4 +56,6 @@ private:
 	OscFlatArray<std::string> oscTypeArray;
 	OscFlatArray<std::string> oscPortaudioDeviceArray;
 	OscFlatArray<std::string> oscWasapiDeviceArray;
+
+	QMenu configurationMenu;
 };

@@ -1,13 +1,16 @@
 #include "MainWindow.h"
 #include "GlobalConfigDialog.h"
 #include "OutputController.h"
+#include "qmessagebox.h"
 #include "ui_MainWindow.h"
+#include <QFileDialog>
 #include <QInputDialog>
 
 MainWindow::MainWindow(OscRoot* oscRoot, bool isMicrocontrollerDamc, QWidget* parent)
     : QWidget(parent),
       ui(new Ui::MainWindow),
       oscRoot(oscRoot),
+      statePersist(oscRoot),
       isMicrocontrollerDamc(isMicrocontrollerDamc),
       outputInterfaces(oscRoot, "strip"),
       oscTypeArray(oscRoot, "type_list"),
@@ -31,7 +34,20 @@ MainWindow::MainWindow(OscRoot* oscRoot, bool isMicrocontrollerDamc, QWidget* pa
 		    return new OutputController(this, oscParent, std::to_string(name), this->isMicrocontrollerDamc);
 	    });
 
-	connect(ui->globalConfigButton, &QAbstractButton::clicked, this, &MainWindow::onShowGlobalConfig);
+	ui->globalConfigButton->setMenu(&configurationMenu);
+
+	QAction* globalConfigurationAction = new QAction("&Global configuration...", this);
+	connect(globalConfigurationAction, &QAction::triggered, this, &MainWindow::onShowGlobalConfig);
+	configurationMenu.addAction(globalConfigurationAction);
+
+	QAction* configurationSaveAction = new QAction("&Save configuration", this);
+	connect(configurationSaveAction, &QAction::triggered, this, &MainWindow::onSaveConfiguration);
+	configurationMenu.addAction(configurationSaveAction);
+
+	QAction* configurationLoadAction = new QAction("&Load configuration", this);
+	connect(configurationLoadAction, &QAction::triggered, this, &MainWindow::onLoadConfiguration);
+	configurationMenu.addAction(configurationLoadAction);
+
 	connect(ui->addButton, &QAbstractButton::clicked, this, &MainWindow::onAddInstance);
 	connect(ui->removeButton, &QAbstractButton::clicked, this, &MainWindow::onRemoveInstance);
 	connect(ui->showDisabledCheckBox, &QCheckBox::toggled, [this](bool showDisabled) {
@@ -62,6 +78,36 @@ void MainWindow::onShowGlobalConfig() {
 	} else {
 		globalConfigDialog->hide();
 		ui->globalConfigButton->setChecked(false);
+	}
+}
+
+void MainWindow::onSaveConfiguration() {
+	QString fileName =
+	    QFileDialog::getSaveFileName(this, tr("Save Config file"), "", tr("DAMC Config (*.json);;All files (*)"));
+	if(fileName.isEmpty())
+		return;
+
+	try {
+		statePersist.saveState(fileName.toStdString());
+	} catch(const std::exception& e) {
+		QMessageBox::critical(this, "Failed to save config", QString("Error while parsing config: %1").arg(e.what()));
+	} catch(...) {
+		QMessageBox::critical(this, "Failed to save config", "Error while parsing config");
+	}
+}
+
+void MainWindow::onLoadConfiguration() {
+	QString fileName =
+	    QFileDialog::getOpenFileName(this, tr("Open Config file"), "", tr("DAMC Config (*.json);;All files (*)"));
+	if(fileName.isEmpty())
+		return;
+
+	try {
+		statePersist.loadState(fileName.toStdString());
+	} catch(const std::exception& e) {
+		QMessageBox::critical(this, "Failed to load config", QString("Error while parsing config: %1").arg(e.what()));
+	} catch(...) {
+		QMessageBox::critical(this, "Failed to load config", "Error while parsing config");
 	}
 }
 
