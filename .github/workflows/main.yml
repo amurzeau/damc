@@ -16,7 +16,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -34,7 +34,7 @@ jobs:
           cmake --build build --target package --config RelWithDebInfo
 
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v4
         with:
           # Artifact name
           name: "damc-linux" # optional, default is artifact
@@ -42,12 +42,10 @@ jobs:
           path: build/*.tar.gz
 
       - name: Publish
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: "build/*.tar.gz"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Windows 32 and 64 bits build
   windows:
@@ -64,7 +62,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -112,7 +110,7 @@ jobs:
           echo "NINJA_PATH=$ninja_path" >> $env:GITHUB_OUTPUT
 
       - name: Cache Qt
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ steps.dependencies.outputs.QT_ROOT }}
           key: "3${{ runner.os }}-${{ matrix.config.arch }}-${{ steps.dependencies.outputs.QT_VERSION }}"
@@ -196,7 +194,7 @@ jobs:
           if ($lastexitcode -ne 0) { exit $lastexitcode }
 
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v4
         with:
           # Artifact name
           name: "damc-win${{ matrix.config.arch }}" # optional, default is artifact
@@ -204,9 +202,7 @@ jobs:
           path: build/*.zip
 
       - name: Publish
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: "build/*.zip"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
