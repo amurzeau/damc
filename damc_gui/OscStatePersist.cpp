@@ -3,7 +3,6 @@
 #include <exception>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
-#include <uv.h>
 
 #include "json.h"
 
