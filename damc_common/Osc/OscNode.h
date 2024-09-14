@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <stdint.h>
 #include <string>
 #include <type_traits>
 #include <variant>
