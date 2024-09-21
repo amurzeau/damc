@@ -37,6 +37,9 @@ protected slots:
 	void onAddInstance();
 	void onRemoveInstance();
 
+	void onGlitchOccurred();
+	void onGlitchButtonPressed();
+
 signals:
 	void showDisabledChanged();
 	void typeListChanged();

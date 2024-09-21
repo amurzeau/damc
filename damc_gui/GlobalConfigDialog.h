@@ -16,8 +16,11 @@ public:
 	explicit GlobalConfigDialog(QWidget* parent, OscContainer* oscParent);
 	~GlobalConfigDialog();
 
+	void resetGlitchCounters();
+
 signals:
 	void showStateChanged(bool shown);
+	void glitchOccurred();
 
 protected:
 	void showEvent(QShowEvent*) override;
@@ -55,4 +58,8 @@ private:
 	OscWidgetMapper<QSpinBox> fastMemoryAvailable;
 	OscWidgetMapper<QSpinBox> slowMemoryUsed;
 	OscWidgetMapper<QSpinBox> slowMemoryAvailable;
+
+	OscContainer oscGlitches;
+	OscWidgetMapper<QAbstractButton> oscGlitchesResetCounters;
+	std::array<OscWidgetMapper<QSpinBox>, 9> glitchesCounters;
 };

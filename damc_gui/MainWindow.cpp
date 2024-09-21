@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "GlobalConfigDialog.h"
 #include "OutputController.h"
+#include "qabstractbutton.h"
 #include "qmessagebox.h"
 #include "ui_MainWindow.h"
 #include <QFileDialog>
@@ -59,6 +60,9 @@ MainWindow::MainWindow(OscRoot* oscRoot, bool isMicrocontrollerDamc, QWidget* pa
 			this->resize(minimumWidth(), this->height());
 		}
 	});
+
+	connect(ui->audioGlitchToolButton, &QAbstractButton::clicked, this, &MainWindow::onGlitchButtonPressed);
+	connect(globalConfigDialog, &GlobalConfigDialog::glitchOccurred, this, &MainWindow::onGlitchOccurred);
 
 	oscTypeArray.addChangeCallback([this](const auto&, const auto&) { emit typeListChanged(); });
 
@@ -130,6 +134,16 @@ void MainWindow::onRemoveInstance() {
 	if(ok) {
 		outputInterfaces.removeItem(value);
 	}
+}
+
+void MainWindow::onGlitchOccurred() {
+	ui->audioGlitchToolButton->setStyleSheet("color: red;");
+}
+
+void MainWindow::onGlitchButtonPressed() {
+	// Reset button color
+	ui->audioGlitchToolButton->setStyleSheet("");
+	globalConfigDialog->resetGlitchCounters();
 }
 
 void MainWindow::removeInstance(int key) {

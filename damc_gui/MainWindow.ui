@@ -14,48 +14,7 @@
    <string>Digital Audio Mixing Console - DAMC</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="1">
-    <spacer name="buttonsSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="0" column="4">
-    <widget class="QPushButton" name="removeButton">
-     <property name="text">
-      <string>Remove</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="3">
-    <widget class="QPushButton" name="addButton">
-     <property name="text">
-      <string>Add</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QCheckBox" name="showDisabledCheckBox">
-     <property name="text">
-      <string>Show disabled</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="2">
-    <widget class="QPushButton" name="globalConfigButton">
-     <property name="text">
-      <string>Config</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="5">
+   <item row="1" column="0" colspan="6">
     <widget class="QWidget" name="outputsWidgets" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="spacing">
@@ -74,6 +33,57 @@
        <number>0</number>
       </property>
      </layout>
+    </widget>
+   </item>
+   <item row="0" column="3">
+    <widget class="QPushButton" name="globalConfigButton">
+     <property name="text">
+      <string>Config</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <spacer name="buttonsSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0">
+    <widget class="QCheckBox" name="showDisabledCheckBox">
+     <property name="text">
+      <string>Show disabled</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="5">
+    <widget class="QPushButton" name="removeButton">
+     <property name="text">
+      <string>Remove</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4">
+    <widget class="QPushButton" name="addButton">
+     <property name="text">
+      <string>Add</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2">
+    <widget class="QToolButton" name="audioGlitchToolButton">
+     <property name="toolTip">
+      <string>When red, glitches appeared. Click to reset.</string>
+     </property>
+     <property name="text">
+      <string>⬤</string>
+     </property>
     </widget>
    </item>
   </layout>

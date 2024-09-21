@@ -27,7 +27,20 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
       fastMemoryUsed(oscParent, "fastMemoryUsed"),
       fastMemoryAvailable(oscParent, "fastMemoryAvailable"),
       slowMemoryUsed(oscParent, "memoryUsed"),
-      slowMemoryAvailable(oscParent, "memoryAvailable") {
+      slowMemoryAvailable(oscParent, "memoryAvailable"),
+      oscGlitches(oscParent, "glitches"),
+      oscGlitchesResetCounters(&oscGlitches, "reset"),
+      glitchesCounters{
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "usbIsochronousTransferLost"},
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "usbOutOverrun"},
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "usbOutUnderrun"},
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "usbInOverrun"},
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "audioProcessInterruptLost"},
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "codecOutXRun"},
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "codecOutDmaUnderrun"},
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "codecInXRun"},
+          OscWidgetMapper<QSpinBox>{&oscGlitches, "codecInDmaOverrun"},
+      } {
 	ui->setupUi(this);
 
 	oscEnableAutoConnect.setWidget(ui->autoConnectJackClients);
@@ -92,11 +105,36 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 	slowMemoryAvailable.setWidget(ui->availableSlowMemorySpinBox, false);
 	slowMemoryAvailable.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
 
+	oscGlitchesResetCounters.setWidget(ui->glitchResetCountersPushButton, true);
+
+	glitchesCounters[0].setWidget(ui->glitchUsbIsochronousTransferLostSpinBox, false);
+	glitchesCounters[1].setWidget(ui->glitchUsbOutOverrunSpinBox, false);
+	glitchesCounters[2].setWidget(ui->glitchUsbOutUnderrunSpinBox, false);
+	glitchesCounters[3].setWidget(ui->glitchUsbInOverrunSpinBox, false);
+	glitchesCounters[4].setWidget(ui->glitchAudioIrqLostSpinBox, false);
+	glitchesCounters[5].setWidget(ui->glitchCodecOutXRunSpinBox, false);
+	glitchesCounters[6].setWidget(ui->glitchCodecOutDmaUnderrunSpinBox, false);
+	glitchesCounters[7].setWidget(ui->glitchCodecInXRunSpinBox, false);
+	glitchesCounters[8].setWidget(ui->glitchCodecInDmaOverrunSpinBox, false);
+
+	std::function lambdaGlitchOccurred = [this](int32_t value) {
+		if(value > 0) {
+			emit glitchOccurred();
+		}
+	};
+	for(size_t i = 0; i < glitchesCounters.size(); i++) {
+		glitchesCounters[i].addChangeCallback(lambdaGlitchOccurred);
+	}
+
 	manageWidgetsVisiblity();
 }
 
 GlobalConfigDialog::~GlobalConfigDialog() {
 	delete ui;
+}
+
+void GlobalConfigDialog::resetGlitchCounters() {
+	emit ui->glitchResetCountersPushButton->clicked();
 }
 
 void GlobalConfigDialog::showEvent(QShowEvent*) {
