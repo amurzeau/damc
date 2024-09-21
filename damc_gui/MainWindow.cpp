@@ -61,8 +61,13 @@ MainWindow::MainWindow(OscRoot* oscRoot, bool isMicrocontrollerDamc, QWidget* pa
 		}
 	});
 
+	ui->audioGlitchToolButton->setHidden(true);
 	connect(ui->audioGlitchToolButton, &QAbstractButton::clicked, this, &MainWindow::onGlitchButtonPressed);
 	connect(globalConfigDialog, &GlobalConfigDialog::glitchOccurred, this, &MainWindow::onGlitchOccurred);
+	connect(globalConfigDialog,
+	        &GlobalConfigDialog::glitchDetectionSupported,
+	        this,
+	        &MainWindow::onGlitchDetectionSupported);
 
 	oscTypeArray.addChangeCallback([this](const auto&, const auto&) { emit typeListChanged(); });
 
@@ -134,6 +139,10 @@ void MainWindow::onRemoveInstance() {
 	if(ok) {
 		outputInterfaces.removeItem(value);
 	}
+}
+
+void MainWindow::onGlitchDetectionSupported() {
+	ui->audioGlitchToolButton->show();
 }
 
 void MainWindow::onGlitchOccurred() {

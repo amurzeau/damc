@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>757</width>
+    <width>984</width>
     <height>439</height>
    </rect>
   </property>
@@ -546,7 +546,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QGroupBox" name="dialogLayout3">
+    <widget class="QGroupBox" name="glitchesCountersGroupBox">
      <property name="title">
       <string>Glitches counters</string>
      </property>

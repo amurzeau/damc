@@ -117,12 +117,14 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 	glitchesCounters[7].setWidget(ui->glitchCodecInXRunSpinBox, false);
 	glitchesCounters[8].setWidget(ui->glitchCodecInDmaOverrunSpinBox, false);
 
+	std::function lambdaGlitchSupported = [this]() { emit glitchDetectionSupported(); };
 	std::function lambdaGlitchOccurred = [this](int32_t value) {
 		if(value > 0) {
 			emit glitchOccurred();
 		}
 	};
 	for(size_t i = 0; i < glitchesCounters.size(); i++) {
+		glitchesCounters[i].addOscEndpointSupportedCallback(lambdaGlitchSupported);
 		glitchesCounters[i].addChangeCallback(lambdaGlitchOccurred);
 	}
 

@@ -2,7 +2,6 @@
 
 #include "ManagedVisibilityWidget.h"
 #include "OscWidgetMapper.h"
-#include "WidgetAutoHidden.h"
 #include <QDialog>
 
 namespace Ui {
@@ -20,6 +19,7 @@ public:
 
 signals:
 	void showStateChanged(bool shown);
+	void glitchDetectionSupported();
 	void glitchOccurred();
 
 protected:
