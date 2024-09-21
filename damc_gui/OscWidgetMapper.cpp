@@ -107,6 +107,10 @@ void OscWidgetMapper<T, UnderlyingType>::execute(const std::vector<OscArgument>&
 		}
 	}
 
+	if(this->defaultValue) {
+		for(auto& onOscEndpointSupported : onOscEndpointSupportedCallbacks)
+			onOscEndpointSupported();
+	}
 	this->defaultValue = false;
 
 	if(this->value == value)
@@ -167,6 +171,11 @@ template<class T, class UnderlyingType>
 void OscWidgetMapper<T, UnderlyingType>::addChangeCallback(std::function<void(UnderlyingType)> onChange) {
 	this->onChangeCallbacks.push_back(onChange);
 	onChange(value);
+}
+
+template<class T, class UnderlyingType>
+void OscWidgetMapper<T, UnderlyingType>::addOscEndpointSupportedCallback(std::function<void()> onOscEndpointSupported) {
+	this->onOscEndpointSupportedCallbacks.push_back(onOscEndpointSupported);
 }
 
 template<class T, class UnderlyingType> bool OscWidgetMapper<T, UnderlyingType>::isPersisted() {

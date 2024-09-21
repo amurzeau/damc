@@ -55,6 +55,7 @@ public:
 	std::string getAsString() const override;
 
 	void addChangeCallback(std::function<void(UnderlyingType)> onChange);
+	void addOscEndpointSupportedCallback(std::function<void()> onOscEndpointSupported);
 
 	bool isPersisted() override;
 
@@ -66,6 +67,7 @@ protected:
 private:
 	std::vector<T*> widgets;
 	std::vector<std::function<void(UnderlyingType)>> onChangeCallbacks;
+	std::vector<std::function<void()>> onOscEndpointSupportedCallbacks;
 	std::function<UnderlyingType(UnderlyingType, bool)> mappingCallback;
 	UnderlyingType value;
 	bool defaultValue;
