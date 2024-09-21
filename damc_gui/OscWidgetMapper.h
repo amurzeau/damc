@@ -60,6 +60,8 @@ public:
 	bool isPersisted() override;
 
 protected:
+	using OscNode::execute;
+
 	void notifyChanged(T* originatorWidget);
 	void updateWidget(T* widget);
 	UnderlyingType mapValue(UnderlyingType value, bool toWidget);
