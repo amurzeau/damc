@@ -39,16 +39,14 @@ CompressorController::CompressorController(QWidget* parent, OscContainer* oscPar
 	oscAttackTime.setScale(1000);
 	oscLufsIntegrationTime.setScale(1000);
 
+	addOscEnableVariable(&oscEnablePeak);
+	addOscEnableVariable(&oscEnableLoudness);
+
 	manageWidgetsVisiblity();
 }
 
 CompressorController::~CompressorController() {
 	delete ui;
-}
-
-void CompressorController::setEnableButton(QAbstractButton* button) {
-	oscEnablePeak.setWidget(button, false);
-	oscEnableLoudness.setWidget(button, false);
 }
 
 void CompressorController::show() {
