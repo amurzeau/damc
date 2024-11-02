@@ -2,6 +2,7 @@
 
 #include "ManagedVisibilityWidget.h"
 #include "OscWidgetMapper.h"
+#include "qcheckbox.h"
 #include <QDialog>
 
 namespace Ui {
@@ -62,4 +63,5 @@ private:
 	OscContainer oscGlitches;
 	OscWidgetMapper<QAbstractButton> oscGlitchesResetCounters;
 	std::array<OscWidgetMapper<QSpinBox>, 9> glitchesCounters;
+	std::array<OscWidgetMapper<QAbstractButton>, 2> feedbackClockSync;
 };

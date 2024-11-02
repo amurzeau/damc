@@ -40,6 +40,10 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
           OscWidgetMapper<QSpinBox>{&oscGlitches, "codecOutDmaUnderrun"},
           OscWidgetMapper<QSpinBox>{&oscGlitches, "codecInXRun"},
           OscWidgetMapper<QSpinBox>{&oscGlitches, "codecInDmaOverrun"},
+      },
+      feedbackClockSync{
+          OscWidgetMapper<QAbstractButton>(&oscGlitches, "feedbackSyncOut0"),
+          OscWidgetMapper<QAbstractButton>(&oscGlitches, "feedbackSyncOut1"),
       } {
 	ui->setupUi(this);
 
@@ -127,6 +131,15 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 		glitchesCounters[i].addOscEndpointSupportedCallback(lambdaGlitchSupported);
 		glitchesCounters[i].addChangeCallback(lambdaGlitchOccurred);
 	}
+
+	// Set checkbox as readonly
+	ui->feedbackClockSyncOut0CheckBox->setAttribute(Qt::WA_TransparentForMouseEvents);
+	ui->feedbackClockSyncOut0CheckBox->setFocusPolicy(Qt::NoFocus);
+	feedbackClockSync[0].setWidget(ui->feedbackClockSyncOut0CheckBox, false);
+
+	ui->feedbackClockSyncOut1CheckBox->setAttribute(Qt::WA_TransparentForMouseEvents);
+	ui->feedbackClockSyncOut1CheckBox->setFocusPolicy(Qt::NoFocus);
+	feedbackClockSync[1].setWidget(ui->feedbackClockSyncOut1CheckBox, false);
 
 	manageWidgetsVisiblity();
 }

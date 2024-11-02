@@ -64,7 +64,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>999999999</number>
@@ -120,7 +120,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -136,7 +136,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -152,7 +152,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>9999999</number>
@@ -175,7 +175,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>9999999</number>
@@ -198,7 +198,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>9999999</number>
@@ -211,7 +211,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>9999999</number>
@@ -224,7 +224,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -240,7 +240,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -286,7 +286,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -323,7 +323,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -339,7 +339,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -362,7 +362,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -378,7 +378,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -394,7 +394,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -410,7 +410,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -433,7 +433,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -449,7 +449,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -465,7 +465,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -490,7 +490,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
+           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> Mhz</string>
@@ -553,6 +553,9 @@
      <layout class="QFormLayout" name="formLayout">
       <item row="1" column="0">
        <widget class="QLabel" name="glitchUsbIsochronousTransferLostLabel">
+        <property name="toolTip">
+         <string>USB stream discontinuity detected, might happen with a short audio stop</string>
+        </property>
         <property name="text">
          <string>USB Xfer Lost</string>
         </property>
@@ -560,6 +563,9 @@
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="glitchUsbOutOverrunLabel">
+        <property name="toolTip">
+         <string>Too much audio data from PC to soundcard received</string>
+        </property>
         <property name="text">
          <string>USB Out Overrun</string>
         </property>
@@ -567,6 +573,9 @@
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="glitchUsbOutUnderrunLabel">
+        <property name="toolTip">
+         <string>Not enough audio data from PC to soundcard received</string>
+        </property>
         <property name="text">
          <string>USB Out Underrun</string>
         </property>
@@ -574,6 +583,9 @@
       </item>
       <item row="4" column="0">
        <widget class="QLabel" name="glitchUsbInOverrunLabel">
+        <property name="toolTip">
+         <string>Too much audio data from soundcard to PC waiting to be polled by the PC</string>
+        </property>
         <property name="text">
          <string>USB In Overrun</string>
         </property>
@@ -581,6 +593,9 @@
       </item>
       <item row="5" column="0">
        <widget class="QLabel" name="glitchAudioIrqLostLabel">
+        <property name="toolTip">
+         <string>Soundcard audio IRQ lost</string>
+        </property>
         <property name="text">
          <string>Audio IRQ Lost</string>
         </property>
@@ -588,6 +603,9 @@
       </item>
       <item row="6" column="0">
        <widget class="QLabel" name="glitchCodecOutXRunLabel">
+        <property name="toolTip">
+         <string>Codec output buffer overrun, too much data written to codec DMA buffer</string>
+        </property>
         <property name="text">
          <string>Codec Out XRun</string>
         </property>
@@ -595,6 +613,9 @@
       </item>
       <item row="7" column="0">
        <widget class="QLabel" name="glitchCodecOutDmaUnderrunLabel">
+        <property name="toolTip">
+         <string>Codec output buffer underrun, not enough data written to codec DMA buffer</string>
+        </property>
         <property name="text">
          <string>Codec Out DMA Underrun</string>
         </property>
@@ -602,6 +623,9 @@
       </item>
       <item row="8" column="0">
        <widget class="QLabel" name="glitchCodecInXRunLabel">
+        <property name="toolTip">
+         <string>Codec input buffer underrun, too much data read from codec DMA buffer</string>
+        </property>
         <property name="text">
          <string>Codec In XRun</string>
         </property>
@@ -609,6 +633,9 @@
       </item>
       <item row="9" column="0">
        <widget class="QLabel" name="glitchCodecInDmaOverrunLabel">
+        <property name="toolTip">
+         <string>Codec input buffer overrun, not enough data read from codec DMA buffer</string>
+        </property>
         <property name="text">
          <string>Codec In DMA Overrun</string>
         </property>
@@ -617,7 +644,7 @@
       <item row="1" column="1">
        <widget class="QSpinBox" name="glitchUsbIsochronousTransferLostSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -627,7 +654,7 @@
       <item row="2" column="1">
        <widget class="QSpinBox" name="glitchUsbOutOverrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -637,7 +664,7 @@
       <item row="3" column="1">
        <widget class="QSpinBox" name="glitchUsbOutUnderrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -647,7 +674,7 @@
       <item row="4" column="1">
        <widget class="QSpinBox" name="glitchUsbInOverrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -657,7 +684,7 @@
       <item row="5" column="1">
        <widget class="QSpinBox" name="glitchAudioIrqLostSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -667,7 +694,7 @@
       <item row="6" column="1">
        <widget class="QSpinBox" name="glitchCodecOutXRunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -677,7 +704,7 @@
       <item row="7" column="1">
        <widget class="QSpinBox" name="glitchCodecOutDmaUnderrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -687,7 +714,7 @@
       <item row="8" column="1">
        <widget class="QSpinBox" name="glitchCodecInXRunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -697,7 +724,7 @@
       <item row="9" column="1">
        <widget class="QSpinBox" name="glitchCodecInDmaOverrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
+         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -708,6 +735,20 @@
        <widget class="QPushButton" name="glitchResetCountersPushButton">
         <property name="text">
          <string>Reset counters</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0" colspan="2">
+       <widget class="QCheckBox" name="feedbackClockSyncOut0CheckBox">
+        <property name="text">
+         <string>USB Out Master Clock sync</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="0" colspan="2">
+       <widget class="QCheckBox" name="feedbackClockSyncOut1CheckBox">
+        <property name="text">
+         <string>USB Out Comp Clock sync</string>
         </property>
        </widget>
       </item>
