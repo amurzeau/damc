@@ -11,6 +11,13 @@ SerialPortInterface::SerialPortInterface(OscRoot* oscRoot) : OscConnector(oscRoo
 	oscReconnectTimer.setSingleShot(true);
 	oscReconnectTimer.setInterval(1000);
 
+	// Workaround https://bugreports.qt.io/browse/QTBUG-130561
+	// When nothing is received for some time, send a NOP OSC message to ensure the serial port is still open.
+	// Normally, we should always receive data for level meters.
+	connect(&checkSerialPortAlive, &QTimer::timeout, this, &SerialPortInterface::onCheckSerialPortAlive);
+	checkSerialPortAlive.setSingleShot(false);
+	checkSerialPortAlive.setInterval(500);
+
 	onOscReconnect();
 }
 
@@ -28,6 +35,8 @@ void SerialPortInterface::onOscDataReceived() {
 		SPDLOG_TRACE("Received OSC data: {:a}", spdlog::to_hex(receivedData));
 		OscConnector::onOscDataReceived((const uint8_t*) receivedData.data(), receivedData.size());
 	} while(oscSerialPort.bytesAvailable());
+
+	dataReceivedSinceLastCheck = true;
 }
 
 void SerialPortInterface::onOscErrorOccurred(QSerialPort::SerialPortError error) {
@@ -36,6 +45,7 @@ void SerialPortInterface::onOscErrorOccurred(QSerialPort::SerialPortError error)
 	SPDLOG_ERROR("{}: error {}", oscSerialPort.portName().toStdString(), oscSerialPort.errorString().toStdString());
 	if(oscSerialPort.isOpen())
 		oscSerialPort.close();
+	checkSerialPortAlive.stop();
 	oscReconnectTimer.start();
 }
 
@@ -68,8 +78,25 @@ void SerialPortInterface::onOscReconnect() {
 
 	if(!portFound) {
 		SPDLOG_INFO("Serial port DAMC STM32 Audio not available, waiting");
+		checkSerialPortAlive.stop();
 		oscReconnectTimer.start();
+	} else {
+		dataReceivedSinceLastCheck = true;
+		oscReconnectTimer.stop();
+		checkSerialPortAlive.start();
 	}
+}
+
+void SerialPortInterface::onCheckSerialPortAlive() {
+	if(dataReceivedSinceLastCheck) {
+		dataReceivedSinceLastCheck = false;
+		return;
+	}
+
+	// No data received since last check, send null OSC frame to ensure the serial port is still open.
+	static const char OSC_NULL_MESSAGE[] = {'/', 0, 0, 0, ',', 0, 0, 0};
+
+	oscSerialPort.write(OSC_NULL_MESSAGE, sizeof(OSC_NULL_MESSAGE));
 }
 
 void SerialPortInterface::sendOscData(const uint8_t* data, size_t size) {
