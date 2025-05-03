@@ -137,9 +137,16 @@ void OscRoot::executeMessage(tosc_message_const* osc) {
 		OscArgument argument;
 
 		switch(osc->format[i]) {
-			case 's':
-				argument = std::string(tosc_getNextString(osc));
+			case 's': {
+				const char* str = tosc_getNextString(osc);
+				if(str) {
+					argument = std::string(str);
+				} else {
+					SPDLOG_ERROR(" Invalid string argument, format: {}", osc->format[i]);
+					argument = "<invalid>";
+				}
 				break;
+			}
 			case 'f':
 				argument = tosc_getNextFloat(osc);
 				break;
