@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>984</width>
-    <height>439</height>
+    <width>1041</width>
+    <height>638</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -64,7 +64,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>999999999</number>
@@ -120,7 +120,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -136,7 +136,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -152,7 +152,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>9999999</number>
@@ -175,7 +175,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>9999999</number>
@@ -198,7 +198,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>9999999</number>
@@ -211,7 +211,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="maximum">
            <number>9999999</number>
@@ -224,7 +224,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -240,7 +240,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -286,7 +286,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -323,7 +323,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -339,7 +339,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -362,7 +362,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -378,7 +378,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -394,7 +394,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -410,7 +410,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -433,7 +433,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -449,7 +449,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -465,7 +465,7 @@
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> %</string>
@@ -484,13 +484,27 @@
         <string>CPU frequency</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="1" column="1">
+        <item row="1" column="0">
+         <widget class="QLabel" name="pllFrequencyLabel">
+          <property name="text">
+           <string>PLL1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="cpuFrequencyLabel">
+          <property name="text">
+           <string>CPU</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
          <widget class="QDoubleSpinBox" name="cpuFrequencySpinBox">
           <property name="readOnly">
            <bool>true</bool>
           </property>
           <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="suffix">
            <string> Mhz</string>
@@ -500,17 +514,260 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="cpuFrequencyLabel">
-          <property name="text">
-           <string>Frequency</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
+        <item row="2" column="2">
          <widget class="QLabel" name="cpuDividerLabel">
           <property name="text">
            <string>Divider</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QSpinBox" name="cpuDividerSpinBox"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="axiFrequencyLabel">
+          <property name="text">
+           <string>AXI</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDoubleSpinBox" name="axiFrequencySpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> Mhz</string>
+          </property>
+          <property name="maximum">
+           <double>999.990000000000009</double>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLabel" name="axiDividerLabel">
+          <property name="text">
+           <string>Divider</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QSpinBox" name="axiDividerSpinBox"/>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="ahbFrequencyLabel">
+          <property name="text">
+           <string>AHB</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QDoubleSpinBox" name="ahbFrequencySpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> Mhz</string>
+          </property>
+          <property name="maximum">
+           <double>999.990000000000009</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QLabel" name="ahbDividerLabel">
+          <property name="text">
+           <string>Divider</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="3">
+         <widget class="QSpinBox" name="ahbDividerSpinBox"/>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="apb1FrequencyLabel">
+          <property name="text">
+           <string>APB1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QDoubleSpinBox" name="apb1FrequencySpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> Mhz</string>
+          </property>
+          <property name="maximum">
+           <double>999.990000000000009</double>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="2">
+         <widget class="QLabel" name="apb1DividerLabel">
+          <property name="text">
+           <string>Divider</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="3">
+         <widget class="QSpinBox" name="apb1DividerSpinBox"/>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="apb2FrequencyLabel">
+          <property name="text">
+           <string>APB2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QDoubleSpinBox" name="apb2FrequencySpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> Mhz</string>
+          </property>
+          <property name="maximum">
+           <double>999.990000000000009</double>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="2">
+         <widget class="QLabel" name="apb2DividerLabel">
+          <property name="text">
+           <string>Divider</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="3">
+         <widget class="QSpinBox" name="apb2DividerSpinBox"/>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="apb4FrequencyLabel">
+          <property name="text">
+           <string>APB4</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QDoubleSpinBox" name="apb4FrequencySpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> Mhz</string>
+          </property>
+          <property name="maximum">
+           <double>999.990000000000009</double>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="2">
+         <widget class="QLabel" name="apb4DividerLabel">
+          <property name="text">
+           <string>Divider</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="3">
+         <widget class="QSpinBox" name="apb4DividerSpinBox"/>
+        </item>
+        <item row="8" column="0">
+         <widget class="QLabel" name="apb5FrequencyLabel">
+          <property name="text">
+           <string>APB5</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <widget class="QDoubleSpinBox" name="apb5FrequencySpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> Mhz</string>
+          </property>
+          <property name="maximum">
+           <double>999.990000000000009</double>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="2">
+         <widget class="QLabel" name="apb5DividerLabel">
+          <property name="text">
+           <string>Divider</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="3">
+         <widget class="QSpinBox" name="apb5DividerSpinBox"/>
+        </item>
+        <item row="9" column="0">
+         <widget class="QLabel" name="timerFrequencyLabel">
+          <property name="text">
+           <string>Timer</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="1">
+         <widget class="QDoubleSpinBox" name="timerFrequencySpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> Mhz</string>
+          </property>
+          <property name="maximum">
+           <double>999.990000000000009</double>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="2">
+         <widget class="QLabel" name="timerDividerLabel">
+          <property name="text">
+           <string>Divider</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="3">
+         <widget class="QSpinBox" name="timerDividerSpinBox"/>
+        </item>
+        <item row="1" column="1" colspan="3">
+         <widget class="QDoubleSpinBox" name="pllFrequencySpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> Mhz</string>
+          </property>
+          <property name="maximum">
+           <double>999.990000000000009</double>
           </property>
          </widget>
         </item>
@@ -519,25 +776,6 @@
           <property name="text">
            <string>Manual Control</string>
           </property>
-         </widget>
-        </item>
-        <item row="1" column="3">
-         <widget class="QComboBox" name="cpuDividerComboBox">
-          <item>
-           <property name="text">
-            <string>1</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>2</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>4</string>
-           </property>
-          </item>
          </widget>
         </item>
        </layout>
@@ -644,7 +882,7 @@
       <item row="1" column="1">
        <widget class="QSpinBox" name="glitchUsbIsochronousTransferLostSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -654,7 +892,7 @@
       <item row="2" column="1">
        <widget class="QSpinBox" name="glitchUsbOutOverrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -664,7 +902,7 @@
       <item row="3" column="1">
        <widget class="QSpinBox" name="glitchUsbOutUnderrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -674,7 +912,7 @@
       <item row="4" column="1">
        <widget class="QSpinBox" name="glitchUsbInOverrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -684,7 +922,7 @@
       <item row="5" column="1">
        <widget class="QSpinBox" name="glitchAudioIrqLostSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -694,7 +932,7 @@
       <item row="6" column="1">
        <widget class="QSpinBox" name="glitchCodecOutXRunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -704,7 +942,7 @@
       <item row="7" column="1">
        <widget class="QSpinBox" name="glitchCodecOutDmaUnderrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -714,7 +952,7 @@
       <item row="8" column="1">
        <widget class="QSpinBox" name="glitchCodecInXRunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>
@@ -724,7 +962,7 @@
       <item row="9" column="1">
        <widget class="QSpinBox" name="glitchCodecInDmaOverrunSpinBox">
         <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::ButtonSymbols::NoButtons</enum>
+         <enum>QAbstractSpinBox::NoButtons</enum>
         </property>
         <property name="maximum">
          <number>999999</number>

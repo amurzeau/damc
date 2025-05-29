@@ -2,7 +2,6 @@
 
 #include "ManagedVisibilityWidget.h"
 #include "OscWidgetMapper.h"
-#include "qcheckbox.h"
 #include <QDialog>
 
 namespace Ui {
@@ -42,8 +41,25 @@ private:
 	OscWidgetMapper<QAbstractButton> oscEnableMicBias;
 
 	OscContainer oscCpuContainer;
-	OscWidgetMapper<QDoubleSpinBox> cpuFrequency;
-	OscWidgetMapper<QComboBox> cpuDivider;
+	OscWidgetMapper<QDoubleSpinBox> oscPllFrequency;
+	OscWidgetMapper<QDoubleSpinBox> oscCpuFrequency;
+	OscWidgetMapper<QDoubleSpinBox> oscAXIFrequency;
+	OscWidgetMapper<QDoubleSpinBox> oscAHBFrequency;
+	OscWidgetMapper<QDoubleSpinBox> oscAPB1Frequency;
+	OscWidgetMapper<QDoubleSpinBox> oscAPB2Frequency;
+	OscWidgetMapper<QDoubleSpinBox> oscAPB4Frequency;
+	OscWidgetMapper<QDoubleSpinBox> oscAPB5Frequency;
+	OscWidgetMapper<QDoubleSpinBox> oscTimerFrequency;
+
+	OscWidgetMapper<QSpinBox> oscCpuDivider;
+	OscWidgetMapper<QSpinBox> oscAXIDivider;
+	OscWidgetMapper<QSpinBox> oscAHBDivider;
+	OscWidgetMapper<QSpinBox> oscAPB1Divider;
+	OscWidgetMapper<QSpinBox> oscAPB2Divider;
+	OscWidgetMapper<QSpinBox> oscAPB4Divider;
+	OscWidgetMapper<QSpinBox> oscAPB5Divider;
+	OscWidgetMapper<QSpinBox> oscTimerDivider;
+
 	OscWidgetMapper<QAbstractButton> cpuManualControl;
 
 	OscWidgetMapper<QDoubleSpinBox> timeUsbInterrupt;

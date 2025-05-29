@@ -13,8 +13,23 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
       oscSaveNow(&oscConfigContainer, "saveNow"),
       oscEnableMicBias(oscParent, "enableMicBias", true),
       oscCpuContainer(oscParent, "cpu"),
-      cpuFrequency(&oscCpuContainer, "freq"),
-      cpuDivider(&oscCpuContainer, "divider"),
+      oscPllFrequency(&oscCpuContainer, "freq"),
+      oscCpuFrequency(&oscCpuContainer, "cpuFreq"),
+      oscAXIFrequency(&oscCpuContainer, "axiFreq"),
+      oscAHBFrequency(&oscCpuContainer, "ahbFreq"),
+      oscAPB1Frequency(&oscCpuContainer, "apb1Freq"),
+      oscAPB2Frequency(&oscCpuContainer, "apb2Freq"),
+      oscAPB4Frequency(&oscCpuContainer, "apb4Freq"),
+      oscAPB5Frequency(&oscCpuContainer, "apb5Freq"),
+      oscTimerFrequency(&oscCpuContainer, "timerFreq"),
+      oscCpuDivider(&oscCpuContainer, "cpuDivider"),
+      oscAXIDivider(&oscCpuContainer, "axiDivider"),
+      oscAHBDivider(&oscCpuContainer, "ahbDivider"),
+      oscAPB1Divider(&oscCpuContainer, "apb1Divider"),
+      oscAPB2Divider(&oscCpuContainer, "apb2Divider"),
+      oscAPB4Divider(&oscCpuContainer, "apb4Divider"),
+      oscAPB5Divider(&oscCpuContainer, "apb5Divider"),
+      oscTimerDivider(&oscCpuContainer, "timerDivider"),
       cpuManualControl(&oscCpuContainer, "manual"),
       timeUsbInterrupt(oscParent, "timeUsbInterrupt"),
       timeAudioProcessing(oscParent, "timeAudioProc"),
@@ -56,15 +71,35 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 	oscEnableMicBias.setWidget(ui->enableMicBiasCheckBox);
 
 	// Convert Hz to Mhz
-	cpuFrequency.setScale(1.f / 1000000.f);
-	cpuFrequency.setWidget(ui->cpuFrequencySpinBox, false);
-	cpuDivider.setValueMappingCallback([](int32_t value, bool toWidget) {
-		if(toWidget)
-			return (int32_t) log2(value);
-		else
-			return 1 << value;
-	});
-	cpuDivider.setWidget(ui->cpuDividerComboBox);
+	oscPllFrequency.setScale(1.f / 1000000.f);
+	oscCpuFrequency.setScale(1.f / 1000000.f);
+	oscAXIFrequency.setScale(1.f / 1000000.f);
+	oscAHBFrequency.setScale(1.f / 1000000.f);
+	oscAPB1Frequency.setScale(1.f / 1000000.f);
+	oscAPB2Frequency.setScale(1.f / 1000000.f);
+	oscAPB4Frequency.setScale(1.f / 1000000.f);
+	oscAPB5Frequency.setScale(1.f / 1000000.f);
+	oscTimerFrequency.setScale(1.f / 1000000.f);
+
+	oscPllFrequency.setWidget(ui->pllFrequencySpinBox, false);
+	oscCpuFrequency.setWidget(ui->cpuFrequencySpinBox, false);
+	oscAXIFrequency.setWidget(ui->axiFrequencySpinBox, false);
+	oscAHBFrequency.setWidget(ui->ahbFrequencySpinBox, false);
+	oscAPB1Frequency.setWidget(ui->apb1FrequencySpinBox, false);
+	oscAPB2Frequency.setWidget(ui->apb2FrequencySpinBox, false);
+	oscAPB4Frequency.setWidget(ui->apb4FrequencySpinBox, false);
+	oscAPB5Frequency.setWidget(ui->apb5FrequencySpinBox, false);
+	oscTimerFrequency.setWidget(ui->timerFrequencySpinBox, false);
+
+	oscCpuDivider.setWidget(ui->cpuDividerSpinBox);
+	oscAXIDivider.setWidget(ui->axiDividerSpinBox);
+	oscAHBDivider.setWidget(ui->ahbDividerSpinBox);
+	oscAPB1Divider.setWidget(ui->apb1DividerSpinBox);
+	oscAPB2Divider.setWidget(ui->apb2DividerSpinBox);
+	oscAPB4Divider.setWidget(ui->apb4DividerSpinBox);
+	oscAPB5Divider.setWidget(ui->apb5DividerSpinBox);
+	oscTimerDivider.setWidget(ui->timerDividerSpinBox);
+
 	cpuManualControl.setWidget(ui->cpuManualControlCheckBox);
 
 	// Convert 1/1000000 values to percents (1/100)
