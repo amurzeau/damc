@@ -12,6 +12,9 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
       oscType(parent, "_type"),
       oscChannelNumber(parent, "channels"),
       oscReverseAudioSignal(parent->getFilterChain(), "reverseAudioSignal"),
+      oscTinyDenoiserFilter(parent->getFilterChain(), "tinyDenoiserFilter"),
+      oscTinyDenoiserEnable(&oscTinyDenoiserFilter, "enable"),
+      oscTinyDenoiserRatio(&oscTinyDenoiserFilter, "ratio"),
       oscDeviceName(this, "deviceName"),
       oscBufferSize(this, "bufferSize"),
       oscActualBufferSize(this, "actualBufferSize"),
@@ -45,6 +48,8 @@ OutputInstanceConfigDialog::OutputInstanceConfigDialog(MainWindow* mainWindow, O
 	oscType.setWidget(ui->typeCombo);
 	oscChannelNumber.setWidget(ui->channelsSpin);
 	oscReverseAudioSignal.setWidget(ui->reverseAudioSignalCheckBox);
+	oscTinyDenoiserEnable.setWidget(ui->tinyDenoiserEnableCheckBox);
+	oscTinyDenoiserRatio.setWidget(ui->tinyDenoiserRatioSpinBox);
 	oscDeviceName.setWidget(ui->deviceDeviceCombo);
 	oscBufferSize.setWidget(ui->bufferSizeSpinBox);
 	oscActualBufferSize.setWidget(ui->actualBufferSize);
