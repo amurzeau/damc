@@ -93,7 +93,7 @@ jobs:
           echo "JACK_VERSION=$jack_latest_version" >> $env:GITHUB_OUTPUT
 
           pip install -U pip
-          pip install --pre aqtinstall
+          pip install --pre aqtinstall==3.1.21
           pip show aqtinstall
 
           # Latest Windows 7 and 32 bits version of qt is 5.x branch as 6.x dropped Windows 7 and 32 bits versions
