@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>475</width>
-    <height>708</height>
+    <height>768</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -138,13 +138,6 @@
       <string>AI Denoiser</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="tinyDenoiserEnableCheckBox">
-        <property name="text">
-         <string>Enable</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="2">
        <widget class="QDoubleSpinBox" name="tinyDenoiserRatioSpinBox">
         <property name="sizePolicy">
@@ -171,6 +164,20 @@
        <widget class="QLabel" name="tinyDenoiserRatioLabel">
         <property name="text">
          <string>Denoising Ratio</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="tinyDenoiserEnableCheckBox">
+        <property name="text">
+         <string>Enable</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="tinyDenoiserUseNpuCheckBox">
+        <property name="text">
+         <string>Use NPU</string>
         </property>
        </widget>
       </item>

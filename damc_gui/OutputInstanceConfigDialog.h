@@ -43,6 +43,7 @@ private:
 	OscContainer oscTinyDenoiserFilter;
 	OscWidgetMapper<QAbstractButton> oscTinyDenoiserEnable;
 	OscWidgetMapper<QDoubleSpinBox> oscTinyDenoiserRatio;
+	OscWidgetMapper<QAbstractButton> oscTinyDenoiserUseNpu;
 
 	OscWidgetMapper<QComboBox, std::string> oscDeviceName;
 	OscWidgetMapper<QSpinBox> oscBufferSize;
