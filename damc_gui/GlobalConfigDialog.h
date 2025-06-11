@@ -45,19 +45,15 @@ private:
 	OscWidgetMapper<QDoubleSpinBox> oscCpuFrequency;
 	OscWidgetMapper<QDoubleSpinBox> oscAXIFrequency;
 	OscWidgetMapper<QDoubleSpinBox> oscAHBFrequency;
-	OscWidgetMapper<QDoubleSpinBox> oscAPB1Frequency;
-	OscWidgetMapper<QDoubleSpinBox> oscAPB2Frequency;
-	OscWidgetMapper<QDoubleSpinBox> oscAPB4Frequency;
-	OscWidgetMapper<QDoubleSpinBox> oscAPB5Frequency;
+	OscWidgetMapper<QDoubleSpinBox> oscNPUFrequency;
+	OscWidgetMapper<QDoubleSpinBox> oscNPUSRAMFrequency;
 	OscWidgetMapper<QDoubleSpinBox> oscTimerFrequency;
 
 	OscWidgetMapper<QSpinBox> oscCpuDivider;
 	OscWidgetMapper<QSpinBox> oscAXIDivider;
 	OscWidgetMapper<QSpinBox> oscAHBDivider;
-	OscWidgetMapper<QSpinBox> oscAPB1Divider;
-	OscWidgetMapper<QSpinBox> oscAPB2Divider;
-	OscWidgetMapper<QSpinBox> oscAPB4Divider;
-	OscWidgetMapper<QSpinBox> oscAPB5Divider;
+	OscWidgetMapper<QSpinBox> oscNPUDivider;
+	OscWidgetMapper<QSpinBox> oscNPUSRAMDivider;
 	OscWidgetMapper<QSpinBox> oscTimerDivider;
 
 	OscWidgetMapper<QAbstractButton> cpuManualControl;

@@ -17,18 +17,14 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
       oscCpuFrequency(&oscCpuContainer, "cpuFreq"),
       oscAXIFrequency(&oscCpuContainer, "axiFreq"),
       oscAHBFrequency(&oscCpuContainer, "ahbFreq"),
-      oscAPB1Frequency(&oscCpuContainer, "apb1Freq"),
-      oscAPB2Frequency(&oscCpuContainer, "apb2Freq"),
-      oscAPB4Frequency(&oscCpuContainer, "apb4Freq"),
-      oscAPB5Frequency(&oscCpuContainer, "apb5Freq"),
+      oscNPUFrequency(&oscCpuContainer, "npuFreq"),
+      oscNPUSRAMFrequency(&oscCpuContainer, "npuSramFreq"),
       oscTimerFrequency(&oscCpuContainer, "timerFreq"),
       oscCpuDivider(&oscCpuContainer, "cpuDivider"),
       oscAXIDivider(&oscCpuContainer, "axiDivider"),
       oscAHBDivider(&oscCpuContainer, "ahbDivider"),
-      oscAPB1Divider(&oscCpuContainer, "apb1Divider"),
-      oscAPB2Divider(&oscCpuContainer, "apb2Divider"),
-      oscAPB4Divider(&oscCpuContainer, "apb4Divider"),
-      oscAPB5Divider(&oscCpuContainer, "apb5Divider"),
+      oscNPUDivider(&oscCpuContainer, "npuDivider"),
+      oscNPUSRAMDivider(&oscCpuContainer, "npuSramDivider"),
       oscTimerDivider(&oscCpuContainer, "timerDivider"),
       cpuManualControl(&oscCpuContainer, "manual"),
       timeUsbInterrupt(oscParent, "timeUsbInterrupt"),
@@ -75,29 +71,23 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 	oscCpuFrequency.setScale(1.f / 1000000.f);
 	oscAXIFrequency.setScale(1.f / 1000000.f);
 	oscAHBFrequency.setScale(1.f / 1000000.f);
-	oscAPB1Frequency.setScale(1.f / 1000000.f);
-	oscAPB2Frequency.setScale(1.f / 1000000.f);
-	oscAPB4Frequency.setScale(1.f / 1000000.f);
-	oscAPB5Frequency.setScale(1.f / 1000000.f);
+	oscNPUFrequency.setScale(1.f / 1000000.f);
+	oscNPUSRAMFrequency.setScale(1.f / 1000000.f);
 	oscTimerFrequency.setScale(1.f / 1000000.f);
 
 	oscPllFrequency.setWidget(ui->pllFrequencySpinBox, false);
 	oscCpuFrequency.setWidget(ui->cpuFrequencySpinBox, false);
 	oscAXIFrequency.setWidget(ui->axiFrequencySpinBox, false);
 	oscAHBFrequency.setWidget(ui->ahbFrequencySpinBox, false);
-	oscAPB1Frequency.setWidget(ui->apb1FrequencySpinBox, false);
-	oscAPB2Frequency.setWidget(ui->apb2FrequencySpinBox, false);
-	oscAPB4Frequency.setWidget(ui->apb4FrequencySpinBox, false);
-	oscAPB5Frequency.setWidget(ui->apb5FrequencySpinBox, false);
+	oscNPUFrequency.setWidget(ui->npuFrequencySpinBox, false);
+	oscNPUSRAMFrequency.setWidget(ui->npuSramFrequencySpinBox, false);
 	oscTimerFrequency.setWidget(ui->timerFrequencySpinBox, false);
 
 	oscCpuDivider.setWidget(ui->cpuDividerSpinBox);
 	oscAXIDivider.setWidget(ui->axiDividerSpinBox);
 	oscAHBDivider.setWidget(ui->ahbDividerSpinBox);
-	oscAPB1Divider.setWidget(ui->apb1DividerSpinBox);
-	oscAPB2Divider.setWidget(ui->apb2DividerSpinBox);
-	oscAPB4Divider.setWidget(ui->apb4DividerSpinBox);
-	oscAPB5Divider.setWidget(ui->apb5DividerSpinBox);
+	oscNPUDivider.setWidget(ui->npuDividerSpinBox);
+	oscNPUSRAMDivider.setWidget(ui->npuSramDividerSpinBox);
 	oscTimerDivider.setWidget(ui->timerDividerSpinBox);
 
 	cpuManualControl.setWidget(ui->cpuManualControlCheckBox);
