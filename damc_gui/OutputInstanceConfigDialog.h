@@ -41,9 +41,7 @@ private:
 	OscWidgetMapper<QSpinBox> oscChannelNumber;
 	OscWidgetMapper<QAbstractButton> oscReverseAudioSignal;
 	OscContainer oscTinyDenoiserFilter;
-	OscWidgetMapper<QAbstractButton> oscTinyDenoiserEnable;
-	OscWidgetMapper<QDoubleSpinBox> oscTinyDenoiserRatio;
-	OscWidgetMapper<QAbstractButton> oscTinyDenoiserUseNpu;
+	OscWidgetMapper<QSpinBox> oscTinyDenoiserEnableIndex;
 
 	OscWidgetMapper<QComboBox, std::string> oscDeviceName;
 	OscWidgetMapper<QSpinBox> oscBufferSize;

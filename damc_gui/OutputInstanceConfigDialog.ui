@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>475</width>
-    <height>768</height>
+    <height>797</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -138,46 +138,17 @@
       <string>AI Denoiser</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="2">
-       <widget class="QDoubleSpinBox" name="tinyDenoiserRatioSpinBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="decimals">
-         <number>2</number>
-        </property>
-        <property name="maximum">
-         <double>1.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.010000000000000</double>
-        </property>
-        <property name="value">
-         <double>1.000000000000000</double>
+      <item row="0" column="0">
+       <widget class="QLabel" name="tinyDenoiserEnableLabel">
+        <property name="text">
+         <string>Denoiser Level</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLabel" name="tinyDenoiserRatioLabel">
-        <property name="text">
-         <string>Denoising Ratio</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="tinyDenoiserEnableCheckBox">
-        <property name="text">
-         <string>Enable</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="tinyDenoiserUseNpuCheckBox">
-        <property name="text">
-         <string>Use NPU</string>
+       <widget class="QSpinBox" name="tinyDenoiserEnableIndexSpinBox">
+        <property name="toolTip">
+         <string>0: Disabled, 1: CPU float16, 2: NPU/CPU Mixed, 3: Full NPU</string>
         </property>
        </widget>
       </item>
