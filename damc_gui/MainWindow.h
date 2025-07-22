@@ -62,4 +62,6 @@ private:
 	OscFlatArray<std::string> oscWasapiDeviceArray;
 
 	QMenu configurationMenu;
+
+	OscEndpoint oscTrace;
 };

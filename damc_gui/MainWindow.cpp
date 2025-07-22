@@ -3,6 +3,8 @@
 #include "OutputController.h"
 #include "qabstractbutton.h"
 #include "qmessagebox.h"
+#include "spdlog/fmt/bundled/core.h"
+#include "spdlog/spdlog.h"
 #include "ui_MainWindow.h"
 #include <QFileDialog>
 #include <QInputDialog>
@@ -16,7 +18,8 @@ MainWindow::MainWindow(OscRoot* oscRoot, bool isMicrocontrollerDamc, QWidget* pa
       outputInterfaces(oscRoot, "strip"),
       oscTypeArray(oscRoot, "type_list"),
       oscPortaudioDeviceArray(oscRoot, "device_list"),
-      oscWasapiDeviceArray(oscRoot, "device_list_wasapi") {
+      oscWasapiDeviceArray(oscRoot, "device_list_wasapi"),
+      oscTrace(oscRoot, "trace") {
 	ui->setupUi(this);
 
 	if(isMicrocontrollerDamc) {
@@ -74,6 +77,24 @@ MainWindow::MainWindow(OscRoot* oscRoot, bool isMicrocontrollerDamc, QWidget* pa
 	oscPortaudioDeviceArray.addChangeCallback([this](const auto&, const auto&) { emit deviceListChanged(); });
 
 	oscWasapiDeviceArray.addChangeCallback([this](const auto&, const auto&) { emit deviceListChanged(); });
+
+	oscTrace.setCallback([](const std::vector<OscArgument>& arguments) {
+		std::string traceInfo;
+		for(const auto& argument : arguments) {
+			int32_t value = 0;
+
+			std::visit(
+			    [&value](auto&& arg) -> void {
+				    using U = std::decay_t<decltype(arg)>;
+				    if constexpr(std::is_same_v<U, int32_t>) {
+					    value = arg;
+				    }
+			    },
+			    argument);
+			traceInfo += " " + std::to_string(value);
+		}
+		SPDLOG_TRACE("Trace: {}", traceInfo);
+	});
 }
 
 MainWindow::~MainWindow() {
