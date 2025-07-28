@@ -62,10 +62,12 @@ private:
 	OscWidgetMapper<QDoubleSpinBox> timeAudioProcessing;
 	OscWidgetMapper<QDoubleSpinBox> timeOtherInterrupts;
 	OscWidgetMapper<QDoubleSpinBox> timeMainLoop;
+	OscWidgetMapper<QDoubleSpinBox> timeTinyDenoiser;
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopUsbInterrupt;
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopAudioProcessing;
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopOtherInterrupts;
 	OscWidgetMapper<QDoubleSpinBox> timePerLoopMainLoop;
+	OscWidgetMapper<QDoubleSpinBox> timePerLoopTinyDenoiser;
 
 	OscWidgetMapper<QSpinBox> fastMemoryUsed;
 	OscWidgetMapper<QSpinBox> fastMemoryAvailable;

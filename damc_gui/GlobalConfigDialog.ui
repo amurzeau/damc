@@ -263,117 +263,8 @@
         <string>CPU usage</string>
        </property>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="2">
-         <widget class="QLabel" name="maxPerLoopLabel">
-          <property name="toolTip">
-           <string>Audio is processing by chunk of 1ms. Nothing must take more than 1ms alone to ensure glitchless audio.</string>
-          </property>
-          <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Max per&lt;br/&gt;1ms loop&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="averageLabel">
-          <property name="text">
-           <string>Average</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QDoubleSpinBox" name="usbInterruptsPerLoopSpinBox">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-          <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
-          </property>
-          <property name="suffix">
-           <string> %</string>
-          </property>
-          <property name="maximum">
-           <double>999.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="usbInterruptsLabel">
-          <property name="text">
-           <string>USB Interrupts</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="totalCpuUsageLabel">
-          <property name="text">
-           <string>Total CPU usage</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="otherInterruptsLabel">
-          <property name="text">
-           <string>Other Interrupts</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="1">
          <widget class="QDoubleSpinBox" name="usbInterruptsSpinBox">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-          <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
-          </property>
-          <property name="suffix">
-           <string> %</string>
-          </property>
-          <property name="maximum">
-           <double>999.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QDoubleSpinBox" name="audioProcessingPerLoopSpinBox">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-          <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
-          </property>
-          <property name="suffix">
-           <string> %</string>
-          </property>
-          <property name="maximum">
-           <double>999.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="audioProcessingLabel">
-          <property name="text">
-           <string>Audio Processing</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QDoubleSpinBox" name="totalCpuUsageSpinBox">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-          <property name="buttonSymbols">
-           <enum>QAbstractSpinBox::NoButtons</enum>
-          </property>
-          <property name="suffix">
-           <string> %</string>
-          </property>
-          <property name="maximum">
-           <double>999.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="2">
-         <widget class="QDoubleSpinBox" name="otherInterruptsPerLoopSpinBox">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -404,8 +295,8 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="QDoubleSpinBox" name="otherInterruptsSpinBox">
+        <item row="1" column="2">
+         <widget class="QDoubleSpinBox" name="totalCpuUsagePerLoopSpinBox">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -416,14 +307,14 @@
            <string> %</string>
           </property>
           <property name="maximum">
-           <double>999.000000000000000</double>
+           <double>9999.000000000000000</double>
           </property>
          </widget>
         </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="timersProcessingLabel">
+        <item row="0" column="1">
+         <widget class="QLabel" name="averageLabel">
           <property name="text">
-           <string>Timers Processing</string>
+           <string>Average</string>
           </property>
          </widget>
         </item>
@@ -443,8 +334,64 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
-         <widget class="QDoubleSpinBox" name="totalCpuUsagePerLoopSpinBox">
+        <item row="4" column="0">
+         <widget class="QLabel" name="otherInterruptsLabel">
+          <property name="text">
+           <string>Other Interrupts</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="maxPerLoopLabel">
+          <property name="toolTip">
+           <string>Audio is processing by chunk of 1ms. Nothing must take more than 1ms alone to ensure glitchless audio.</string>
+          </property>
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Max per&lt;br/&gt;loop&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QDoubleSpinBox" name="usbInterruptsPerLoopSpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> %</string>
+          </property>
+          <property name="maximum">
+           <double>9999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QDoubleSpinBox" name="otherInterruptsPerLoopSpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> %</string>
+          </property>
+          <property name="maximum">
+           <double>9999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="usbInterruptsLabel">
+          <property name="text">
+           <string>USB Interrupts</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QDoubleSpinBox" name="totalCpuUsageSpinBox">
           <property name="readOnly">
            <bool>true</bool>
           </property>
@@ -456,6 +403,59 @@
           </property>
           <property name="maximum">
            <double>999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="audioProcessingLabel">
+          <property name="text">
+           <string>Audio Processing</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QDoubleSpinBox" name="otherInterruptsSpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> %</string>
+          </property>
+          <property name="maximum">
+           <double>999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QDoubleSpinBox" name="audioProcessingPerLoopSpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> %</string>
+          </property>
+          <property name="maximum">
+           <double>9999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="timersProcessingLabel">
+          <property name="text">
+           <string>Timers Processing</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="totalCpuUsageLabel">
+          <property name="text">
+           <string>Total CPU usage</string>
           </property>
          </widget>
         </item>
@@ -471,7 +471,46 @@
            <string> %</string>
           </property>
           <property name="maximum">
+           <double>9999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="tinyDenoiserLabel">
+          <property name="text">
+           <string>TinyDenoiser</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QDoubleSpinBox" name="tinyDenoiserSpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> %</string>
+          </property>
+          <property name="maximum">
            <double>999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="2">
+         <widget class="QDoubleSpinBox" name="tinyDenoiserPerLoopSpinBox">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="suffix">
+           <string> %</string>
+          </property>
+          <property name="maximum">
+           <double>9999.000000000000000</double>
           </property>
          </widget>
         </item>

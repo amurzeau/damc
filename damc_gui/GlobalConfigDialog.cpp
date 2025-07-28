@@ -31,10 +31,12 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
       timeAudioProcessing(oscParent, "timeAudioProc"),
       timeOtherInterrupts(oscParent, "timeOtherInterrupts"),
       timeMainLoop(oscParent, "timeMainLoop"),
+      timeTinyDenoiser(oscParent, "timeTinyDenoiser"),
       timePerLoopUsbInterrupt(oscParent, "timePerLoopUsbInterrupt"),
       timePerLoopAudioProcessing(oscParent, "timePerLoopAudioProc"),
       timePerLoopOtherInterrupts(oscParent, "timePerLoopOtherInterrupts"),
       timePerLoopMainLoop(oscParent, "timePerLoopMainLoop"),
+      timePerLoopTinyDenoiser(oscParent, "timePerLoopTinyDenoiser"),
       fastMemoryUsed(oscParent, "fastMemoryUsed"),
       fastMemoryAvailable(oscParent, "fastMemoryAvailable"),
       slowMemoryUsed(oscParent, "memoryUsed"),
@@ -97,30 +99,36 @@ GlobalConfigDialog::GlobalConfigDialog(QWidget* parent, OscContainer* oscParent)
 	timeAudioProcessing.setScale(1.f / 10000.f);
 	timeOtherInterrupts.setScale(1.f / 10000.f);
 	timeMainLoop.setScale(1.f / 10000.f);
+	timeTinyDenoiser.setScale(1.f / 10000.f);
 
 	timeUsbInterrupt.setWidget(ui->usbInterruptsSpinBox, false);
 	timeAudioProcessing.setWidget(ui->audioProcessingSpinBox, false);
 	timeOtherInterrupts.setWidget(ui->otherInterruptsSpinBox, false);
 	timeMainLoop.setWidget(ui->timersProcessingSpinBox, false);
+	timeTinyDenoiser.setWidget(ui->tinyDenoiserSpinBox, false);
 
 	timeUsbInterrupt.addChangeCallback([this](float) { updateCpuTotalUsage(); });
 	timeAudioProcessing.addChangeCallback([this](float) { updateCpuTotalUsage(); });
 	timeOtherInterrupts.addChangeCallback([this](float) { updateCpuTotalUsage(); });
 	timeMainLoop.addChangeCallback([this](float) { updateCpuTotalUsage(); });
+	timeTinyDenoiser.addChangeCallback([this](float) { updateCpuTotalUsage(); });
 
 	timePerLoopUsbInterrupt.setScale(1.f / 10.f);
 	timePerLoopAudioProcessing.setScale(1.f / 10.f);
 	timePerLoopOtherInterrupts.setScale(1.f / 10.f);
 	timePerLoopMainLoop.setScale(1.f / 10.f);
+	timePerLoopTinyDenoiser.setScale(1.f / 10.f);
 
 	timePerLoopUsbInterrupt.setWidget(ui->usbInterruptsPerLoopSpinBox, false);
 	timePerLoopAudioProcessing.setWidget(ui->audioProcessingPerLoopSpinBox, false);
 	timePerLoopOtherInterrupts.setWidget(ui->otherInterruptsPerLoopSpinBox, false);
 	timePerLoopMainLoop.setWidget(ui->timersProcessingPerLoopSpinBox, false);
+	timePerLoopTinyDenoiser.setWidget(ui->tinyDenoiserPerLoopSpinBox, false);
 
 	timePerLoopUsbInterrupt.addChangeCallback([this](float) { updateCpuTotalUsagePerLoop(); });
 	timePerLoopAudioProcessing.addChangeCallback([this](float) { updateCpuTotalUsagePerLoop(); });
 	timePerLoopOtherInterrupts.addChangeCallback([this](float) { updateCpuTotalUsagePerLoop(); });
+	timePerLoopTinyDenoiser.addChangeCallback([this](float) { updateCpuTotalUsagePerLoop(); });
 
 	fastMemoryUsed.setWidget(ui->usedFastMemorySpinBox, false);
 	fastMemoryUsed.addChangeCallback([this](int32_t value) { updateMemoryUsagePercent(); });
@@ -186,14 +194,14 @@ void GlobalConfigDialog::hideEvent(QHideEvent*) {
 }
 
 void GlobalConfigDialog::updateCpuTotalUsage() {
-	float totalCpuUsage =
-	    timeUsbInterrupt.get() + timeAudioProcessing.get() + timeOtherInterrupts.get() + timeMainLoop.get();
+	float totalCpuUsage = timeUsbInterrupt.get() + timeAudioProcessing.get() + timeOtherInterrupts.get() +
+	                      timeMainLoop.get() + timeTinyDenoiser.get();
 	ui->totalCpuUsageSpinBox->setValue(totalCpuUsage / 10000.f);
 }
 
 void GlobalConfigDialog::updateCpuTotalUsagePerLoop() {
-	float totalCpuUsage =
-	    timePerLoopUsbInterrupt.get() + timePerLoopAudioProcessing.get() + timePerLoopOtherInterrupts.get();
+	float totalCpuUsage = timePerLoopUsbInterrupt.get() + timePerLoopAudioProcessing.get() +
+	                      timePerLoopOtherInterrupts.get() + timePerLoopTinyDenoiser.get();
 	ui->totalCpuUsagePerLoopSpinBox->setValue(totalCpuUsage / 10.f);
 }
 
